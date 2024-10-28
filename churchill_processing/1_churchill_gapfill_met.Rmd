@@ -16,6 +16,7 @@ rm(list = ls())
 library(data.table)
 library(ggplot2)
 library(zoo)
+library(cowplot)
 Sys.setenv(TZ = "UTC")
 ```
 
@@ -259,7 +260,6 @@ ggplot(data = all,aes(pres,PA_4_2_1_1_1.c))+theme_bw()+
   geom_abline(slope = 1,intercept = 0,col='red',lty=2)
 ```
 
-
 #reduce down to churchill size and add to final data set
 ```{r}
 eras = all[,c('date','rh.eramod','airt.eramod','ws.eramod','rad.eramod','tsoil.eramod','le.eramod','h.eramod','pres.eramod')]
@@ -270,5 +270,95 @@ df = merge(df,eras,by = 'date',all.x = T)
 write.csv(x = df,file = './churchill_2022_2023_era.csv',row.names = F,quote = F)
 ```
 
+
+Plot comparing churchill ERA data to site level data
+```{r}
+#air T
+airt = ggplot(data = all,aes(airt,TA_2_1_1_1_1))+theme_bw()+
+  geom_hline(yintercept = 0)+geom_vline(xintercept = 0)+
+  geom_point(alpha=0.5)+
+  geom_abline(slope = 1,intercept = 0,col='red',lty=2)+
+  scale_y_continuous(expression('Site Air T. ('*degree*C*")"))+
+  scale_x_continuous(expression('ERA5 Air T. ('*degree*C*")"))+
+  theme(text = element_text(size = 6))
+
+#RH
+rh = ggplot(data = all,aes(rh,RH_19_3_1_1_1.c))+theme_bw()+
+  geom_hline(yintercept = 0)+geom_vline(xintercept = 0)+
+  geom_point(alpha=0.5)+
+  geom_abline(slope = 1,intercept = 0,col='red',lty=2)+
+  scale_y_continuous(expression('Site RH (%)'))+
+  scale_x_continuous(expression('ERA5 RH (%)'))+
+  theme(text = element_text(size = 6))
+
+#wind speed
+ws = ggplot(data = all,aes(ws,WS_16_33_1_1_1))+theme_bw()+
+  geom_hline(yintercept = 0)+geom_vline(xintercept = 0)+
+  geom_point(alpha=0.5)+
+  geom_abline(slope = 1,intercept = 0,col='red',lty=2)+
+  scale_y_continuous(expression('Site Wind Speed ('*m~s^-1*")"))+
+  scale_x_continuous(expression('ERA5 Wind Speed ('*m~s^-1*")"))+
+  theme(text = element_text(size = 6))
+
+#'rad.eramod'
+rad = ggplot(data = all,aes(rad,SWIN_6_10_1_1_1.c))+theme_bw()+
+  geom_hline(yintercept = 0)+geom_vline(xintercept = 0)+
+  geom_point(alpha=0.5)+
+  geom_abline(slope = 1,intercept = 0,col='red',lty=2)+
+  scale_y_continuous(expression('Site Incident Radiation ('*W~m^-2*")"))+
+  scale_x_continuous(expression('ERA5 Incident Radiation ('*W~m^-2*")"))+
+  theme(text = element_text(size = 6))
+
+#'tsoil.eramod',
+tsoil = ggplot(data = all,aes(st2,TS_2_38_3_2_1.c))+theme_bw()+
+  geom_hline(yintercept = 0)+geom_vline(xintercept = 0)+
+  geom_point(alpha=0.5)+
+  geom_abline(slope = 1,intercept = 0,col='red',lty=2)+
+  scale_y_continuous(expression('Site Soil T. ('*degree*C*")"))+
+  scale_x_continuous(expression('ERA5 Soil T. ('*degree*C*")"))+
+  theme(text = element_text(size = 6))
+
+#'le.eramod',
+le = ggplot(data = all,aes(le,LE.c))+theme_bw()+
+  geom_hline(yintercept = 0)+geom_vline(xintercept = 0)+
+  geom_point(alpha=0.5)+
+  geom_abline(slope = 1,intercept = 0,col='red',lty=2)+
+  scale_y_continuous(expression('Site LE ('*W~m^-2*")"))+
+  scale_x_continuous(expression('ERA5 LE ('*W~m^-2*")"))+
+  theme(text = element_text(size = 6))
+
+#'h.eramod'
+h = ggplot(data = all,aes(h,H.c))+theme_bw()+
+  geom_hline(yintercept = 0)+geom_vline(xintercept = 0)+
+  geom_point(alpha=0.5)+
+  geom_abline(slope = 1,intercept = 0,col='red',lty=2)+
+  scale_y_continuous(expression('Site H ('*W~m^-2*")"))+
+  scale_x_continuous(expression('ERA5 H ('*W~m^-2*")"))+
+  theme(text = element_text(size = 6))
+
+#'pres.eramod'
+pres = ggplot(data = all,aes(pres,PA_4_2_1_1_1.c))+theme_bw()+
+#  geom_hline(yintercept = 0)+geom_vline(xintercept = 0)+
+  geom_point(alpha=0.5)+
+  geom_abline(slope = 1,intercept = 0,col='red',lty=2)+
+  scale_y_continuous(expression('Site Atmopsheric Pressure (kPa)'))+
+  scale_x_continuous(expression('ERA5 Atmopsheric Pressure (kPa)'))+
+  theme(text = element_text(size = 6))
+
+#swc
+swc = ggplot(data = all,aes(vwc1*100,SWC_12_36_2_1_1))+theme_bw()+
+  geom_hline(yintercept = 0)+geom_vline(xintercept = 0)+
+  geom_point(alpha=0.5)+
+  geom_abline(slope = 1,intercept = 0,col='red',lty=2)+
+  scale_y_continuous(expression('Site VWC (%)'))+
+  scale_x_continuous(expression('ERA5 VWC (%)'))+
+  theme(text = element_text(size = 6))
+```
+
+```{r}
+png(filename = 'C:/Users/karndt.WHRC/Desktop/sites/churchill/figures/era5_churchill_comparisons.png',width = 6,height = 4,units = 'in',res = 1500)
+plot_grid(airt,rh,ws,rad,tsoil,le,h,pres,swc)
+dev.off()
+```
 
 
