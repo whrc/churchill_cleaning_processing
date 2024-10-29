@@ -270,7 +270,7 @@ df = merge(df,eras,by = 'date',all.x = T)
 #write.csv(x = df,file = './churchill_2022_2023_era.csv',row.names = F,quote = F)
 
 #calculate VPD from air t and RH
-svp = 610.7*10^((7.5*all$tair)/(237.3+all$tair))
+svp = 610.7*10^((7.5*all$airt)/(237.3+all$airt))
 all$vpd = ((100 - all$rh)/100)*svp  
 ```
 
@@ -339,6 +339,7 @@ h = ggplot(data = all,aes(h,H.c))+theme_bw()+
   scale_y_continuous(expression('Site H ('*W~m^-2*")"))+
   scale_x_continuous(expression('ERA5 H ('*W~m^-2*")"))+
   theme(text = element_text(size = 6))
+
 
 #VPD
 vpd = ggplot(data = all,aes(vpd,VPD))+theme_bw()+
