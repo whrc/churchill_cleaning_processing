@@ -32,18 +32,22 @@ library(zoo)
 library(stringr)
 library(plyr)
 library(dplyr)
+```
 
 
-df = fread('C:/Users/dtrangmoe/Documents/Churchill/churchillFenBiomet_Aug2022-Jan2023.csv',na.strings = c('-9999','NA','NaN','NAN','-7999'))
 
-h = fread('C:/Users/dtrangmoe/Documents/Churchill/Churchill_AllBiomet_until20230620.dat',skip=1 ,nrows = 0)
-dat = fread('C:/Users/dtrangmoe/Documents/Churchill/Churchill_AllBiomet_until20230620.dat',skip=4, header = FALSE, na.strings=c('-9999','NA','NaN','NAN',"-7999"))
+```{r, warning=FALSE}
 
-h2 = fread('C:/Users/dtrangmoe/Documents/Churchill/Churchill_AllBiomet_until20230712.dat',skip=1 ,nrows = 0)
-dat2 = fread('C:/Users/dtrangmoe/Documents/Churchill/Churchill_AllBiomet_until20230712.dat',skip=4, header = FALSE, na.strings=c('-9999','NA','NaN','NAN',"-7999"))
+# df = fread('C:/Users/dtrangmoe/Documents/Churchill/raw/Churchill_AllBiomet.dat',na.strings = c('-9999','NA','NaN','NAN','-7999'))
 
-h3 = fread('C:/Users/dtrangmoe/Documents/Churchill/Churchill_AllBiomet.dat',skip=1 ,nrows = 0)
-dat3 = fread('C:/Users/dtrangmoe/Documents/Churchill/Churchill_AllBiomet.dat',skip=4, header = FALSE, na.strings=c('-9999','NA','NaN','NAN',"-7999"))
+h = fread('C:/Users/dtrangmoe/Documents/Churchill/raw/Churchill_AllBiomet_until20240622.dat',skip=1 ,nrows = 0)
+dat = fread('C:/Users/dtrangmoe/Documents/Churchill/raw/Churchill_AllBiomet_until20240622.dat',skip=4, header = FALSE, na.strings=c('-9999','NA','NaN','NAN',"-7999"))
+
+h2 = fread('C:/Users/dtrangmoe/Documents/Churchill/raw/Churchill_AllBiomet_until20240802.dat',skip=1 ,nrows = 0)
+dat2 = fread('C:/Users/dtrangmoe/Documents/Churchill/raw/Churchill_AllBiomet_until20240802.dat',skip=4, header = FALSE, na.strings=c('-9999','NA','NaN','NAN',"-7999"))
+
+h3 = fread('C:/Users/dtrangmoe/Documents/Churchill/raw/Churchill_AllBiomet.dat',skip=1 ,nrows = 0)
+dat3 = fread('C:/Users/dtrangmoe/Documents/Churchill/raw/Churchill_AllBiomet.dat',skip=4, header = FALSE, na.strings=c('-9999','NA','NaN','NAN',"-7999"))
 
 names(dat) = names(h)
 names(dat2) = names(h2)
@@ -53,12 +57,11 @@ met= dat
 met2 = dat2
 met3 = dat3
 
-df = rbind.fill(df,met,met2,met3)
+df = rbind.fill(met,met2,met3)
 
 df = df[!duplicated(df$TIMESTAMP),]
 
 
-write.csv(x = df,file = 'C:/Users/dtrangmoe/Documents/Churchill/Churchill_met_merged.csv',row.names = F,quote = F)
 
 #check time stamps to ensure we have a complete series
 TIMESTAMP = seq(from = min(df$TIMESTAMP), to = max(df$TIMESTAMP),by = 60*30,tz = "UTC")
@@ -71,17 +74,25 @@ df = merge(tsdf,df,by = "TIMESTAMP",all = T)
 df[df == -9999] = NA
 df[df == -7999] = NA
 summary(df)
+
+
+# write.csv(x = df,file = 'C:/Users/dtrangmoe/Documents/Churchill/Churchill_met_merged2024.csv',row.names = F,quote = F)
+
+## for loading in merged file
+df <- fread('C:/Users/dtrangmoe/Documents/Churchill/Churchill_met_merged2024.csv')
+
+df <- subset(df, df$TIMESTAMP > as.POSIXct('2023-01-01'))
 ```
 
 
 Creates a variable to input a date range for the plots in the biomet section of
 cleaning code. Used to easily change date range for different data sets. 
 ```{r, warning=FALSE}
-biomet_dates <- c('2022-08-05', '2024-02-28')
+biomet_dates <- c('2024-01-01', '2024-09-15')
 ```
 
 
-# Air T
+# Air T - X
 ```{r, warning=FALSE}
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,TA_2_1_1_1_1),col='black')+
@@ -89,157 +100,42 @@ ggplot(data = df)+
                      expression('Air Temperature ('*Celsius*')'))+
   scale_x_datetime(limits = as.POSIXct(biomet_dates))
 
-#First we need to just convert from Kelvin to degrees C
-df$TA_2_1_1_1_1 = ifelse(df$TA_2_1_1_1_1 > 200,df$TA_2_1_1_1_1 - 273.15,df$TA_2_1_1_1_1)
-
-ggplot(data = df)+
-  geom_point(aes(TIMESTAMP,TA_2_1_1_1_1),col='black')+
-  scale_y_continuous(limits = c(-40,40),
-                      expression('Air Temperature ('*Celsius*')'))
 ```
 
 
-## Limits
-```{r, warning=FALSE}
-hist(df$TA_2_1_1_1_1,breaks=100)
-plot(df$TIMESTAMP,df$TA_2_1_1_1_1,ylim = c(-50,50));abline(h=-50, col= 'red');abline(h=50, col='red')
-TA_2_1_1_1_1.limits = replace(df$TA_2_1_1_1_1, df$TA_2_1_1_1_1 < -50 | df$TA_2_1_1_1_1 > 50,NA)
-hist(TA_2_1_1_1_1.limits,breaks=100)
-plot(TA_2_1_1_1_1.limits)
-```
 
-
-#Relative Humidity
+#Relative Humidity - X
 
 ```{r,warning=FALSE}
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,RH_19_3_1_1_1),col='black')+
   scale_y_continuous(#limits = c(20,100),
-                     expression('Relative Humidity ('*percent*')'))
-#  scale_x_datetime(limits = as.POSIXct(biomet_dates))
-```
-
-
-## Limits
-```{r,warning=FALSE}
-RH_19_3_1_1_1.limits = df$RH_19_3_1_1_1
-
-RH_19_3_1_1_1.limits = ifelse(df$RH_19_3_1_1_1 > 0 & df$TIMESTAMP <= '2022-9-23',NA, RH_19_3_1_1_1.limits)
-
-df$RH_19_3_1_1_1.c = RH_19_3_1_1_1.limits
-
-ggplot(data = df)+
-  geom_point(aes(TIMESTAMP,RH_19_3_1_1_1.c),col='black')+
-  scale_y_continuous(limits = c(5,100),
                      expression('Relative Humidity ('*percent*')'))+
   scale_x_datetime(limits = as.POSIXct(biomet_dates))
 ```
 
-# Barometric Pressure 
+
+# Barometric Pressure - X
 
 ```{r,warning=FALSE}
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,PA_4_2_1_1_1),col='black')+
   scale_y_continuous(#limits = c(90000,110000),
-                     expression ('Barometric Pressure ('*kPa*')'))
-#  scale_x_datetime(limits = as.POSIXct(biomet_dates))
+                     expression ('Barometric Pressure ('*kPa*')'))+
+  scale_x_datetime(limits = as.POSIXct(biomet_dates))
 
-df$PA_4_2_1_1_1 = ifelse(df$PA_4_2_1_1_1 > 97000,df$PA_4_2_1_1_1/1000,df$PA_4_2_1_1_1)
-
-ggplot(data = df)+
-  geom_point(aes(TIMESTAMP,PA_4_2_1_1_1),col='black')+
-  scale_y_continuous(limits = c(0,200),
-                     expression ('Barometric Pressure ('*kPa*')'))
-
-
-df$PA_4_2_1_1_1 = ifelse(df$PA_4_2_1_1_1 > 150,df$PA_4_2_1_1_1/10,df$PA_4_2_1_1_1)
+df$PA_4_2_1_1_1 = ifelse(df$PA_4_2_1_1_1 < 50, NA ,df$PA_4_2_1_1_1)
 
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,PA_4_2_1_1_1),col='black')+
-  scale_y_continuous(limits = c(0,140),
-                     expression ('Barometric Pressure ('*kPa*')'))
+  scale_y_continuous(#limits = c(0,200),
+                     expression ('Barometric Pressure ('*kPa*')'))+
+  scale_x_datetime(limits = as.POSIXct(biomet_dates))
+
 ```
 
 
-```{r, warning=FALSE}
-hist(df$PA_4_2_1_1_1,breaks=100)
-
-ggplot(data = df)+
-  geom_point(aes(TIMESTAMP,PA_4_2_1_1_1),col='black')+
-  scale_y_continuous(limits = c(90,110),
-                     expression ('Barometric Pressure ('*kPa*')'))
-
-PA_4_2_1_1_1.limits = ifelse(df$PA_4_2_1_1_1 > 110 | df$PA_4_2_1_1_1 < 97,NA, df$PA_4_2_1_1_1)
-
-ggplot(data = df)+
-  geom_point(aes(TIMESTAMP,PA_4_2_1_1_1.limits),col='black')+
-  geom_hline(yintercept = 106,col = 'red')+
-  geom_hline(yintercept = 97,col = 'red')+
-  scale_y_continuous(limits = c(90,110),
-                     expression ('Barometric Pressure ('*kPa*')'))
-```
-## Rolling MAD
-```{r, warning=FALSE}
-f = PA_4_2_1_1_1.limits # first make a new flux vector to apply the above filters
-# prepare the inputs for a zero-phase (forward and reverse) filter  
-ind       = which(complete.cases(f))   # first save the index of all the NAs
-b         = rep(1,8)/8                 # moving average coefficient
-a         = 1                          # coefficient of the ARMA filter
-mad_i    = filtfilt(b, a, na.omit(f)) #create a forward and reverse ARMA filter
-mad_filt = f                          # make a copy of the full fluxes again
-mad_filt[ind] = mad_i                # apply the filter where the real data exist
-
-n = 7*48 # set the length of the rolling filter, 48 half hours in day * x days
-roll.mad = rollapply(data = mad_filt,
-                     width = n,
-                     FUN = mad,
-                     partial = TRUE,
-                     na.rm = T,
-                     fill = NA)  #create a rolling MAD or sd or other
-roll.mad[is.na(mad_filt)] = NA  #make NA values where NAs exist in the real data
-
-
-ggplot(df)+geom_hline(yintercept = 0)+
-  geom_point(aes(TIMESTAMP,PA_4_2_1_1_1.limits,col='Pressure'))+
-  geom_line(aes(TIMESTAMP,mad_filt,col='Filter'))+
-  geom_line(aes(TIMESTAMP,roll.mad,col='MAD'))+
-  scale_y_continuous(limits = c(0,110))+
-  scale_x_datetime(limits = as.POSIXct(biomet_dates,format="%F"))+
-  scale_color_manual(values=c('yellow','red','black'))
-```
-
-```{r, warning=FALSE}
-#adjust this value (N) to tweak how many MADs to be away from the norm
-N = 3 
-
-#Add clean value to dataframe (_.c)
-
-df$PA_4_2_1_1_1.c = ifelse(abs(PA_4_2_1_1_1.limits - mad_filt) > (N * roll.mad),NA,PA_4_2_1_1_1.limits)
-
-#Compare cleaned vs. uncleaned
-
-ggplot(df)+geom_hline(yintercept = 0)+
-  geom_point(aes(TIMESTAMP,PA_4_2_1_1_1,col='Uncleaned'))+
-  geom_point(aes(TIMESTAMP,PA_4_2_1_1_1.c,col='Cleaned'))+
-  scale_y_continuous(limits = c(90,110))+
-  scale_x_datetime(limits = as.POSIXct(biomet_dates,format="%F"))+
-  scale_color_manual(values=c('black','red'))
-```
-
-```{r, warning=FALSE}
-ggplot(data = df)+
-  geom_ribbon(aes(x = TIMESTAMP,ymax = mad_filt+roll.mad*6,ymin = mad_filt-roll.mad*6,fill='6'))+
-  geom_ribbon(aes(x = TIMESTAMP,ymax = mad_filt+roll.mad*3,ymin = mad_filt-roll.mad*3,fill='3'))+
-  geom_ribbon(aes(x = TIMESTAMP,ymax = mad_filt+roll.mad*2,ymin = mad_filt-roll.mad*2,fill='2'))+
-  geom_ribbon(aes(x = TIMESTAMP,ymax = mad_filt+roll.mad*1,ymin = mad_filt-roll.mad*1,fill='1'))+
-  geom_point(aes(TIMESTAMP,PA_4_2_1_1_1.limits),col='red')+
-  geom_point(aes(TIMESTAMP,PA_4_2_1_1_1.c),col='black')+
-  scale_y_continuous(limits = c(80,115))+
-scale_x_datetime(limits = as.POSIXct(biomet_dates,format="%F"))
-```
-
-
-#Soil Heat Flux
+#Soil Heat Flux - X
 ```{r, warning=FALSE}
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,SHF_6_37_1_1_1,col='SHF 1'))+
@@ -250,31 +146,11 @@ ggplot(data = df)+
   scale_x_datetime(limits = as.POSIXct(biomet_dates))
 ```
 
-## SHF1
-```{r, warning=FALSE}
-hist(df$SHF_6_37_1_1_1,breaks=100)
-plot(df$TIMESTAMP,df$SHF_6_37_1_1_1,ylim = c(-50,200));abline(h=-55, col= 'red');abline(h=190, col='red')
-SHF_6_37_1_1_1.limits = replace(df$SHF_6_37_1_1_1, df$SHF_6_37_1_1_1 < -55 | df$SHF_6_37_1_1_1 > 190,NA)
-hist(SHF_6_37_1_1_1.limits,breaks=100)
-plot(SHF_6_37_1_1_1.limits)
-df$SHF_6_37_1_1_1.c = SHF_6_37_1_1_1.limits
-```
-
-## SHF2
-```{r, warning=FALSE}
-hist(df$SHF_6_37_2_1_1,breaks=100)
-plot(df$TIMESTAMP,df$SHF_6_37_2_1_1,ylim = c(-80,165));abline(h=-75, col= 'red');abline(h=150, col='red')
-SHF_6_37_2_1_1.limits = replace(df$SHF_6_37_2_1_1, df$SHF_6_37_2_1_1 < -75 | df$SHF_6_37_2_1_1 > 150,NA)
-hist(SHF_6_37_2_1_1.limits,breaks=100)
-plot(SHF_6_37_2_1_1.limits)
-df$SHF_6_37_2_1_1.c = SHF_6_37_2_1_1.limits
-```
-
 # Snow Depth
 ```{r, warning=FALSE}
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,SD_10_99_1_1_1),col='black')+
-  scale_y_continuous(limits = c(-1.5,.75),
+  scale_y_continuous(#limits = c(-1.5,.75),
                      expression('Snow Depth ('*m*')'))+
   scale_x_datetime(limits = as.POSIXct(biomet_dates))
 ```
@@ -282,16 +158,18 @@ ggplot(data = df)+
 
 ```{r, warning=FALSE}
 hist(df$SD_10_99_1_1_1,breaks=100)
-plot(df$TIMESTAMP,df$SD_10_99_1_1_1,ylim = c(-1.5,1));abline(h=0, col= 'red');abline(h=.8, col='red')
+
+plot(df$TIMESTAMP,df$SD_10_99_1_1_1,ylim = c(-1.5,1));abline(h=0, col= 'red');abline(h=.7, col='red')
+
 SD_10_99_1_1_1.limits=df$SD_10_99_1_1_1
-SD_10_99_1_1_1.limits = ifelse(df$SD_10_99_1_1_1 < 1 & df$TIMESTAMP >= '2023-5-8' & df$TIMESTAMP <= '2023-10-28',NA,
-                               ifelse(df$SD_10_99_1_1_1 < 0 | df$SD_10_99_1_1_1 > .8,NA,df$SD_10_99_1_1_1))
+SD_10_99_1_1_1.limits = ifelse(df$SD_10_99_1_1_1 < 0 | df$SD_10_99_1_1_1 > .7,NA,df$SD_10_99_1_1_1)
                                
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,SD_10_99_1_1_1.limits),col='black')+
-  scale_y_continuous(limits = c(-.25,.75),
+  scale_y_continuous(#limits = c(-.25,.75),
                      expression('Snow Depth ('*m*')'))+
   scale_x_datetime(limits = as.POSIXct(biomet_dates))
+
 df$SD_10_99_1_1_1.c = SD_10_99_1_1_1.limits 
 ```
 
