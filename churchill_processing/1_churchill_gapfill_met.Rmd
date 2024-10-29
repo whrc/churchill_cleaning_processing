@@ -267,7 +267,11 @@ eras = all[,c('date','rh.eramod','airt.eramod','ws.eramod','rad.eramod','tsoil.e
 df = df[!duplicated(df$date),]
 df = merge(df,eras,by = 'date',all.x = T)
 
-write.csv(x = df,file = './churchill_2022_2023_era.csv',row.names = F,quote = F)
+#write.csv(x = df,file = './churchill_2022_2023_era.csv',row.names = F,quote = F)
+
+#calculate VPD from air t and RH
+svp = 610.7*10^((7.5*all$tair)/(237.3+all$tair))
+all$vpd = ((100 - all$rh)/100)*svp  
 ```
 
 
@@ -336,13 +340,13 @@ h = ggplot(data = all,aes(h,H.c))+theme_bw()+
   scale_x_continuous(expression('ERA5 H ('*W~m^-2*")"))+
   theme(text = element_text(size = 6))
 
-#'pres.eramod'
-pres = ggplot(data = all,aes(pres,PA_4_2_1_1_1.c))+theme_bw()+
+#VPD
+vpd = ggplot(data = all,aes(vpd,VPD))+theme_bw()+
 #  geom_hline(yintercept = 0)+geom_vline(xintercept = 0)+
   geom_point(alpha=0.5)+
   geom_abline(slope = 1,intercept = 0,col='red',lty=2)+
-  scale_y_continuous(expression('Site Atmopsheric Pressure (kPa)'))+
-  scale_x_continuous(expression('ERA5 Atmopsheric Pressure (kPa)'))+
+  scale_y_continuous(expression('Site VPD ('*W~m^-2*")"))+
+  scale_x_continuous(expression('ERA5 VPD ('*W~m^-2*")"))+
   theme(text = element_text(size = 6))
 
 #swc
@@ -357,7 +361,7 @@ swc = ggplot(data = all,aes(vwc1*100,SWC_12_36_2_1_1))+theme_bw()+
 
 ```{r}
 png(filename = 'C:/Users/karndt.WHRC/Desktop/sites/churchill/figures/era5_churchill_comparisons.png',width = 6,height = 4,units = 'in',res = 1500)
-plot_grid(airt,rh,ws,rad,tsoil,le,h,pres,swc)
+plot_grid(airt,rh,ws,rad,tsoil,le,h,vpd,swc)
 dev.off()
 ```
 
