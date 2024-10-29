@@ -72,57 +72,7 @@ write.csv(df,'C:/Users/dtrangmoe/Documents/Churchill/Churchill_fluxes_merged_202
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+##Plots
 
 
 co2 = ggplot(data = df)+theme_bw()+geom_abline(slope = 0,intercept = 0)+
