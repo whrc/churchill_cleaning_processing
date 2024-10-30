@@ -1,0 +1,554 @@
+---
+title: "Churchill Cleaning"
+output: pdf_document
+date: "2022-12-08"
+---
+
+# To Do
+
+
+Make sure all of the timestamps are loaded
+Look at roll apply command
+
+# Loading DF's
+
+Clear Console and add packages
+
+
+# Load 
+
+```{r, warning=FALSE}
+rm(list = ls())
+Sys.setenv(TZ = "UTC")
+
+library(data.table)
+library(ggplot2)
+library(cowplot)
+library(openair)
+library(plotrix)
+library(signal)
+library(svMisc)
+library(zoo)
+library(stringr)
+library(plyr)
+library(dplyr)
+```
+
+
+
+```{r, warning=FALSE}
+
+# df = fread('C:/Users/dtrangmoe/Documents/Churchill/raw/Churchill_AllBiomet.dat',na.strings = c('-9999','NA','NaN','NAN','-7999'))
+# 
+# h = fread('C:/Users/dtrangmoe/Documents/Churchill/raw/Churchill_AllBiomet_until20240622.dat',skip=1 ,nrows = 0)
+# dat = fread('C:/Users/dtrangmoe/Documents/Churchill/raw/Churchill_AllBiomet_until20240622.dat',skip=4, header = FALSE, na.strings=c('-9999','NA','NaN','NAN',"-7999"))
+# 
+# h2 = fread('C:/Users/dtrangmoe/Documents/Churchill/raw/Churchill_AllBiomet_until20240802.dat',skip=1 ,nrows = 0)
+# dat2 = fread('C:/Users/dtrangmoe/Documents/Churchill/raw/Churchill_AllBiomet_until20240802.dat',skip=4, header = FALSE, na.strings=c('-9999','NA','NaN','NAN',"-7999"))
+# 
+# h3 = fread('C:/Users/dtrangmoe/Documents/Churchill/raw/Churchill_AllBiomet.dat',skip=1 ,nrows = 0)
+# dat3 = fread('C:/Users/dtrangmoe/Documents/Churchill/raw/Churchill_AllBiomet.dat',skip=4, header = FALSE, na.strings=c('-9999','NA','NaN','NAN',"-7999"))
+# 
+# names(dat) = names(h)
+# names(dat2) = names(h2)
+# names(dat3) = names(h3)
+# 
+# met= dat
+# met2 = dat2
+# met3 = dat3
+# 
+# df = rbind.fill(met,met2,met3)
+# 
+# df = df[!duplicated(df$TIMESTAMP),]
+# 
+# 
+# 
+# #check time stamps to ensure we have a complete series
+# TIMESTAMP = seq(from = min(df$TIMESTAMP), to = max(df$TIMESTAMP),by = 60*30,tz = "UTC")
+# tsdf = as.data.frame(TIMESTAMP)
+# 
+# df = merge(tsdf,df,by = "TIMESTAMP",all = T)
+# 
+# 
+# #na.strings not working for numbers for some reason, remove all here
+# df[df == -9999] = NA
+# df[df == -7999] = NA
+# summary(df)
+
+
+# write.csv(x = df,file = 'C:/Users/dtrangmoe/Documents/Churchill/Churchill_met_merged2024.csv',row.names = F,quote = F)
+
+## for loading in merged file
+df <- fread('C:/Users/dtrangmoe/Documents/Churchill/Churchill_met_merged2024.csv')
+
+df <- subset(df, df$TIMESTAMP > as.POSIXct('2024-01-01'))
+```
+
+
+Creates a variable to input a date range for the plots in the biomet section of
+cleaning code. Used to easily change date range for different data sets. 
+```{r, warning=FALSE}
+biomet_dates <- c('2024-01-01', '2024-09-15')
+```
+
+
+# Air T 
+```{r, warning=FALSE}
+ggplot(data = df)+
+  geom_point(aes(TIMESTAMP,TA_2_1_1_1_1),col='black')+
+  scale_y_continuous(#limits = c(-40,40),
+                     expression('Air Temperature ('*Celsius*')'))+
+  scale_x_datetime(limits = as.POSIXct(biomet_dates))
+
+```
+
+
+
+#Relative Humidity 
+
+```{r,warning=FALSE}
+ggplot(data = df)+
+  geom_point(aes(TIMESTAMP,RH_19_3_1_1_1),col='black')+
+  scale_y_continuous(#limits = c(20,100),
+                     expression('Relative Humidity ('*percent*')'))+
+  scale_x_datetime(limits = as.POSIXct(biomet_dates))
+```
+
+
+# Barometric Pressure 
+
+```{r,warning=FALSE}
+ggplot(data = df)+
+  geom_point(aes(TIMESTAMP,PA_4_2_1_1_1),col='black')+
+  scale_y_continuous(#limits = c(90000,110000),
+                     expression ('Barometric Pressure ('*kPa*')'))+
+  scale_x_datetime(limits = as.POSIXct(biomet_dates))
+
+df$PA_4_2_1_1_1 = ifelse(df$PA_4_2_1_1_1 < 50, NA ,df$PA_4_2_1_1_1)
+
+ggplot(data = df)+
+  geom_point(aes(TIMESTAMP,PA_4_2_1_1_1),col='black')+
+  scale_y_continuous(#limits = c(0,200),
+                     expression ('Barometric Pressure ('*kPa*')'))+
+  scale_x_datetime(limits = as.POSIXct(biomet_dates))
+
+```
+
+
+#Soil Heat Flux 
+```{r, warning=FALSE}
+ggplot(data = df)+
+  geom_point(aes(TIMESTAMP,SHF_6_37_1_1_1,col='SHF 1'))+
+  geom_point(aes(TIMESTAMP,SHF_6_37_2_1_1,col='SHF 2'))+
+  scale_y_continuous(limits = c(-80,190),
+                     expression ('Soil Heat Flux ('*W/m^2*')'))+
+  scale_color_manual(values = c('red','black'))+
+  scale_x_datetime(limits = as.POSIXct(biomet_dates))
+```
+
+# Snow Depth 
+```{r, warning=FALSE}
+
+ggplot(data = df)+
+  geom_point(aes(TIMESTAMP,SD_10_99_1_1_1),col='black')+
+  scale_y_continuous(#limits = c(-1.5,.75),
+                     expression('Snow Depth ('*m*')'))+
+  scale_x_datetime(limits = as.POSIXct(biomet_dates))
+
+```
+
+
+```{r, warning=FALSE}
+hist(df$SD_10_99_1_1_1,breaks=100)
+
+ggplot(data = df)+
+  geom_point(aes(TIMESTAMP,SD_10_99_1_1_1),col='black')+
+  scale_y_continuous(#limits = c(-1.5,.75),
+                     expression('Snow Depth ('*m*')'))+
+  geom_hline(yintercept = 0, color = "red")+
+  geom_hline(yintercept = 0.65, color = "red")+
+  geom_vline(xintercept = as.POSIXct("2024-05-10"), color = "red")
+
+SD_10_99_1_1_1.limits=df$SD_10_99_1_1_1
+SD_10_99_1_1_1.limits = ifelse(df$SD_10_99_1_1_1 < 0 | df$SD_10_99_1_1_1 > .65,NA,df$SD_10_99_1_1_1)
+SD_10_99_1_1_1.limits = ifelse(df$SD_10_99_1_1_1 > 0.2 & df$TIMESTAMP > as.POSIXct('2024-05-10'),NA,SD_10_99_1_1_1.limits)
+                               
+ggplot(data = df)+
+  geom_point(aes(TIMESTAMP,SD_10_99_1_1_1.limits),col='black')+
+  scale_y_continuous(#limits = c(-.25,.75),
+                     expression('Snow Depth ('*m*')'))+
+  scale_x_datetime(limits = as.POSIXct(biomet_dates))
+
+df$SD_10_99_1_1_1.c = SD_10_99_1_1_1.limits 
+```
+
+## Rolling MAD
+```{r, warning=FALSE}
+f = SD_10_99_1_1_1.limits # first make a new flux vector to apply the above filters
+# prepare the inputs for a zero-phase (forward and reverse) filter  
+ind       = which(complete.cases(f))   # first save the index of all the NAs
+b         = rep(1,8)/8                 # moving average coefficient
+a         = 1                          # coefficient of the ARMA filter
+mad_i    = filtfilt(b, a, na.omit(f)) #create a forward and reverse ARMA filter
+mad_filt = f                          # make a copy of the full fluxes again
+mad_filt[ind] = mad_i                # apply the filter where the real data exist
+
+n = 7*48 # set the length of the rolling filter, 48 half hours in day * x days
+roll.mad = rollapply(data = mad_filt,
+                     width = n,
+                     FUN = mad,
+                     partial = TRUE,
+                     na.rm = T,
+                     fill = NA)  #create a rolling MAD or sd or other
+roll.mad[is.na(mad_filt)] = NA  #make NA values where NAs exist in the real data
+
+```
+
+```{r, warning=FALSE}
+
+ggplot(df)+geom_hline(yintercept = 0)+
+  geom_point(aes(TIMESTAMP,SD_10_99_1_1_1.limits,col='Snow Depth'))+
+  geom_line(aes(TIMESTAMP,mad_filt,col='Filter'))+
+  geom_line(aes(TIMESTAMP,roll.mad,col='MAD'))+
+  scale_y_continuous(limits = c(-.1,.8))+
+  scale_x_datetime(limits = as.POSIXct(biomet_dates,format="%F"))+
+  scale_color_manual(values=c('yellow','red','black'))
+
+```
+
+```{r, warning=FALSE}
+#adjust this value (N) to tweak how many MADs to be away from the norm
+N = 2
+
+#Add clean value to dataframe (_.c)
+
+df$SD_10_99_1_1_1.c = ifelse(abs(SD_10_99_1_1_1.limits - mad_filt) > (N * roll.mad),NA,SD_10_99_1_1_1.limits)
+
+#Compare cleaned vs. uncleaned
+
+ggplot(df)+geom_hline(yintercept = 0)+
+  geom_point(aes(TIMESTAMP,SD_10_99_1_1_1,col='Uncleaned'))+
+  geom_point(aes(TIMESTAMP,SD_10_99_1_1_1.c,col='Cleaned'))+
+  scale_y_continuous(limits = c(-0.75,1))+
+  scale_x_datetime(limits = as.POSIXct(biomet_dates,format="%F"))+
+  scale_color_manual(values=c('black','red'))
+```
+
+
+```{r, warning=FALSE}
+ggplot(data = df)+
+  geom_ribbon(aes(x = TIMESTAMP,ymax = mad_filt+roll.mad*6,ymin = mad_filt-roll.mad*6,fill='6'))+
+  geom_ribbon(aes(x = TIMESTAMP,ymax = mad_filt+roll.mad*3,ymin = mad_filt-roll.mad*3,fill='3'))+
+  geom_ribbon(aes(x = TIMESTAMP,ymax = mad_filt+roll.mad*2,ymin = mad_filt-roll.mad*2,fill='2'))+
+  geom_ribbon(aes(x = TIMESTAMP,ymax = mad_filt+roll.mad*1,ymin = mad_filt-roll.mad*1,fill='1'))+
+  geom_point(aes(TIMESTAMP,SD_10_99_1_1_1.limits),col='red')+
+  geom_point(aes(TIMESTAMP,SD_10_99_1_1_1.c),col='black')+
+  scale_y_continuous(limits = c(-.25,.5))+
+scale_x_datetime(limits = as.POSIXct(c('2024-1-1','2024-2-26'),format="%F"))
+
+```
+
+
+# PAR 
+```{r, warning=FALSE}
+ggplot(data = df)+
+  geom_point(aes(TIMESTAMP,PPFD_7_21_1_1_1),col='black')+
+  scale_y_continuous(limits = c(-25,2000),
+                     expression('PAR ('*mu*mol/m^2/s*')'))
+```
+
+```{r, warning=FALSE}
+summary(df$PPFD_7_21_1_1_1)
+# hist(df$PPFD_7_21_1_1_1,breaks=100)
+# plot(df$TIMESTAMP,df$PPFD_7_21_1_1_1,ylim = c(0,1850));abline(h=1750, col= 'red');abline(h=0, col='red')
+# PPFD_7_21_1_1_1.limits = replace(df$PPFD_7_21_1_1_1, df$PPFD_7_21_1_1_1 < 0 | df$PPFD_7_21_1_1_1 > 1750,NA)
+# hist(PPFD_7_21_1_1_1.limits,breaks=100)
+# plot(PPFD_7_21_1_1_1.limits)
+
+df$PPFD_7_21_1_1_1.c <- df$PPFD_7_21_1_1_1
+```
+
+
+# PAR Reflected 
+
+```{r, warning=FALSE}
+ggplot(data = df)+
+  geom_point(aes(TIMESTAMP,PPFDR_7_23_1_1_1),col='black')+
+  scale_y_continuous(limits = c(-25,1600),
+                     expression('PAR Reflected ('*mu*mol/m^2/s*')'))
+```
+
+```{r, warning=FALSE}
+# summary(df$PPFDR_7_23_1_1_1)
+# hist(df$PPFDR_7_23_1_1_1,breaks=100)
+# plot(df$TIMESTAMP,df$PPFDR_7_23_1_1_1,ylim = c(0,5850));abline(h=1400, col= 'red');abline(h=-1, col='red')
+# PPFDR_7_23_1_1_1.limits=df$PPFDR_7_23_1_1_1
+# PPFDR_7_23_1_1_1.limits = ifelse(df$PPFDR_7_23_1_1_1 < -1 | df$PPFDR_7_23_1_1_1 > 600 & df$TIMESTAMP <= '2022-10-31',NA,df$PPFDR_7_23_1_1_1)
+# hist(PPFDR_7_23_1_1_1.limits,breaks=100)
+# plot(PPFDR_7_23_1_1_1.limits)
+
+df$PPFDR_7_23_1_1_1.c <- df$PPFDR_7_23_1_1_1
+```
+
+
+# Net Radiation 
+```{r, warning=FALSE}
+ggplot(data = df)+
+  geom_point(aes(TIMESTAMP, RN_6_5_1_1_1),col='black')+
+  scale_y_continuous(#limits = c(-125,850),
+                     expression('Net Radiation ('*W/m^2*')'))
+```
+
+```{r, warning=FALSE}
+# hist(df$RN_6_5_1_1_1,breaks=100)
+# plot(df$TIMESTAMP,df$RN_6_5_1_1_1,ylim = c(-400,850));abline(h=835,col= 'red');abline(h=-300, col='red')
+# RN_6_5_1_1_1.limits = replace(df$RN_6_5_1_1_1, df$RN_6_5_1_1_1 < -300 | df$RN_6_5_1_1_1 > 835,NA)
+# hist(RN_6_5_1_1_1.limits,breaks=100)
+# plot(df$TIMESTAMP,RN_6_5_1_1_1.limits)
+
+RN_6_5_1_1_1.limits <- df$RN_6_5_1_1_1
+df$RN_6_5_1_1_1.c <- df$RN_6_5_1_1_1
+```
+
+# Shortwave in 
+
+```{r, warning=FALSE}
+ggplot(data = df)+
+  geom_point(aes(TIMESTAMP,SWIN_6_10_1_1_1))+
+  scale_y_continuous(#limits = c(-10,1000),
+                     expression('Shortwave In ('*W/m^2*')'))
+```
+
+
+```{r, warning=FALSE}
+
+# hist(df$SWIN_6_10_1_1_1,breaks=100)
+# plot(df$TIMESTAMP,df$SWIN_6_10_1_1_1,ylim = c(0,1000));abline(h=900,col= 'red');abline(h=-1, col='red')
+# SWIN_6_10_1_1_1.limits <- df$SWIN_6_10_1_1_1
+# SWIN_6_10_1_1_1.limits[df$SWIN_6_10_1_1_1 < 0] <- 0
+# hist(SWIN_6_10_1_1_1.limits,breaks=100)
+# plot(df$TIMESTAMP,SWIN_6_10_1_1_1.limits)
+
+summary(df$SWIN_6_10_1_1_1)
+
+SWIN_6_10_1_1_1.limits <- df$SWIN_6_10_1_1_1
+
+SWIN_6_10_1_1_1.limits[df$SWIN_6_10_1_1_1 < 0] <- 0
+
+df$SWIN_6_10_1_1_1.c <- SWIN_6_10_1_1_1.limits
+
+
+```
+
+
+# Shortwave out 
+```{r, warning=FALSE}
+ggplot(data = df)+
+  geom_point(aes(TIMESTAMP,SWOUT_6_11_1_1_1))+
+  scale_y_continuous(limits = c(-10,750),
+                     expression('Shortwave Out ('*W/m^2*')'))+
+  scale_x_datetime(limits = as.POSIXct(biomet_dates))
+```
+
+```{r, warning=FALSE}
+# hist(df$SWOUT_6_11_1_1_1,breaks=100)
+# plot(df$TIMESTAMP,df$SWOUT_6_11_1_1_1,ylim = c(0,800));abline(h=700,col= 'red');abline(h=-1, col='red')
+
+SWOUT_6_11_1_1_1.limits <- df$SWOUT_6_11_1_1_1
+SWOUT_6_11_1_1_1.limits[df$SWOUT_6_11_1_1_1 < 0] <- 0
+
+df$SWOUT_6_11_1_1_1.c <- SWOUT_6_11_1_1_1.limits
+```
+
+
+# Albedo 
+```{r, warning=FALSE}
+albedo = df$SWOUT_6_11_1_1_1.c / df$SWIN_6_10_1_1_1.c
+
+ggplot(data = df)+
+  geom_point(aes(TIMESTAMP,albedo))+
+  scale_y_continuous(limits = c(-1,2),
+                     expression('Albedo'))+
+  scale_x_datetime(limits = as.POSIXct(biomet_dates))
+
+albedo.limits = replace(albedo, albedo < .05 | albedo > 1,NA)
+
+
+ggplot(data = df)+
+  geom_point(aes(TIMESTAMP,albedo.limits))+
+  scale_y_continuous(limits = c(-.5,1.5),
+                     expression('Albedo'))+
+  scale_x_datetime(limits = as.POSIXct(biomet_dates))
+
+
+```
+
+```{r, warning=FALSE}
+f = albedo.limits # first make a new flux vector to apply the above filters
+# prepare the inputs for a zero-phase (forward and reverse) filter  
+ind       = which(complete.cases(f))   # first save the index of all the NAs
+b         = rep(1,8)/8                 # moving average coefficient
+a         = 1                          # coefficient of the ARMA filter
+mad_i    = filtfilt(b, a, na.omit(f)) #create a forward and reverse ARMA filter
+mad_filt = f                          # make a copy of the full fluxes again
+mad_filt[ind] = mad_i                # apply the filter where the real data exist
+
+n = 7*48 # set the length of the rolling filter, 48 half hours in day * x days
+roll.mad = rollapply(data = mad_filt,
+                     width = n,
+                     FUN = mad,
+                     partial = TRUE,
+                     na.rm = T,
+                     fill = NA)  #create a rolling MAD or sd or other
+roll.mad[is.na(mad_filt)] = NA  #make NA values where NAs exist in the real data
+
+ggplot(df)+geom_hline(yintercept = 0)+
+  geom_point(aes(TIMESTAMP,albedo.limits,col='Albedo'))+
+  geom_line(aes(TIMESTAMP,mad_filt,col='Filter'))+
+  geom_line(aes(TIMESTAMP,roll.mad,col='MAD'))+
+  scale_y_continuous(limits = c(0,1))+
+  scale_x_datetime(limits = as.POSIXct(biomet_dates,format="%F"))+
+  scale_color_manual(values=c('black','yellow','red'))
+```
+
+
+```{r, warning=FALSE}
+#adjust this value (N) to tweak how many MADs to be away from the norm
+N = 2
+
+#Add clean value to dataframe (_.c)
+
+df$ALB_1_1_1.c = ifelse(abs(albedo.limits - mad_filt) > (N * roll.mad),NA,albedo.limits)
+
+#Compare cleaned vs. uncleaned
+
+
+ggplot(df)+geom_hline(yintercept = 0)+
+  geom_point(aes(TIMESTAMP,albedo.limits,col='Uncleaned'))+
+  geom_point(aes(TIMESTAMP,df$ALB_1_1_1.c,col='Cleaned'))+
+  scale_y_continuous(limits = c(0,1))+
+  scale_color_manual(values=c('black','red'))
+
+
+```
+
+# Longwave In 
+```{r, warning=FALSE}
+ggplot(data = df)+
+  geom_point(aes(TIMESTAMP,LWIN_6_14_1_1_1))+
+  scale_y_continuous(limits = c(50,750),
+                     expression('Longwave In ('*W/m^2*')'))+
+  scale_x_datetime(limits = as.POSIXct(biomet_dates))
+
+```
+
+```{r, warning=FALSE}
+hist(df$LWIN_6_14_1_1_1,breaks=100)
+
+
+df$LWIN_6_14_1_1_1.c = df$LWIN_6_14_1_1_1
+```
+
+
+# Longwave out 
+```{r, warning=FALSE}
+ggplot(data = df)+
+  geom_point(aes(TIMESTAMP,LWOUT_6_15_1_1_1))+
+  scale_y_continuous(#limits = c(150,750),
+                     expression('Longwave Out ('*W/m^2*')'))+
+  scale_x_datetime(limits = as.POSIXct(biomet_dates))
+```
+
+```{r, warning=FALSE}
+
+hist(df$LWOUT_6_15_1_1_1,breaks=100)
+
+
+df$LWOUT_6_15_1_1_1.c = df$LWOUT_6_15_1_1_1
+```
+
+# Soil Temps
+
+#All Hummock Therms
+```{r}
+ggplot(data = df)+ theme_bw()+
+  geom_hline(yintercept = 0)+
+  geom_line(aes(TIMESTAMP,TS_2_38_4_1_1,color='Surface'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_4_2_1,color='5 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_4_3_1,color='10 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_4_4_1,color='20 cm'))+  
+  geom_line(aes(TIMESTAMP,TS_2_38_4_5_1,color='30 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_4_6_1,color='40 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_4_7_1,color='50 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_4_8_1,color='60 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_4_9_1,color='70 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_4_10_1,color='80 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_4_11_1,color='90 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_4_12_1,color='1 m')) 
+```
+  
+
+# All Open Water therms
+```{r, warning=FALSE}
+ggplot(data = df)+ theme_bw()+
+  geom_hline(yintercept = 0)+
+  geom_line(aes(TIMESTAMP,TS_2_38_3_1_1,color='Surface'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_3_2_1,color='5 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_3_3_1,color='10 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_3_4_1,color='20 cm'))+  
+  geom_line(aes(TIMESTAMP,TS_2_38_3_5_1,color='30 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_3_6_1,color='40 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_3_7_1,color='50 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_3_8_1,color='60 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_3_9_1,color='70 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_3_10_1,color='80 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_3_11_1,color='90 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_3_12_1,color='1 m')) 
+```
+
+# Hummocks clean
+
+```{r, warning=FALSE}
+
+df$TS_2_38_4_1_1.c <- df$TS_2_38_4_1_1
+df$TS_2_38_4_2_1.c <- df$TS_2_38_4_2_1
+df$TS_2_38_4_3_1.c <- df$TS_2_38_4_3_1
+df$TS_2_38_4_4_1.c <- df$TS_2_38_4_4_1
+df$TS_2_38_4_5_1.c <- df$TS_2_38_4_5_1
+df$TS_2_38_4_6_1.c <- df$TS_2_38_4_6_1
+df$TS_2_38_4_7_1.c <- df$TS_2_38_4_7_1
+df$TS_2_38_4_8_1.c <- df$TS_2_38_4_8_1
+df$TS_2_38_4_9_1.c <- df$TS_2_38_4_9_1
+df$TS_2_38_4_10_1.c <- df$TS_2_38_4_10_1
+df$TS_2_38_4_11_1.c <- df$TS_2_38_4_11_1
+df$TS_2_38_4_12_1.c <- df$TS_2_38_4_12_1
+
+```
+
+# Open Water clean
+
+```{r, warning=FALSE}
+
+df$TS_2_38_3_1_1.c <- df$TS_2_38_3_1_1
+df$TS_2_38_3_2_1.c <- df$TS_2_38_3_2_1
+df$TS_2_38_3_3_1.c <- df$TS_2_38_3_3_1
+df$TS_2_38_3_4_1.c <- df$TS_2_38_3_4_1
+df$TS_2_38_3_5_1.c <- df$TS_2_38_3_5_1
+df$TS_2_38_3_6_1.c <- df$TS_2_38_3_6_1
+df$TS_2_38_3_7_1.c <- df$TS_2_38_3_7_1
+df$TS_2_38_3_8_1.c <- df$TS_2_38_3_8_1
+df$TS_2_38_3_9_1.c <- df$TS_2_38_3_9_1
+df$TS_2_38_3_10_1.c <- df$TS_2_38_3_10_1
+df$TS_2_38_3_11_1.c <- df$TS_2_38_3_11_1
+df$TS_2_38_3_12_1.c <- df$TS_2_38_3_12_1
+
+```
+
+
+
+# Save
+
+```{r, warning=FALSE}
+# write.csv(x = df,file = 'C:/Users/dtrangmoe/Documents/Churchill/Churchill_met_clean_2024.csv',row.names = F,quote = F)
+```
+
