@@ -5,7 +5,7 @@ setwd('C:/Users/karndt.WHRC/Desktop/sites/churchill/ameriflux submission/')
 library(data.table)
 
 #Prep for Reddy for an initial gap filling
-dat = fread('./churchill_2022_2023_gf.csv')
+dat = fread('./churchill_2022_2024_gf.csv')
 
 #time variables #########################################################
 dat$ts = as.POSIXct(dat$ts)
