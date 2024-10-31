@@ -112,6 +112,8 @@ ggplot(data = df)+
   scale_y_continuous(#limits = c(20,100),
                      expression('Relative Humidity ('*percent*')'))+
   scale_x_datetime(limits = as.POSIXct(biomet_dates))
+
+df$RH_19_3_1_1_1.c <- df$RH_19_3_1_1_1
 ```
 
 
@@ -124,13 +126,15 @@ ggplot(data = df)+
                      expression ('Barometric Pressure ('*kPa*')'))+
   scale_x_datetime(limits = as.POSIXct(biomet_dates))
 
-df$PA_4_2_1_1_1 = ifelse(df$PA_4_2_1_1_1 < 50, NA ,df$PA_4_2_1_1_1)
+df$PA_4_2_1_1_1.c = ifelse(df$PA_4_2_1_1_1 < 50, NA ,df$PA_4_2_1_1_1)
 
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,PA_4_2_1_1_1),col='black')+
   scale_y_continuous(#limits = c(0,200),
                      expression ('Barometric Pressure ('*kPa*')'))+
   scale_x_datetime(limits = as.POSIXct(biomet_dates))
+
+
 
 ```
 
@@ -144,6 +148,9 @@ ggplot(data = df)+
                      expression ('Soil Heat Flux ('*W/m^2*')'))+
   scale_color_manual(values = c('red','black'))+
   scale_x_datetime(limits = as.POSIXct(biomet_dates))
+
+df$SHF_6_37_1_1_1.c <- df$SHF_6_37_1_1_1
+df$SHF_6_37_2_1_1.c <- df$SHF_6_37_2_1_1
 ```
 
 # Snow Depth 
@@ -549,6 +556,6 @@ df$TS_2_38_3_12_1.c <- df$TS_2_38_3_12_1
 # Save
 
 ```{r, warning=FALSE}
-# write.csv(x = df,file = 'C:/Users/dtrangmoe/Documents/Churchill/Churchill_met_clean_2024.csv',row.names = F,quote = F)
+write.csv(x = df,file = 'C:/Users/dtrangmoe/Documents/Churchill/Churchill_met_clean_2024.csv',row.names = F,quote = F)
 ```
 
