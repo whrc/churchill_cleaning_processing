@@ -1,7 +1,7 @@
 rm(list = ls())
 library(REddyProc)
 
-#help("REddyProc-package")
+help("REddyProc-package")
 
   #+++ Load data with one header and one unit row from (tab-delimited) text file
     EddyData.F <- fLoadTXTIntoDataframe('./reddy_cf3.txt')
