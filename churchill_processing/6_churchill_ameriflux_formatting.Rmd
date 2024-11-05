@@ -23,6 +23,11 @@ Sys.setenv(TZ = "UTC")
 Load Data
 ```{r}
 df = fread(input = "./data/cf3_gapfilled_clean_2022_2024.csv")
+
+# Subset out 2024 data (starts at end of other ameriflux file)
+
+df <- df[df$ts > as.POSIXct("2023-12-30 17:00", tz = "UTC"), ]
+
 ```
 
 Format the time stamps at start and end
@@ -345,12 +350,6 @@ CA_CF3 = data.frame(TIMESTAMP_START,TIMESTAMP_END,
 ,FC_SSITC_TEST,FCH4_SSITC_TEST,H_SSITC_TEST,LE_SSITC_TEST,TAU_SSITC_TEST)
 ```
 
-To save only 2024 data after using all data for gapfilling
-```{r}
-
-CA_CF3 <- CA_CF3[substr(CA_CF3$TIMESTAMP_START, 1, 4) == "2024", ]
-
-```
 
 Write off final csv with Ameriflux naming convention
 ```{r}
