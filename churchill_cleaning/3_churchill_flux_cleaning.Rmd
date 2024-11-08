@@ -5,9 +5,7 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
-
 # Flux Cleaning
-
 
 ```{r, warning=FALSE}
 rm(list = ls())
@@ -28,10 +26,9 @@ library(dplyr)
 Load in cleaned met data and flux data
 
 ```{r warning=FALSE}
-
-met = fread('C:/Users/dtrangmoe/Documents/Churchill/Churchill_met_clean_2024.csv')
-
-df = fread('C:/Users/dtrangmoe/Documents/Churchill/Churchill_fluxes_merged_2024_01_to_2024_10.csv')
+#met = fread('C:/Users/dtrangmoe/Documents/Churchill/Churchill_met_clean_2024.csv')
+#df = fread('C:/Users/dtrangmoe/Documents/Churchill/Churchill_fluxes_merged_2024_01_to_2024_10.csv')
+df = fread('C:/Users/karndt.WHRC/Desktop/sites/churchill/data/Churchill_fluxes_merged_2022_08_to_2024_10.csv')
 
 df$TIMESTAMP = df$ts
 
@@ -49,7 +46,7 @@ df = merge(tsdf,df,by = "TIMESTAMP",all = T)
 Creates a variable to input a date range for the plots in the flux section of
 cleaning code. Used to easily change date range for different data sets. 
 ```{r, warning=FALSE}
-flux_dates <- c('2024-01-01', '2024-09-15')
+flux_dates <- c('2022-08-01', '2024-09-15')
 ```
 
 # Initial Clean
@@ -59,12 +56,37 @@ flux_dates <- c('2024-01-01', '2024-09-15')
 filter by the eddypro flags and create new variable _.qc
 
 ```{r, warning=FALSE}
-Tau.qc      = replace(df$Tau,df$qc_Tau == 2,NA)
-co2_flux.qc = replace(df$co2_flux,df$qc_co2_flux == 2,NA)
-ch4_flux.qc = replace(df$ch4_flux,df$qc_ch4_flux == 2,NA)
-LE.qc       = replace(df$LE,df$qc_LE == 2,NA)
-H.qc        = replace(df$H,df$qc_H == 2,NA)
+Tau.qc      = ifelse(df$qc_Tau == 2,1,0)
+co2_flux.qc = ifelse(df$qc_co2_flux == 2,1,0)
+ch4_flux.qc = ifelse(df$qc_ch4_flux == 2,1,0)
+LE.qc       = ifelse(df$qc_LE == 2,1,0)
+H.qc        = ifelse(df$qc_H == 2,1,0)
 ```
+
+Clean some data based on instrument diagnostics
+```{r}
+signal.threshold.co2 = ifelse(df$co2_signal_strength_7200_mean >= 75 |
+                              df$co2_signal_strength_7500_mean >= 75,0,1)
+signal.threshold.h2o = ifelse(df$h2o_signal_strength_7200_mean >= 75,0,1)
+signal.threshold.ch4 = ifelse(df$rssi_77_mean >= 10,0,1)
+
+ggplot(data = df)+
+  geom_point(aes(ts,co2_flux,color=signal.threshold.co2))+
+  scale_y_continuous(limits = c(-20,20))
+
+ggplot(data = df)+
+  geom_point(aes(ts,ch4_flux,color=signal.threshold.ch4))+
+  scale_y_continuous(limits = c(-0.2,0.25))
+
+ggplot(data = df)+
+  geom_point(aes(ts,h2o_flux,color=signal.threshold.h2o))+
+  scale_y_continuous(limits = c(-5,10))
+
+ggplot(data = df)+
+  geom_point(aes(ts,LE,color=signal.threshold.h2o))+
+  scale_y_continuous(limits = c(-200,500))
+```
+
 
 ## Clear Outliers
 
@@ -83,107 +105,68 @@ Cut the crazy data and create new variable (Tau.limits)
 ```{r, warning=FALSE}
 
 Tau.limits = df$Tau
-Tau.limits = replace(df$Tau,df$Tau < -1 | df$Tau > .1,NA)
+Tau.limits = ifelse(df$Tau < -1 | df$Tau > .1,1,0)
 
 ggplot(data = df)+
-  geom_point(aes(x = TIMESTAMP, y = Tau, color = "red"))+
-  geom_point(aes(x = TIMESTAMP, y = Tau.limits, color = "black"))
+  geom_point(aes(x = TIMESTAMP, y = Tau, color = Tau.limits))
 
 ```
 
 ### NEE
 
-Plot NEE Histogram and what we might clean
+Plot NEE and what we might clean
 
 ```{r, warning=FALSE}
-hist(df$co2_flux,breaks=100)
-
 ggplot(data = df)+
-  geom_point(aes(x = TIMESTAMP, y = co2_flux, color = "red"))+
-  geom_point(aes(x = TIMESTAMP, y = co2_flux.qc, color = "black"))
+  geom_point(aes(x = TIMESTAMP, y = co2_flux))+
+  geom_hline(yintercept = c(-30,30))
 
-#for 2022
-plot(df$ts,df$co2_flux,ylim = c(-25,25));abline(h=10, col= 'red');abline(h=-14, col='red')
-
-# for 2023 and on
-plot(df$ts,df$co2_flux,ylim = c(-25,25));abline(h=15, col= 'red');abline(h=-10, col='red')
+co2_flux.limits = ifelse(df$co2_flux > 30 | df$co2_flux < -30,1,0)
 ```
 
-Clean based on graphs, create new variable (co2_flux.limits), and see cleaned product
-
-```{r, warning=FALSE}
-co2_flux.limits = replace(df$co2_flux,(df$co2_flux > 15 | df$co2_flux < -10) ,NA)
-
-
-plot(df$ts,co2_flux.limits,ylim = c(-25,25));abline(h=15, col= 'red');abline(h=-10, col='red')
-
-hist(co2_flux.limits,breaks=100)
-```
 
 ### CH4
 
-Plot CH4 Histogram and what we might clean
+Plot CH4 and what we might clean
 
 ```{r, warning=FALSE}
-hist(df$ch4_flux,breaks=100)
+ggplot(data = df)+
+  geom_point(aes(ts,ch4_flux))+
+  scale_y_continuous(limits = c(-1,1))+
+  geom_hline(yintercept = c(-0.5,1))
 
-plot(df$ts,df$ch4_flux);abline(h=-.15, col='red'); abline(h=0,col= 'black')
+ch4_flux.limits =ifelse(df$ch4_flux < -0.5 | df$ch4_flux > 1,1,0)
 ```
 
-Clean based on graphs, create new variable (ch4_flux.limits), and see cleaned product
-
-```{r, warning=FALSE}
-
-
-ch4_flux.limits = df$ch4_flux
-
-ch4_flux.limits =ifelse(df$ch4_flux < -.15, NA, ch4_flux.limits)
-                                        
-                                
-hist(ch4_flux.limits,breaks = 100)
-plot(ch4_flux.limits)
-
-ggplot(data = df)+geom_hline(yintercept = 0)+
-  geom_point(aes(x=ts,y=ch4_flux),col = 'red')+
-  geom_point(aes(x=ts,y=ch4_flux.limits),col = 'black')+
-  scale_y_continuous(limits = c(-.35,.4))
-```
 
 ### H
 
-Plot H Histogram and what we might clean
-
-```{r, warning=FALSE}
-hist(df$H,breaks=100)
-
-plot(df$ts,df$H);abline(h=-150, col= 'red');abline(h=360, col='red')
-```
+Plot H and what we might clean
 
 Clean based on graphs, create new variable (H.limits), and see cleaned product
 
 ```{r, warning=FALSE}
-H.limits = replace(df$H, df$H < -150 | df$H > 360,NA)
-hist(H.limits,breaks = 100)
-plot(H.limits)
+ggplot(data = df)+
+  geom_point(aes(ts,H))+
+  scale_y_continuous(limits = c(-200,500))+
+  geom_hline(yintercept = c(-200,400))
+
+H.limits =ifelse(df$H < -200 | df$H > 400,1,0)
 ```
 
 ### LE
 
 Plot LE Histogram and what we might clean
 
-
-```{r, warning=FALSE}
-hist(df$LE,breaks=100)
-
-plot(df$ts,df$LE);abline(h=-40, col= 'red');abline(h=390, col='red')
-```
-
 Clean based on graphs, create new variable (H.limits), and see cleaned product
 
 ```{r, warning=FALSE}
-LE.limits = replace(df$LE, df$LE < -40 | df$LE > 390,NA)
-hist(LE.limits)
-plot(LE.limits)
+ggplot(data = df)+
+  geom_point(aes(ts,LE))+
+  scale_y_continuous(limits = c(-200,500))+
+  geom_hline(yintercept = c(-100,500))
+
+LE.limits =ifelse(df$LE < -100 | df$LE > 500,1,0)
 ```
 
 ## USTAR
@@ -191,16 +174,21 @@ plot(LE.limits)
 use night-time only flux values and plot Ustar based on data drop off
 
 ```{r, warning=FALSE}
-df$nightCO2 = co2_flux.limits
+clean.co2 = ifelse(co2_flux.limits == 1 |
+                   co2_flux.qc == 2 |
+                   signal.threshold.co2 == 1,NA,df$co2_flux)
+
+df$nightCO2 = clean.co2
 df$nightCO2 = replace(df$nightCO2,df$SWIN_6_10_1_1_1 > 10,NA)
+1/10^9
 
 Uthreshold=0.065
 ggplot(data = df,aes(`u*`,nightCO2))+
   ylab(expression(paste("Flux (g-C", ~CO[2], ~"m",""^"-2","d",""^"-1",")")))+
   geom_point()+xlab("U*")+
   scale_x_continuous(limits = c(0,1))+
+  scale_y_continuous(limits = c(-10,10))+
   geom_vline(xintercept = Uthreshold,col='red')
-
 ```
 
 pick threshold and filter based on plots above, I liked .065
@@ -216,15 +204,23 @@ df$u_flag = ifelse(df$`u*` < Uthreshold,1,0)
 investigate the previous limits and combine all to create a new variable (clean), plot to see difference
 
 ```{r, warning=FALSE}
-co2fluxclean = ifelse(is.na(co2_flux.qc) | is.na(co2_flux.limits),NA,df$co2_flux)
+co2fluxclean = ifelse(co2_flux.qc == 2 | 
+                      co2_flux.limits == 1 | 
+                      signal.threshold.co2 == 1,NA,df$co2_flux)
 
-ch4fluxclean = ifelse(is.na(ch4_flux.qc) | is.na(ch4_flux.limits),NA,df$ch4_flux)
+ch4fluxclean = ifelse(ch4_flux.qc == 2 | 
+                      ch4_flux.limits == 1 |
+                      signal.threshold.ch4 == 1,NA,df$ch4_flux)
 
-Hclean = ifelse(is.na(H.qc) | is.na(H.limits),NA,df$H)
+Hclean = ifelse(H.qc == 2 | 
+                H.limits == 1,NA,df$H)
 
-LEclean = ifelse(is.na(LE.qc) | is.na(LE.limits),NA,df$LE)
+LEclean = ifelse(LE.qc == 2 | 
+                 LE.limits == 1 |
+                 signal.threshold.h2o == 1,NA,df$LE)
 
-Tauclean = ifelse(is.na(Tau.qc) | is.na(Tau.limits),NA,df$Tau)
+Tauclean = ifelse(Tau.qc == 2 | 
+                  Tau.limits == 1,NA,df$Tau)
 
 plot(df$ts,co2fluxclean)
 plot(df$ts,ch4fluxclean)
@@ -236,17 +232,6 @@ plot(df$ts,Tauclean)
 Add cleaned tau to dataframe (no MAD filter)
 ```{r, warning=FALSE}
 df$Tau.c = Tauclean
-```
-
-
-```{r}
-
-ggplot(data = df)+
-  geom_point(aes(x = ts, y = co2_flux))+
-  geom_line(aes(x = ts, y = TS_2_38_3_1_1.c))
-  
-
-
 ```
 
 
@@ -298,10 +283,10 @@ df$co2_flux.c = ifelse(abs(co2fluxclean - Flux_filt) > (N * roll.mad),NA,co2flux
 ggplot(data = df)+geom_hline(yintercept = 0)+
   geom_point(aes(TIMESTAMP,co2_flux),col='red')+
   geom_point(aes(TIMESTAMP,co2_flux.c),col='black')+
-  scale_y_continuous(limits=c(-12,8))+
+  scale_y_continuous(limits=c(-15,15))+
+#  scale_x_datetime(limits = as.POSIXct(c("2022-07-01","2022-09-15")))
   scale_x_datetime(limits = as.POSIXct(flux_dates,format="%F"))
 ```
-
 See data with multiple layers of the MAD filter to see if it should be changed
 
 ```{r, warning=FALSE}
@@ -312,8 +297,8 @@ ggplot(data = df)+
   geom_ribbon(aes(x = ts,ymax = Flux_filt+roll.mad*1,ymin = Flux_filt-roll.mad*1,fill='1'))+
   geom_point(aes(ts,co2fluxclean),col='red')+
   geom_point(aes(ts,co2_flux.c),col='black')+
-  scale_y_continuous(limits = c(-1,1))+
-scale_x_datetime(limits = as.POSIXct(c('2024-2-3','2024-3-15'),format="%F"))
+  scale_y_continuous(limits = c(-20,20))+
+scale_x_datetime(limits = as.POSIXct(c('2022-08-03','2022-08-30'),format="%F"))
 ```
 
 ## CH4
@@ -658,8 +643,4 @@ df <- df[!duplicated(df$TIMESTAMP), ]
 
 write.csv(x = df,file = 'C:/Users/dtrangmoe/Documents/Churchill/Churchill_Flux_Met_Clean_Ameriflux_2024.csv',row.names = F,quote = F)
 ```
-
-
-
-
 

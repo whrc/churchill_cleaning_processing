@@ -9,15 +9,19 @@ library(viridis)
 library(dplyr)
 library(lubridate)
 
+#set wd for kyle
+setwd('C:/Users/karndt.WHRC/Desktop/sites/churchill')
+
 #load in the full output flux data ##################
-fp = 'C:/Users/dtrangmoe/Documents/Churchill/EP_full_output/2024'
+#fp = 'C:/Users/dtrangmoe/Documents/Churchill/EP_full_output/2024'
+fp = './data/EP_full_output/'
 files = list.files(path = fp,pattern = '*full_output.+csv$',recursive = T,full.names = T)
+
 
 #load the headers and data into their own lists
 h   = lapply(files, fread,skip = 1,nrow = 0)
 dat = lapply(files, fread,skip = 3,header = F,na.strings=c('-9999'))
 
-ls()
 
 #assign the headers to the data
 for (i in 1:length(h)) {
@@ -34,23 +38,25 @@ for (i in 2:length(dat)) {
 df$ts = as.POSIXct(x = paste(df$date,df$time,sep = ' '),tz = 'UTC')
 df = df[!duplicated(df$ts),]
 
-
+plot(df$ts,df$co2_flux,ylim = c(-10,10))
 
 # ## Replace Nov/Dec data with merged ch4/co2 files (if applicable) 
 # df_nov=fread('C:/Users/dtrangmoe/Documents/Churchill/ChurchillFlux_Nov23_CO2_CH4_merged.csv')
 # df_dec=fread('C:/Users/dtrangmoe/Documents/Churchill/ChurchillFlux_Dec23_CO2_CH4_merged.csv')
 
 
-df_jan=fread('C:/Users/dtrangmoe/Documents/Churchill/EP_full_output/2024/ChurchillFlux_Jan24_merged.csv')
-df_feb=fread('C:/Users/dtrangmoe/Documents/Churchill/EP_full_output/2024/ChurchillFlux_Feb24_merged.csv')
+# df_jan=fread('C:/Users/dtrangmoe/Documents/Churchill/EP_full_output/2024/ChurchillFlux_Jan24_merged.csv')
+# df_feb=fread('C:/Users/dtrangmoe/Documents/Churchill/EP_full_output/2024/ChurchillFlux_Feb24_merged.csv')
+
+df_jan=fread('./data/EP_full_output/2024/ChurchillFlux_Jan24_merged.csv')
+df_feb=fread('./data/EP_full_output/2024/ChurchillFlux_Feb24_merged.csv')
+
 
 #Used to add in merged files 
 df_subset <- subset(df, df$ts > as.POSIXct('2024-03-01 0000'))
 
 # Combine df_subset, df_nov, and df_dec
 df <- bind_rows(df_jan, df_feb, df_subset)
-
-
 
 
 #take the min and max date rounding to the nearest full month
@@ -61,15 +67,14 @@ maxdate = ceiling_date(max(df$ts),unit = 'month')
 ts = seq(from = mindate,to = maxdate,by = 60*30)
 ts = as.data.frame(ts)
 
-
 #merge with the flux data frame to create NAs where data is missing
 df = merge(ts,df,by = 'ts',all.x = T)
 
 
 #save off flux data
-write.csv(df,'C:/Users/dtrangmoe/Documents/Churchill/Churchill_fluxes_merged_2024_01_to_2024_10.csv',row.names = F)
+#write.csv(df,'C:/Users/dtrangmoe/Documents/Churchill/Churchill_fluxes_merged_2024_01_to_2024_10.csv',row.names = F)
 
-
+write.csv(df,'./data/Churchill_fluxes_merged_2022_08_to_2024_10.csv',row.names = F)
 
 
 ##Plots
