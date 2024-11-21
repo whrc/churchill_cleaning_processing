@@ -39,7 +39,6 @@ TIMESTAMP = seq(from = min(df$TIMESTAMP), to = max(df$TIMESTAMP),by = 60*30,tz =
 tsdf = as.data.frame(TIMESTAMP)
 
 df = merge(tsdf,df,by = "TIMESTAMP",all = T)
-
 ```
 
 
