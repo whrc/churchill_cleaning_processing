@@ -9,12 +9,12 @@ library(viridis)
 library(dplyr)
 library(lubridate)
 
-#set wd for kyle
-setwd('C:/Users/karndt.WHRC/Desktop/sites/churchill')
+# #set wd
+# setwd('C:/Users/karndt.WHRC/Desktop/sites/churchill')
 
 #load in the full output flux data ##################
-#fp = 'C:/Users/dtrangmoe/Documents/Churchill/EP_full_output/2024'
-fp = './data/EP_full_output/'
+fp = 'C:/Users/dtrangmoe/Documents/Churchill/EP_full_output/2024/'
+#fp = './data/EP_full_output/'
 files = list.files(path = fp,pattern = '*full_output.+csv$',recursive = T,full.names = T)
 
 
@@ -40,22 +40,21 @@ df = df[!duplicated(df$ts),]
 
 plot(df$ts,df$co2_flux,ylim = c(-10,10))
 
-# ## Replace Nov/Dec data with merged ch4/co2 files (if applicable) 
+## Replace Nov/Dec data with merged ch4/co2 files (if applicable)
+## These files are saved on the buckets for download if needed
 # df_nov=fread('C:/Users/dtrangmoe/Documents/Churchill/ChurchillFlux_Nov23_CO2_CH4_merged.csv')
 # df_dec=fread('C:/Users/dtrangmoe/Documents/Churchill/ChurchillFlux_Dec23_CO2_CH4_merged.csv')
 
 
-# df_jan=fread('C:/Users/dtrangmoe/Documents/Churchill/EP_full_output/2024/ChurchillFlux_Jan24_merged.csv')
-# df_feb=fread('C:/Users/dtrangmoe/Documents/Churchill/EP_full_output/2024/ChurchillFlux_Feb24_merged.csv')
+df_jan=fread('C:/Users/dtrangmoe/Documents/Churchill/EP_full_output/2024/ChurchillFlux_Jan24_merged.csv')
+df_feb=fread('C:/Users/dtrangmoe/Documents/Churchill/EP_full_output/2024/ChurchillFlux_Feb24_merged.csv')
 
-df_jan=fread('./data/EP_full_output/2024/ChurchillFlux_Jan24_merged.csv')
-df_feb=fread('./data/EP_full_output/2024/ChurchillFlux_Feb24_merged.csv')
 
 
 #Used to add in merged files 
 df_subset <- subset(df, df$ts > as.POSIXct('2024-03-01 0000'))
 
-# Combine df_subset, df_nov, and df_dec
+# Combine df_subset and monthly data (set up for 2024)
 df <- bind_rows(df_jan, df_feb, df_subset)
 
 
@@ -72,9 +71,9 @@ df = merge(ts,df,by = 'ts',all.x = T)
 
 
 #save off flux data
-#write.csv(df,'C:/Users/dtrangmoe/Documents/Churchill/Churchill_fluxes_merged_2024_01_to_2024_10.csv',row.names = F)
 
-write.csv(df,'./data/Churchill_fluxes_merged_2022_08_to_2024_10.csv',row.names = F)
+write.csv(df,'C:/Users/dtrangmoe/Documents/Churchill/Churchill_fluxes_merged_2024.csv',row.names = F)
+
 
 
 ##Plots
@@ -86,15 +85,17 @@ co2 = ggplot(data = df)+theme_bw()+geom_abline(slope = 0,intercept = 0)+
                      expression('NEE (mg '*CO[2]*'-C '*m^-2*h^-1*')'))+
  # scale_x_datetime(limits = as.POSIXct(c('2022-10-28','2022-11-15')))+
   theme(plot.margin = margin(t = 1,r = 1,b = 0,l = 0))
+
+co2
   
 ch4 = ggplot(data = df)+theme_bw()+geom_abline(slope = 0,intercept = 0)+
-  geom_point(data=df[df$qc_ch4_flux<2,],aes(ts,ch4_flux*43.2,color=air_temperature-273.15))+
-  scale_y_continuous(limits = c(-1,2),
+  geom_point(data=df[df$qc_ch4_flux<2,],aes(ts,ch4_flux,color=air_temperature-273.15))+
+  scale_y_continuous(limits = c(-0.6,0.5),
                      expression(CH[4]~flux~'(mg '*CH[4]*'-C '*m^-2*h^-1*')'))+
  # scale_x_datetime(limits = as.POSIXct(c('2022-10-28','2022-11-15')))+
   theme(plot.margin = margin(t = 1,r = 1,b = 0,l = 7))
 
-
+ch4
 
 
 
