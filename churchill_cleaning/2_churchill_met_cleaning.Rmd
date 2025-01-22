@@ -41,7 +41,7 @@ Merge all_biomet files
 
 ```{r, warning=FALSE}
 
-
+# 
 # h = fread('C:/Users/dtrangmoe/Documents/Churchill/Data/Churchill_AllBiomet_until20240622.dat',skip=1 ,nrows = 0)
 # dat = fread('C:/Users/dtrangmoe/Documents/Churchill/Data/Churchill_AllBiomet_until20240622.dat',skip=4, header = FALSE, na.strings=c('-9999','NA','NaN','NAN',"-7999"))
 # 
@@ -77,12 +77,12 @@ Merge all_biomet files
 # df[df == -7999] = NA
 # summary(df)
 # 
-# #Isolate 2024 Data 
-# df <- subset(df, df$TIMESTAMP > as.POSIXct('2024-01-01'))
+# #Isolate 2024 Data
+# df <- subset(df, df$TIMESTAMP > as.POSIXct('2023-12-31 23:30'))
 # df <- subset(df, df$TIMESTAMP < as.POSIXct('2025-01-01 00:30'))
 # 
 # write.csv(x = df,file = 'C:/Users/dtrangmoe/Documents/Churchill/Data/Churchill_met_merged2024.csv',row.names = F,quote = F)
-# 
+
 
 
 ## for loading in merged file
