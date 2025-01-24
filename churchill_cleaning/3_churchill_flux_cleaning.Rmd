@@ -26,9 +26,9 @@ library(dplyr)
 Load in cleaned met data and flux data
 
 ```{r warning=FALSE}
-#met = fread('C:/Users/dtrangmoe/Documents/Churchill/Churchill_met_clean_2024.csv')
-#df = fread('C:/Users/dtrangmoe/Documents/Churchill/Churchill_fluxes_merged_2024_01_to_2024_10.csv')
-df = fread('C:/Users/karndt.WHRC/Desktop/sites/churchill/data/Churchill_fluxes_merged_2022_08_to_2024_10.csv')
+met = fread('C:/Users/dtrangmoe/Documents/Churchill/Churchill_met_clean_2024.csv')
+df = fread('C:/Users/dtrangmoe/Documents/Churchill/Churchill_fluxes_merged_2024.csv')
+# df = fread('C:/Users/karndt.WHRC/Desktop/sites/churchill/data/Churchill_fluxes_merged_2022_08_to_2024_10.csv')
 
 df$TIMESTAMP = df$ts
 
@@ -45,8 +45,9 @@ df = merge(tsdf,df,by = "TIMESTAMP",all = T)
 Creates a variable to input a date range for the plots in the flux section of
 cleaning code. Used to easily change date range for different data sets. 
 ```{r, warning=FALSE}
-flux_dates <- c('2022-08-01', '2024-09-15')
+flux_dates <- c('2024-01-01', '2024-12-31')
 ```
+
 
 # Initial Clean
 
@@ -64,8 +65,7 @@ H.qc        = ifelse(df$qc_H == 2,1,0)
 
 Clean some data based on instrument diagnostics
 ```{r}
-signal.threshold.co2 = ifelse(df$co2_signal_strength_7200_mean >= 75 |
-                              df$co2_signal_strength_7500_mean >= 75,0,1)
+signal.threshold.co2 = ifelse(df$co2_signal_strength_7200_mean >= 75,0,1)
 signal.threshold.h2o = ifelse(df$h2o_signal_strength_7200_mean >= 75,0,1)
 signal.threshold.ch4 = ifelse(df$rssi_77_mean >= 10,0,1)
 
@@ -75,7 +75,7 @@ ggplot(data = df)+
 
 ggplot(data = df)+
   geom_point(aes(ts,ch4_flux,color=signal.threshold.ch4))+
-  scale_y_continuous(limits = c(-0.2,0.25))
+  scale_y_continuous(limits = c(-0.5,0.25))
 
 ggplot(data = df)+
   geom_point(aes(ts,h2o_flux,color=signal.threshold.h2o))+
@@ -104,10 +104,8 @@ Cut the crazy data and create new variable (Tau.limits)
 ```{r, warning=FALSE}
 
 Tau.limits = df$Tau
-Tau.limits = ifelse(df$Tau < -1 | df$Tau > .1,1,0)
+Tau.limits = ifelse(df$Tau < -1.1 | df$Tau > .1,1,0)
 
-ggplot(data = df)+
-  geom_point(aes(x = TIMESTAMP, y = Tau, color = Tau.limits))
 
 ```
 
@@ -166,6 +164,30 @@ ggplot(data = df)+
   geom_hline(yintercept = c(-100,500))
 
 LE.limits =ifelse(df$LE < -100 | df$LE > 500,1,0)
+```
+
+## Plot abs. limits cleaning 
+```{r}
+ggplot(data = df)+
+  geom_point(aes(ts,Tau,color=Tau.limits))+
+  scale_y_continuous(limits = c(-1.5, 0.5))
+
+ggplot(data = df)+
+  geom_point(aes(ts,co2_flux,color=co2_flux.limits))+
+  scale_y_continuous(limits = c(-35,60))
+
+ggplot(data = df)+
+  geom_point(aes(ts,ch4_flux,color=ch4_flux.limits))+
+  scale_y_continuous(limits = c(-0.6,0.4))
+
+ggplot(data = df)+
+  geom_point(aes(ts,H,color=H.limits))+
+  scale_y_continuous(limits = c(-215,690))
+
+ggplot(data = df)+
+  geom_point(aes(ts,LE,color=LE.limits))+
+  scale_y_continuous(limits = c(-100,1100))
+
 ```
 
 ## USTAR
@@ -264,8 +286,7 @@ ggplot(df)+geom_hline(yintercept = 0)+
   geom_line(aes(ts,roll.mad,col='MAD'))+
   scale_y_continuous(limits = c(-10,10))+
   scale_x_datetime(limits = as.POSIXct(flux_dates,format="%F"))+
-  scale_color_manual(values=c('black','yellow','red'))+
-  geom_vline(xintercept = as.POSIXct('2024-01-01'))
+  scale_color_manual(values=c('black','yellow','red'))
 ```
 
 now filter the data based on this signal
@@ -296,8 +317,8 @@ ggplot(data = df)+
   geom_ribbon(aes(x = ts,ymax = Flux_filt+roll.mad*1,ymin = Flux_filt-roll.mad*1,fill='1'))+
   geom_point(aes(ts,co2fluxclean),col='red')+
   geom_point(aes(ts,co2_flux.c),col='black')+
-  scale_y_continuous(limits = c(-20,20))+
-scale_x_datetime(limits = as.POSIXct(c('2022-08-03','2022-08-30'),format="%F"))
+  scale_y_continuous(limits = c(-20,20))
+#+scale_x_datetime(limits = as.POSIXct(c('2024-01-03','2024-02-30'),format="%F"))
 ```
 
 ## CH4
@@ -361,14 +382,18 @@ CH4RSSI = ggplot(data = df)+geom_hline(yintercept = 0)+
   scale_y_continuous(limits = c(-1,60))+
   scale_x_datetime(limits = as.POSIXct(c('2024-8-1','2024-9-30'),format="%F"))
 
-
-CH4MOLE = ggplot(data = df)+geom_hline(yintercept = 0)+
-  geom_point(aes(x=ts,y=ch4_mole_fraction))+
-  scale_y_continuous(limits = c(1,4))+
+CH4RSSI = ggplot(data = df)+geom_hline(yintercept = 0)+
+  geom_line(aes(x=ts,y=rssi_77_mean))+
+  scale_y_continuous(limits = c(-1,60))+
   scale_x_datetime(limits = as.POSIXct(c('2024-8-1','2024-9-30'),format="%F"))
-CH4MOLE
 
-CH4_FALLSOILTCOMP = plot_grid(CH4Filter,CH4RSSI,CH4MOLE,nrow=3,align = 'v')
+#added co2 flux to compare co2/ch4 data coverage
+CO2FLUX = ggplot(data = df)+geom_hline(yintercept = 0)+
+  geom_point(aes(x=ts,y=co2_flux))+
+  scale_y_continuous(limits = c(-3,3))+
+  scale_x_datetime(limits = as.POSIXct(c('2024-8-1','2024-9-30'),format="%F"))
+
+CH4_FALLSOILTCOMP = plot_grid(CH4Filter,CH4RSSI,CO2FLUX,nrow=3,align = 'v')
 CH4_FALLSOILTCOMP
 
 ```
@@ -640,6 +665,6 @@ levels(diel$month)
 ```{r, warning=FALSE}
 df <- df[!duplicated(df$TIMESTAMP), ]
 
-write.csv(x = df,file = 'C:/Users/dtrangmoe/Documents/Churchill/Churchill_Flux_Met_Clean_Ameriflux_2024.csv',row.names = F,quote = F)
+write.csv(x = df,file = 'C:/Users/dtrangmoe/Documents/Churchill/Churchill_Met_Flux_Clean_Ameriflux_2024.csv',row.names = F,quote = F)
 ```
 
