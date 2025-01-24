@@ -22,13 +22,12 @@ Sys.setenv(TZ = "UTC")
 
 Load Data
 ```{r}
-# c22 = fread(input = "./cleaned_Churchill_Met_Flux_Clean_Ameriflux_2022.csv")
-# c23 = fread(input = "./cleaned_Churchill_Met_Flux_Clean_Ameriflux_2023.csv")
+c22 = fread(input = "C:/Users/dtrangmoe/Documents/Churchill/Churchill_Met_Flux_Clean_Ameriflux_2022.csv")
+c23 = fread(input = "C:/Users/dtrangmoe/Documents/Churchill/Churchill_Met_Flux_Clean_Ameriflux_2023.csv")
+c24 = fread(input = "C:/Users/dtrangmoe/Documents/Churchill/Churchill_Met_Flux_Clean_Ameriflux_2024.csv")
 
 
-#df = rbind(c22,c23,fill=T)
-
-df = fread(input = "C:/Users/dtrangmoe/Documents/Churchill/Churchill_Flux_Met_Clean_2022_2024.csv")
+df = rbind(c22,c23,c24,fill=T)
 
 df$ts = df$ts-6*3600 #adjust timezone from UTC to CST
 
@@ -100,6 +99,7 @@ df$TS_2_38_4_12_1.c = na.spline(df$TS_2_38_4_12_1.c,maxgap = gap)
 
 ```{r}
 summary(df$RH_19_3_1_1_1.c) #check on the data coverage after filling small gaps
+plot(df$ts,df$RH_19_3_1_1_1.c)
 
 #save off a copy of the newly merged data
 write.csv(x = df,file = "./churchill_2022_2024.csv",row.names = F)
@@ -107,7 +107,7 @@ write.csv(x = df,file = "./churchill_2022_2024.csv",row.names = F)
 
 Add ERA5 data
 ```{r}
-#load in era5 data for churchill for continuous met data (found in Ameriflux folder in bucket)
+#load in era5 data for churchill for continuous met data
 era = fread('C:/Users/dtrangmoe/Documents/Churchill/era5_churchill24.csv')
 
 #rename to match up timestamps and merge datasets
@@ -365,7 +365,7 @@ swc = ggplot(data = all,aes(vwc1*100,SWC_12_36_2_1_1))+theme_bw()+
 ```
 
 ```{r}
-png(filename = 'C:/Users/karndt.WHRC/Desktop/sites/churchill/figures/era5_churchill_comparisons.png',width = 6,height = 4,units = 'in',res = 1500)
+png(filename = 'C:/Users/dtrangmoe/Documents/Churchill/era5_churchill_comparisons.png',width = 6,height = 4,units = 'in',res = 1500)
 plot_grid(airt,rh,ws,rad,tsoil,le,h,vpd,swc)
 dev.off()
 ```
