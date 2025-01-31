@@ -162,16 +162,6 @@ df$SHF_6_37_2_1_1.c <- df$SHF_6_37_2_1_1
 ```
 
 # Snow Depth 
-```{r, warning=FALSE}
-
-ggplot(data = df)+
-  geom_point(aes(TIMESTAMP,SD_10_99_1_1_1),col='black')+
-  scale_y_continuous(#limits = c(-1.5,.75),
-                     expression('Snow Depth ('*m*')'))+
-  scale_x_datetime(limits = as.POSIXct(biomet_dates))
-
-```
-
 
 ```{r, warning=FALSE}
 hist(df$SD_10_99_1_1_1,breaks=100)
@@ -183,14 +173,13 @@ ggplot(data = df)+
                      expression('Snow Depth ('*m*')'))+
   geom_hline(yintercept = 0, color = "red")+
   geom_hline(yintercept = 1, color = "red")+
-  geom_hline(yintercept = 0.2, color = "red")+
   geom_vline(xintercept = as.POSIXct("2024-05-10"), color = "red")+
   geom_vline(xintercept = as.POSIXct("2024-10-23"), color = "red")
 
 SD_10_99_1_1_1.limits=df$SD_10_99_1_1_1
 SD_10_99_1_1_1.limits = ifelse(df$SD_10_99_1_1_1 < 0,0,SD_10_99_1_1_1.limits)
 SD_10_99_1_1_1.limits = ifelse(df$SD_10_99_1_1_1 > 1,NA,SD_10_99_1_1_1.limits)
-SD_10_99_1_1_1.limits = ifelse(df$SD_10_99_1_1_1 > 0.2 & df$TIMESTAMP > as.POSIXct('2024-05-10') & df$TIMESTAMP < as.POSIXct('2024-10-23') ,NA,SD_10_99_1_1_1.limits)
+SD_10_99_1_1_1.limits = ifelse(df$TIMESTAMP > as.POSIXct('2024-05-10') & df$TIMESTAMP < as.POSIXct('2024-10-23') ,0,SD_10_99_1_1_1.limits)
                                
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,SD_10_99_1_1_1.limits),col='black')+

@@ -1,14 +1,14 @@
 ---
-title: "Neural Network YK"
+title: "Neural Network Churchill"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 date: "2023-2-5"
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE,dev = 'png')
-knitr::opts_knit$set(root.dir = 'C:/Users/karndt.WHRC/Desktop/sites/churchill/ameriflux submission/') #use this to set your directory
+knitr::opts_knit$set(root.dir = "C:/Users/dtrangmoe/Documents/GitHub/churchill_cleaning_processing") #use this to set your directory
 ```
 
 
@@ -21,6 +21,7 @@ library(reshape)
 library(caret)
 library(randomForest)
 library(Boruta)
+library(tidyverse)
 Sys.setenv(TZ = 'UTC')
 ```
 
@@ -107,7 +108,7 @@ hist(cc$nee)
 hist(train$nee)
 hist(test$nee)
 
-rfnee = randomForest(formula = nee ~ tair + rh + rg + ws + tsoil + swc + vpd + le + pres + h,data = train,ntree = 100, importance = TRUE)
+rfnee = randomForest(formula = nee ~ tair + rh + rg + ws + tsoil + swc + vpd + le + pres + h, data = train, ntree = 100, importance = TRUE)
 
 pnee = predict(object = rfnee,newdata = ncf)
 
@@ -221,5 +222,5 @@ summary(lm(test.data$ch4_flux.c ~ test.data$rfch4))
 
 save off the data
 ```{r,error=FALSE,warning=FALSE}
-# write.csv(x = cf,file = "./churchill_2022_2024_gf.csv",quote = F,row.names = F)
+write.csv(x = cf,file = "./churchill_2022_2024_gf.csv",quote = F,row.names = F)
 ```

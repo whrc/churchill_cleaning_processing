@@ -1,6 +1,6 @@
 rm(list = ls())
 Sys.setenv(TZ = 'utc')
-setwd('C:/Users/karndt.WHRC/Desktop/sites/churchill/ameriflux submission/')
+# setwd('C:/Users/karndt.WHRC/Desktop/sites/churchill/ameriflux submission/')
 
 library(data.table)
 
