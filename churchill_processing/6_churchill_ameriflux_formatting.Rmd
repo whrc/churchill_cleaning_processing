@@ -8,6 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 #knitr::opts_knit$set(root.dir = 'C:/Users/karndt.WHRC/Desktop/sites/churchill/ameriflux submission/') #use this to set your directory
+knitr::opts_knit$set(root.dir = 'C:/Users/dtrangmoe/Documents/GitHub/churchill_cleaning_processing/') #use this to set your directory
 ```
 
 Libraries
@@ -15,6 +16,7 @@ Libraries
 rm(list = ls())
 library(data.table)
 library(ggplot2)
+library(dplyr)
 library(zoo)
 library(stringr)
 Sys.setenv(TZ = "UTC")
@@ -364,3 +366,28 @@ filename = paste("./",filename,".csv",sep = "")
 write.csv(x = CA_CF3,file = filename,row.names = F,na = "-9999")
 ```
 
+
+Remove gapfilled columns (for methane submission)
+
+```{r}
+
+#used to find any gap filled columns (columns with 0 NAs)
+colSums(is.na(CA_CF3))
+
+CA_CF3_X <- CA_CF3 %>% select(-c("FC_F", "FCH4_F", "GPP_F", "GPP_DT", "RECO", "RECO_DT"))
+
+colSums(is.na(CA_CF3_X))
+
+#save data
+siteID = "CA-CF3"
+resolution = 'HH'
+tsstart = CA_CF3_X$TIMESTAMP_START[1]
+tsend   = CA_CF3_X$TIMESTAMP_END[nrow(CA_CF3_X)]
+gapfill = "noF"
+
+filenamex = paste(siteID,resolution,tsstart,tsend,gapfill,sep = '_')
+filenamex = paste("./",filenamex,".csv",sep = "")
+
+write.csv(x = CA_CF3_X,file = filenamex,row.names = F,na = "-9999")
+
+```
