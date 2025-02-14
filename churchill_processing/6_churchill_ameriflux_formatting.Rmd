@@ -100,6 +100,8 @@ T_SONIC = df$sonic_temperature-273.15 #sonic temp in Deg C
 VPD     = ((100 - RH)/100)*SVP/100 #VPD in hPA
 D_SNOW  = df$SD_10_99_1_1_1.c*100  # snow depth in cm
 P       = df$P_RAIN_8_19_1_1_1 # rain in mm
+WTD     = df$WTD_10_42_1_1_1.c # water table depth in m
+TW      = df$TW_2_45_1_1_1 # Water temperature in deg C
 
 #Radiation #####################################
 ALB = df$ALB_1_1_1.c*100 #albedo in %
