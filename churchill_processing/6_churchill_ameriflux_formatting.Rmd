@@ -91,6 +91,10 @@ G_2_1_1 = df$SHF_6_37_2_1_1.c
 H       = df$H.c
 LE      = df$LE.c
 
+#Pressure Transducer
+WTD_1_1_1 = df$WTD_10_42_1_1_1.c # water table depth in m
+TW        = df$TW_2_45_1_1_1 # Water temperature in deg C
+
 #meteorology and weather #################################
 TA      = df$TA_2_1_1_1_1    # Air T in Deg C
 SVP     = 610.7*10^((7.5*TA)/(237.3+TA)) #NOT INCLUDED IN FINAL
@@ -100,8 +104,7 @@ T_SONIC = df$sonic_temperature-273.15 #sonic temp in Deg C
 VPD     = ((100 - RH)/100)*SVP/100 #VPD in hPA
 D_SNOW  = df$SD_10_99_1_1_1.c*100  # snow depth in cm
 P       = df$P_RAIN_8_19_1_1_1 # rain in mm
-WTD     = df$WTD_10_42_1_1_1.c # water table depth in m
-TW      = df$TW_2_45_1_1_1 # Water temperature in deg C
+
 
 #Radiation #####################################
 ALB = df$ALB_1_1_1.c*100 #albedo in %
@@ -221,6 +224,7 @@ plot(TA)
 plot(VPD) 
 plot(D_SNOW)
 plot(P)
+plot(WTD_1_1_1)
 ```
 
 ```{r}
@@ -312,6 +316,7 @@ CA_CF3 = data.frame(TIMESTAMP_START,TIMESTAMP_END,
 ,VPD 
 ,D_SNOW
 ,P
+,WTD_1_1_1
 ,ALB
 ,LW_IN
 ,LW_OUT
