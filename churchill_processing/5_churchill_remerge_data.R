@@ -6,7 +6,7 @@ library(data.table)
 library(ggplot2)
 
 #read the ungapfilled data
-dat = fread('./churchill_2022_2024_gf.csv')
+dat = fread('./churchill_2022_2025_gf.csv')
 
 #read in the gapfilling output
 gfh  = fread('./data/cf3-Results_data.txt',header = T,nrows = 0)
@@ -64,5 +64,5 @@ dat = subset(dat,dat$dup == 'FALSE')
 
 summary(dat$ts)
 
-write.csv(x = dat,file = './data/cf3_gapfilled_clean_2022_2024.csv',quote = F,row.names = F)
+write.csv(x = dat,file = './cf3_gapfilled_clean_2022_2025.csv',quote = F,row.names = F)
 

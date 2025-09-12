@@ -6,7 +6,7 @@ library(dplyr)
 library(zoo)
 
 #read in the full dataset
-era = fread('C:/Users/dtrangmoe/Documents/Churchill/ERA5hourly_2022_2024_Churchill.csv')
+era = fread('C:/Users/dtrangmoe/Documents/sites/churchill/era5/ERA5hourly_2022_2025_Churchill.csv')
 
 #make more R friendly names
 names(era)[c(17:30)] = c('date','dew','st1','st2','le','pres','h','rad','airt','ppt','u','v','vwc1','vwc2')
@@ -37,8 +37,8 @@ era$rh = 100*(exp((17.625*era$dew)/(243.04+era$dew))/exp((17.625*era$airt)/(243.
 era$ws = sqrt(era$v^2 + era$u^2)
 
 #create a date data frame with every half hour in the timeframe of interest
-date = seq(from = as.POSIXct('2022-7-1 00:00',tz='UTC'),
-           to = as.POSIXct('2025-1-1 00:00',tz='UTC'),
+date = seq(from = as.POSIXct('2022-07-01 00:00',tz='UTC'),
+           to = as.POSIXct('2025-09-01 00:00',tz='UTC'),
            by = 60*30)
 datedf = as.data.frame(date)
 
@@ -63,7 +63,7 @@ eram$h    = na.approx(object = eram$h,maxgap = 6)
 #check out the data
 ggplot(data = eram)+theme_bw()+geom_hline(yintercept = 0)+
   geom_point(aes(date,airt,col='airT'))+
-  geom_point(aes(date,st1,col='soilT1'))+
+ # geom_point(aes(date,st1,col='soilT1'))+
   geom_point(aes(date,st2,col='soilT2'))
 
 ggplot(data = eram)+theme_bw()+geom_hline(yintercept = 0)+
@@ -83,5 +83,5 @@ ggplot(data = eram)+theme_bw()+geom_hline(yintercept = 0)+
   geom_point(aes(date,ws))
 
 #re-save off for comparison
-write.csv(x = eram,file = 'C:/Users/dtrangmoe/Documents/Churchill/era5_churchill24.csv',row.names = F)
+write.csv(x = eram,file = 'C:/Users/dtrangmoe/Documents/sites/churchill/era5/era5_churchill25.csv',row.names = F)
 

@@ -24,11 +24,11 @@ Sys.setenv(TZ = "UTC")
 
 Load Data
 ```{r}
-df = fread(input = "./data/cf3_gapfilled_clean_2022_2024.csv")
+df = fread(input = "./cf3_gapfilled_clean_2022_2025.csv")
 
-# Subset out 2024 data (starts at end of other ameriflux file)
+# Subset out 2025 data (starts at end of other ameriflux file)
 
-df <- df[df$ts > as.POSIXct("2023-12-30 17:00", tz = "UTC"), ]
+df <- df[df$ts > as.POSIXct("2024-12-30 17:00", tz = "UTC"), ]
 
 ```
 

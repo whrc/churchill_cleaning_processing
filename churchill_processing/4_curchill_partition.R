@@ -108,7 +108,7 @@ help("REddyProc-package")
   #EddyProc.C$sMRFluxPartition(parsE0Regression=list(TempRange.n=2.0, optimAlgorithm="LM")	)  
   
   #+++ Example plots of calculated GPP and respiration 
-#  EddyProc.C$sPlotFingerprintY('GPP_f', Year=2016)
+ # EddyProc.C$sPlotFingerprintY('GPP_f', Year=2023)
  # EddyProc.C$sPlotHHFluxes('GPP_f')
   #EddyProc.C$sPlotHHFluxesY('GPP_f', Year=2017)
 #  EddyProc.C$sPlotHHFluxes('Reco')

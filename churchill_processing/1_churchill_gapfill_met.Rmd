@@ -7,7 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = 'C:/Users/dtrangmoe/Documents/Churchill/') #use this to set your directory
+knitr::opts_knit$set(root.dir = 'C:/Users/dtrangmoe/Documents/sites/churchill/') #use this to set your directory
 ```
 
 Libraries
@@ -22,12 +22,13 @@ Sys.setenv(TZ = "UTC")
 
 Load Data
 ```{r}
-c22 = fread(input = "C:/Users/dtrangmoe/Documents/Churchill/Churchill_Met_Flux_Clean_Ameriflux_2022.csv")
-c23 = fread(input = "C:/Users/dtrangmoe/Documents/Churchill/Churchill_Met_Flux_Clean_Ameriflux_2023.csv")
-c24 = fread(input = "C:/Users/dtrangmoe/Documents/Churchill/Churchill_Met_Flux_Clean_Ameriflux_2024.csv")
+c22 = fread(input = "C:/Users/dtrangmoe/Documents/sites/churchill/data/Churchill_Met_Flux_Clean_Ameriflux_2022.csv")
+c23 = fread(input = "C:/Users/dtrangmoe/Documents/sites/churchill/data/Churchill_Met_Flux_Clean_Ameriflux_2023.csv")
+c24 = fread(input = "C:/Users/dtrangmoe/Documents/sites/churchill/data/Churchill_Met_Flux_Clean_Ameriflux_2024.csv")
+c25 = fread(input = "C:/Users/dtrangmoe/Documents/sites/churchill/data/Churchill_Met_Flux_Clean_Ameriflux_2025.csv")
 
 
-df = rbind(c22,c23,c24,fill=T)
+df = rbind(c22,c23,c24,c25,fill=T)
 
 df$ts = df$ts-6*3600 #adjust timezone from UTC to CST
 
@@ -102,13 +103,13 @@ summary(df$RH_19_3_1_1_1.c) #check on the data coverage after filling small gaps
 plot(df$ts,df$RH_19_3_1_1_1.c)
 
 #save off a copy of the newly merged data
-write.csv(x = df,file = "./churchill_2022_2024.csv",row.names = F)
+write.csv(x = df,file = "./data/churchill_2022_2025.csv",row.names = F)
 ```
 
 Add ERA5 data
 ```{r}
 #load in era5 data for churchill for continuous met data
-era = fread('C:/Users/dtrangmoe/Documents/Churchill/era5_churchill24.csv')
+era = fread('C:/Users/dtrangmoe/Documents/sites/churchill/era5/era5_churchill25.csv')
 
 #rename to match up timestamps and merge datasets
 df$date = df$ts
@@ -169,6 +170,8 @@ ggplot(data = all)+
   geom_point(aes(date,st2,col='ERA5'))+
   geom_point(aes(date,TS_2_38_3_2_1.c,col='Site'))+
   geom_point(aes(date,tsoil.eramod,col='Lin. Reg.'))
+
+#why is linear regression less than both datasets here?
 ```
 
 #Rg
@@ -271,7 +274,7 @@ eras = all[,c('date','rh.eramod','airt.eramod','ws.eramod','rad.eramod','tsoil.e
 df = df[!duplicated(df$date),]
 df = merge(df,eras,by = 'date',all.x = T)
 
-write.csv(x = df,file = './churchill_2022_2024_era.csv',row.names = F,quote = F)
+write.csv(x = df,file = './churchill_2022_2025_era.csv',row.names = F,quote = F)
 
 #calculate VPD from air t and RH
 svp = 610.7*10^((7.5*all$airt)/(237.3+all$airt))
@@ -365,7 +368,7 @@ swc = ggplot(data = all,aes(vwc1*100,SWC_12_36_2_1_1))+theme_bw()+
 ```
 
 ```{r}
-png(filename = 'C:/Users/dtrangmoe/Documents/Churchill/era5_churchill_comparisons.png',width = 6,height = 4,units = 'in',res = 1500)
+png(filename = 'C:/Users/dtrangmoe/Documents/sites/churchill/era5/era5_churchill_comparisons.png',width = 6,height = 4,units = 'in',res = 1500)
 plot_grid(airt,rh,ws,rad,tsoil,le,h,vpd,swc)
 dev.off()
 ```
