@@ -27,8 +27,8 @@ library(patchwork)
 Load in cleaned met data and flux data
 
 ```{r warning=FALSE}
-met = fread('C:/Users/dtrangmoe/Documents/sites/churchill/data/Churchill_met_clean_2025.csv')
-df = fread('C:/Users/dtrangmoe/Documents/sites/churchill/data/Churchill_fluxes_merged_2025.csv')
+met = fread('./outputs/cleaning/Churchill_met_clean_2025.csv')
+df = fread('./outputs/cleaning/Churchill_fluxes_merged_2025.csv')
 # df = fread('C:/Users/karndt.WHRC/Desktop/sites/churchill/data/Churchill_fluxes_merged_2022_08_to_2024_10.csv')
 
 df$TIMESTAMP = df$ts
@@ -572,12 +572,12 @@ ch4 <- ggplot(data = df)+theme_bw()+geom_hline(yintercept = 0)+
 
 
 
-png(filename = './mainplotsflux.png',width = 12,height = 8,units = 'in',res = 2000)
+png(filename = './png/mainplotsflux.png',width = 12,height = 8,units = 'in',res = 2000)
 co2 / ch4  + plot_layout(guides = "collect", axes = "collect")
 dev.off()
 
 
-png(filename = './mainplotseb.png',width = 12,height = 8,units = 'in',res = 2000)
+png(filename = './png/mainplotseb.png',width = 12,height = 8,units = 'in',res = 2000)
 le / h  + plot_layout(guides = "collect", axes = "collect")
 dev.off()
 
@@ -694,8 +694,7 @@ levels(diel$month)
 # Save
 
 ```{r, warning=FALSE}
-df <- df[!duplicated(df$TIMESTAMP), ]
 
-write.csv(x = df,file = 'C:/Users/dtrangmoe/Documents/sites/churchill/data/Churchill_Met_Flux_Clean_Ameriflux_2025.csv',row.names = F,quote = F)
+write.csv(x = df,file = './outputs/cleaning/Churchill_Met_Flux_Clean_Ameriflux_2025.csv',row.names = F,quote = F)
 ```
 

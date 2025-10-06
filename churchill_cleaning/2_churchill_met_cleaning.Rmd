@@ -6,15 +6,11 @@ output:
 date: "2022-12-08"
 ---
 
-# To Do
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = 'C:/Users/dtrangmoe/Documents/github/churchill_cleaning_processing') #use this to set your directory
+```
 
-
-Make sure all of the timestamps are loaded
-Look at roll apply command
-
-# Loading DF's
-
-Clear Console and add packages
 
 
 # Load 
@@ -37,56 +33,12 @@ library(dplyr)
 ```
 
 
-Merge all_biomet files
+Read in met file
+```{r}
 
-```{r, warning=FALSE}
-
-#load in the full output flux data ##################
-fp = 'C:/Users/dtrangmoe/Documents/sites/churchill/met/2025/'
-#fp = './data/EP_full_output/'
-files = list.files(path = fp,pattern = 'biomet_2025[0-9][0-9].+csv$',recursive = T,full.names = T)
-
-met_list <- vector("list", length(files))
-
-
-#assign the headers to the data
-for (i in 1:length(files)) {
-  met_list[[i]] <- fread(files[[i]])
-}
-
-#make all the lists into one dataframe
-df = met_list[[1]]
-for (i in 2:length(met_list)) {
-  df = rbind.fill(df,met_list[[i]])
-}
-
-
-df = df[!duplicated(df$TIMESTAMP),]
-
-
-
-#check time stamps to ensure we have a complete series
-TIMESTAMP = seq(from = min(df$TIMESTAMP), to = max(df$TIMESTAMP),by = 60*30,tz = "UTC")
-tsdf = as.data.frame(TIMESTAMP)
-
-df = merge(tsdf,df,by = "TIMESTAMP",all = T)
-
-
-#na.strings not working for numbers for some reason, remove all here
-df[df == -9999] = NA
-df[df == -7999] = NA
-summary(df)
-
-
-write.csv(x = df,file = 'C:/Users/dtrangmoe/Documents/sites/churchill/data/Churchill_met_merged_2025.csv',row.names = F,quote = F)
-
-# 
-# 
-# ## for loading in merged file
-# df <- fread('C:/Users/dtrangmoe/Documents/sites/churchill/data/Churchill_met_merged_2025.csv')
+df <- fread('./outputs/cleaning/Churchill_met_merged_2025.csv')
 
 ```
-
 
 Creates a variable to input a date range for the plots in the biomet section of
 cleaning code. Used to easily change date range for different data sets. 
@@ -597,6 +549,6 @@ df$TS_2_38_3_12_1.c <- df$TS_2_38_3_12_1
 # Save
 
 ```{r, warning=FALSE}
-write.csv(x = df,file = 'C:/Users/dtrangmoe/Documents/sites/churchill/data/Churchill_met_clean_2025.csv',row.names = F,quote = F)
+write.csv(x = df,file = './outputs/cleaning/Churchill_met_clean_2025.csv',row.names = F,quote = F)
 ```
 

@@ -26,9 +26,9 @@ Load Data
 ```{r}
 df = fread(input = "./cf3_gapfilled_clean_2022_2025.csv")
 
-# Subset out 2025 data (starts at end of other ameriflux file)
+# Subset out 2025 data to create annual file (starts at end of other ameriflux file)
 
-df <- df[df$ts > as.POSIXct("2024-12-30 17:00", tz = "UTC"), ]
+# df <- df[df$ts > as.POSIXct("2022-12-30 17:00", tz = "UTC"), ]
 
 ```
 
@@ -67,6 +67,7 @@ CO2_MIXING_RATIO = df$co2_mixing_ratio
 CH4_MIXING_RATIO = ifelse(df$ch4_mixing_ratio<0,NA,df$ch4_mixing_ratio*1000) #convert from umol to nmol
 #H2O mole fraction and H2O mixing ratio are identical
 
+
 #standard deviation of co2 wet fraction. (Standard deviation is sqrt of the variance, need to)
 # CO2_SIGMA = sqrt(df$co2_var)
 # CH4_SIGMA = sqrt(df$ch4_var*1000)
@@ -78,7 +79,7 @@ FC   = df$co2_flux.c
 FC_F = ifelse(is.na(df$co2_flux.c),df$rfnee,df$co2_flux.c)
 FCH4 = df$ch4_flux.c*1000 #convert from umol m-2 s-1 to nmol m-2 s-1
 FCH4_F = ifelse(is.na(df$ch4_flux.c),df$rfch4,df$ch4_flux.c)*1000 #convert from umol m-2 s-1 to nmol m-2 s-1
-FH2O = df$h2o_flux
+FH2O = ifelse(df$h2o_flux > 10, NA, df$h2o_flux) # removes a few crazy values
 
 GPP_F   = df$GPP_f
 GPP_DT  = df$GPP_DT
@@ -102,7 +103,7 @@ PA      = df$PA_4_2_1_1_1.c    # air pressure in kPA
 RH      = df$RH_19_3_1_1_1.c   #RH in %
 T_SONIC = df$sonic_temperature-273.15 #sonic temp in Deg C
 VPD     = ((100 - RH)/100)*SVP/100 #VPD in hPA
-D_SNOW  = df$SD_10_99_1_1_1.c*100  # snow depth in cm
+D_SNOW  = ifelse(df$SD_10_99_1_1_1.c == 0,NA,df$SD_10_99_1_1_1.c*100)  # snow depth in cm, standardize summer values between years
 P       = df$P_RAIN_8_19_1_1_1 # rain in mm
 
 
@@ -141,7 +142,7 @@ TS_3_8_1  = df$TS_2_38_3_8_1.c
 TS_3_9_1  = df$TS_2_38_3_9_1.c
 TS_3_10_1 = df$TS_2_38_3_10_1.c
 TS_3_11_1 = df$TS_2_38_3_11_1.c
-TS_3_12_1 = df$TS_2_38_3_12_1.c
+TS_3_12_1 = ifelse(df$TS_2_38_3_12_1.c < -3, NA, df$TS_2_38_3_12_1.c) # get rid of weird 2022 data
 
 TS_4_1_1  = df$TS_2_38_4_1_1.c
 TS_4_2_1  = df$TS_2_38_4_2_1.c
