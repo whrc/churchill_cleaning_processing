@@ -1,0 +1,164 @@
+---
+title: "Churchill File Merging"
+author: "Dani Trangmoe"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = 'C:/Users/dtrangmoe/Documents/github/churchill_cleaning_processing') #use this to set your directory
+```
+
+
+Load Packages
+```{r}
+rm(list = ls())
+
+library(data.table)
+library(plyr)
+library(ggplot2)
+library(cowplot)
+library(openair)
+library(viridis)
+library(dplyr)
+library(lubridate)
+
+```
+
+
+```{r}
+
+#load in all biomet monthly files ##################
+fp = './data/EP_full_output/2025/'
+#fp = './data/EP_full_output/'
+files = list.files(path = fp,pattern = '*full_output.+csv$',recursive = T,full.names = T)
+
+
+#load the headers and data into their own lists
+h   = lapply(files, fread,skip = 1,nrow = 0)
+dat = lapply(files, fread,skip = 3,header = F,na.strings=c('-9999'))
+
+
+#assign the headers to the data
+for (i in 1:length(h)) {
+  names(dat[[i]]) = names(h[[i]])
+}
+
+#make all the lists into one dataframe
+df = dat[[1]]
+for (i in 2:length(dat)) {
+  df = rbind.fill(df,dat[[i]])
+}
+
+#create a timestamp from the date and time
+df$ts = as.POSIXct(x = paste(df$date,df$time,sep = ' '),tz = 'UTC')
+df = df[!duplicated(df$ts),]
+
+plot(df$ts,df$co2_flux,ylim = c(-10,10))
+
+## Replace Nov/Dec data with merged ch4/co2 files (if applicable)
+## These files are saved on the buckets for download if needed
+# df_nov=fread('C:/Users/dtrangmoe/Documents/Churchill/ChurchillFlux_Nov23_CO2_CH4_merged.csv')
+# df_dec=fread('C:/Users/dtrangmoe/Documents/Churchill/ChurchillFlux_Dec23_CO2_CH4_merged.csv')
+#
+# #Used to add in merged files 
+# df_subset <- subset(df, df$ts > as.POSIXct('2024-03-01 0000'))
+# 
+# # Combine df_subset and monthly data (set up for 2024)
+# df <- bind_rows(df_jan, df_feb, df_subset)
+
+
+#take the min and max date rounding to the nearest full month
+mindate = floor_date(min(df$ts),unit = 'month')
+maxdate = ceiling_date(max(df$ts),unit = 'month')
+
+#create a timestamp variable every half hour to the full months
+ts = seq(from = mindate,to = maxdate,by = 60*30)
+ts = as.data.frame(ts)
+
+#merge with the flux data frame to create NAs where data is missing
+df = merge(ts,df,by = 'ts',all.x = T)
+
+```
+
+
+Save & plot
+```{r}
+
+write.csv(df,'./outputs/cleaning/Churchill_fluxes_merged_2025.csv',row.names = F)
+
+
+
+##Plots
+
+
+co2 = ggplot(data = df)+theme_bw()+geom_abline(slope = 0,intercept = 0)+
+  geom_point(data=df[df$qc_co2_flux<2,], aes(ts,co2_flux*43.2,color=air_temperature-273.15))+
+  scale_y_continuous(limits = c(-400,200),
+                     expression('NEE (mg '*CO[2]*'-C '*m^-2*h^-1*')'))+
+ # scale_x_datetime(limits = as.POSIXct(c('2022-10-28','2022-11-15')))+
+  theme(plot.margin = margin(t = 1,r = 1,b = 0,l = 0))
+
+co2
+  
+ch4 = ggplot(data = df)+theme_bw()+geom_abline(slope = 0,intercept = 0)+
+  geom_point(data=df[df$qc_ch4_flux<2,],aes(ts,ch4_flux,color=air_temperature-273.15))+
+  scale_y_continuous(limits = c(-0.6,0.5),
+                     expression(CH[4]~flux~'(mg '*CH[4]*'-C '*m^-2*h^-1*')'))+
+ # scale_x_datetime(limits = as.POSIXct(c('2022-10-28','2022-11-15')))+
+  theme(plot.margin = margin(t = 1,r = 1,b = 0,l = 7))
+
+ch4
+
+
+```
+
+
+Merge Biomet Files
+
+```{r, warning=FALSE}
+rm(list = ls())
+
+#load in the full output flux data ##################
+fp = './data/biomet/'
+files = list.files(path = fp,pattern = 'churchill_biomet_2025[0-9][0-9].+csv$',recursive = T,full.names = T)
+
+met_list <- vector("list", length(files))
+
+
+#assign the headers to the data
+for (i in 1:length(files)) {
+  met_list[[i]] <- fread(files[[i]])
+}
+
+#make all the lists into one dataframe
+df = met_list[[1]]
+for (i in 2:length(met_list)) {
+  df = rbind.fill(df,met_list[[i]])
+}
+
+
+df = df[!duplicated(df$TIMESTAMP),]
+
+
+
+#check time stamps to ensure we have a complete series
+TIMESTAMP = seq(from = min(df$TIMESTAMP), to = max(df$TIMESTAMP),by = 60*30,tz = "UTC")
+tsdf = as.data.frame(TIMESTAMP)
+
+df = merge(tsdf,df,by = "TIMESTAMP",all = T)
+
+
+#na.strings not working for numbers for some reason, remove all here
+df[df == -9999] = NA
+df[df == -7999] = NA
+summary(df)
+
+
+write.csv(x = df,file = './outputs/cleaning/Churchill_met_merged_2025.csv',row.names = F,quote = F)
+
+
+```
+
+
