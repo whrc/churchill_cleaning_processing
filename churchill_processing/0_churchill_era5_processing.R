@@ -5,8 +5,10 @@ library(ggplot2)
 library(dplyr)
 library(zoo)
 
+setwd('C:/Users/dtrangmoe/Documents/github/churchill_cleaning_processing')
+
 #read in the full dataset
-era = fread('C:/Users/dtrangmoe/Documents/sites/churchill/era5/ERA5hourly_2022_2025_Churchill.csv')
+era = fread('./era5/ERA5hourly_2022_2025_Churchill.csv')
 
 #make more R friendly names
 names(era)[c(17:30)] = c('date','dew','st1','st2','le','pres','h','rad','airt','ppt','u','v','vwc1','vwc2')
@@ -83,5 +85,5 @@ ggplot(data = eram)+theme_bw()+geom_hline(yintercept = 0)+
   geom_point(aes(date,ws))
 
 #re-save off for comparison
-write.csv(x = eram,file = 'C:/Users/dtrangmoe/Documents/sites/churchill/era5/era5_churchill25.csv',row.names = F)
+write.csv(x = eram,file = './outputs/gapfilling/era5_churchill25.csv',row.names = F)
 

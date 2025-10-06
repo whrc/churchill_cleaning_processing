@@ -1,10 +1,11 @@
 rm(list = ls())
 library(REddyProc)
+setwd('C:/Users/dtrangmoe/Documents/github/churchill_cleaning_processing')
 
 help("REddyProc-package")
 
   #+++ Load data with one header and one unit row from (tab-delimited) text file
-    EddyData.F <- fLoadTXTIntoDataframe('./reddy_cf3.txt')
+    EddyData.F <- fLoadTXTIntoDataframe('./outputs/gapfilling/reddy_cf3.txt')
   # note: use \code{fFilterAttr} to subset rows while keeping the units attributes
   
     #subset out problematic repeat rows
@@ -123,5 +124,5 @@ help("REddyProc-package")
   CombinedDataAmeriflux.F$TIMESTAMP_END <- POSIXctToBerkeleyJulianDate( EddyProc.C$sExportData()[[1]] )
   head(tmp <- BerkeleyJulianDateToPOSIXct( CombinedDataAmeriflux.F$TIMESTAMP_END ))
   #colnames(tmp <- renameVariablesInDataframe(CombinedData.F, getAmerifluxToBGC05VariableNameMapping() ))
-  fWriteDataframeToFile(CombinedData.F, 'cf3-Results_data.txt', 'data')
+  fWriteDataframeToFile(CombinedData.F, 'cf3-Results_data.txt', 'outputs/gapfilling')
   

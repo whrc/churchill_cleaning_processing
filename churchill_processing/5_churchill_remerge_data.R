@@ -1,16 +1,16 @@
 rm(list = ls())
 Sys.setenv(TZ = 'UTC')
-#setwd('C:/Users/karndt.WHRC/Desktop/sites/churchill/ameriflux submission')
+setwd('C:/Users/dtrangmoe/Documents/github/churchill_cleaning_processing')
 
 library(data.table)
 library(ggplot2)
 
 #read the ungapfilled data
-dat = fread('./churchill_2022_2025_gf.csv')
+dat = fread('./outputs/gapfilling/churchill_2022_2025_gf.csv')
 
 #read in the gapfilling output
-gfh  = fread('./data/cf3-Results_data.txt',header = T,nrows = 0)
-gf   = fread('./data/cf3-Results_data.txt',header = F,skip  = 2,na.strings = c('-9999','-10000','-9.9990e+03'))
+gfh  = fread('./outputs/gapfilling/cf3-Results_data.txt',header = T,nrows = 0)
+gf   = fread('./outputs/gapfilling/cf3-Results_data.txt',header = F,skip  = 2,na.strings = c('-9999','-10000','-9.9990e+03'))
 names(gf) = names(gfh)
 
 #break apart the time column
@@ -64,5 +64,5 @@ dat = subset(dat,dat$dup == 'FALSE')
 
 summary(dat$ts)
 
-write.csv(x = dat,file = './cf3_gapfilled_clean_2022_2025.csv',quote = F,row.names = F)
+write.csv(x = dat,file = './outputs/gapfilling/cf3_gapfilled_clean_2022_2025.csv',quote = F,row.names = F)
 

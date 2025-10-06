@@ -1,11 +1,11 @@
 rm(list = ls())
 Sys.setenv(TZ = 'utc')
-# setwd('C:/Users/karndt.WHRC/Desktop/sites/churchill/ameriflux submission/')
+setwd('C:/Users/dtrangmoe/Documents/github/churchill_cleaning_processing')
 
 library(data.table)
 
 #Prep for Reddy for an initial gap filling
-dat = fread('./churchill_2022_2025_gf.csv')
+dat = fread('./outputs/gapfilling/churchill_2022_2025_gf.csv')
 
 #time variables #########################################################
 dat$ts = as.POSIXct(dat$ts)
@@ -53,5 +53,5 @@ reddy2[1,2] = '--'
 
 reddy2 = reddy2[complete.cases(reddy2$Year),]
 
-write.table(x = reddy2,file = './reddy_cf3.txt',row.names = F,sep = '\t',quote = F,na = '-9999')
+write.table(x = reddy2,file = './outputs/gapfilling/reddy_cf3.txt',row.names = F,sep = '\t',quote = F,na = '-9999')
 

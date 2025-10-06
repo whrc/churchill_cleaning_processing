@@ -5,6 +5,13 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = 'C:/Users/dtrangmoe/Documents/github/churchill_cleaning_processing') #use this to set your directory
+```
+
+
 # Flux Cleaning
 
 ```{r, warning=FALSE}
@@ -692,9 +699,9 @@ levels(diel$month)
 
 
 # Save
-
+This gets written into data folder to match with previous cleaned files' location
 ```{r, warning=FALSE}
 
-write.csv(x = df,file = './outputs/cleaning/Churchill_Met_Flux_Clean_Ameriflux_2025.csv',row.names = F,quote = F)
+write.csv(x = df,file = './data/cleaned/Churchill_Met_Flux_Clean_Ameriflux_2025.csv',row.names = F,quote = F)
 ```
 

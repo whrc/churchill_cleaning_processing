@@ -24,7 +24,7 @@ Sys.setenv(TZ = "UTC")
 
 Load Data
 ```{r}
-df = fread(input = "./cf3_gapfilled_clean_2022_2025.csv")
+df = fread(input = "./outputs/gapfilling/cf3_gapfilled_clean_2022_2025.csv")
 
 # Subset out 2025 data to create annual file (starts at end of other ameriflux file)
 
@@ -369,33 +369,8 @@ tsstart = CA_CF3$TIMESTAMP_START[1]
 tsend   = CA_CF3$TIMESTAMP_END[nrow(CA_CF3)]
 
 filename = paste(siteID,resolution,tsstart,tsend,sep = '_')
-filename = paste("./",filename,".csv",sep = "")
+filename = paste("./ameriflux/",filename,".csv",sep = "")
 
 write.csv(x = CA_CF3,file = filename,row.names = F,na = "-9999")
 ```
 
-
-Remove gapfilled columns (for methane submission)
-
-```{r}
-
-#used to find any gap filled columns (columns with 0 NAs)
-colSums(is.na(CA_CF3))
-
-CA_CF3_X <- CA_CF3 %>% select(-c("FC_F", "FCH4_F", "GPP_F", "GPP_DT", "RECO", "RECO_DT"))
-
-colSums(is.na(CA_CF3_X))
-
-#save data
-siteID = "CA-CF3"
-resolution = 'HH'
-tsstart = CA_CF3_X$TIMESTAMP_START[1]
-tsend   = CA_CF3_X$TIMESTAMP_END[nrow(CA_CF3_X)]
-gapfill = "noF"
-
-filenamex = paste(siteID,resolution,tsstart,tsend,gapfill,sep = '_')
-filenamex = paste("./",filenamex,".csv",sep = "")
-
-write.csv(x = CA_CF3_X,file = filenamex,row.names = F,na = "-9999")
-
-```
