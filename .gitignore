@@ -2,3 +2,9 @@
 .Rhistory
 .RData
 .Ruserdata
+/data
+/outputs
+/ameriflux
+/internal_data
+/era5
+/png
