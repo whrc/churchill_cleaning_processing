@@ -43,7 +43,7 @@ df <- fread('./outputs/cleaning/Churchill_met_merged_2025.csv')
 Creates a variable to input a date range for the plots in the biomet section of
 cleaning code. Used to easily change date range for different data sets. 
 ```{r, warning=FALSE}
-biomet_dates <- c('2025-01-01', '2025-08-31')
+biomet_dates <- c('2025-01-01', '2025-09-30')
 ```
 
 

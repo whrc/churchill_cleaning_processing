@@ -155,6 +155,7 @@ df[df == -9999] = NA
 df[df == -7999] = NA
 summary(df)
 
+plot(df$TIMESTAMP, df$TA_2_1_1_1_1)
 
 write.csv(x = df,file = './outputs/cleaning/Churchill_met_merged_2025.csv',row.names = F,quote = F)
 
