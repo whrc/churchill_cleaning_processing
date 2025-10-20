@@ -8,7 +8,7 @@ library(zoo)
 setwd('C:/Users/dtrangmoe/Documents/github/churchill_cleaning_processing')
 
 #read in the full dataset
-era = fread('./era5/ERA5hourly_2022_2025_Churchill.csv')
+era = fread('./era5/ERA5hourly_2022_Oct2025_Churchill_2.csv')
 
 #make more R friendly names
 names(era)[c(17:30)] = c('date','dew','st1','st2','le','pres','h','rad','airt','ppt','u','v','vwc1','vwc2')
@@ -40,12 +40,12 @@ era$ws = sqrt(era$v^2 + era$u^2)
 
 #create a date data frame with every half hour in the timeframe of interest
 date = seq(from = as.POSIXct('2022-07-01 00:00',tz='UTC'),
-           to = as.POSIXct('2025-09-01 00:00',tz='UTC'),
+           to = as.POSIXct('2025-10-01 00:00',tz='UTC'),
            by = 60*30)
 datedf = as.data.frame(date)
 
 #merge with era 5
-eram = merge(datedf,era,by = 'date',all = T)
+eram = merge(datedf,era,by = 'date',all.x = T)
 
 #gapfill middle half hours
 eram$dew  = na.approx(object = eram$dew,maxgap = 6)

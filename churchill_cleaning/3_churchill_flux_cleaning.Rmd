@@ -698,7 +698,10 @@ levels(diel$month)
 
 
 # Save
+
 This gets written into data folder to match with previous cleaned files' location
+
+Upload this file to the buckets!!!
 ```{r, warning=FALSE}
 
 write.csv(x = df,file = './data/cleaned/Churchill_Met_Flux_Clean_Ameriflux_2025.csv',row.names = F,quote = F)

@@ -31,11 +31,18 @@ c24 = fread(input = "./data/cleaned/Churchill_Met_Flux_Clean_Ameriflux_2024.csv"
 c25 = fread(input = "./data/cleaned/Churchill_Met_Flux_Clean_Ameriflux_2025.csv")
 
 
-df = rbind(c22,c23,c24,c25,fill=T)
+df <- rbind(c22,c23,c24,c25,fill=T)
 
-df$ts = df$ts-6*3600 #adjust timezone from UTC to CST
+# Adjust timestamps to CST
 
-df = subset(df,df$ts >= as.POSIXct(x = "2022-08-07 00:00"))
+df$ts <- df$ts-6*3600 #adjust timezone from UTC to CST
+df$TIMESTAMP <- df$TIMESTAMP-6*3600 #adjust timezone from UTC to CST
+
+# create date, time, DOY in the correct  time zone
+df$DOY <- yday(df$TIMESTAMP)
+df$time <- format(df$TIMESTAMP, format = "%H:%M")
+
+df <- subset(df,df$ts >= as.POSIXct(x = "2022-08-07 00:00"))
 ```
 
 
@@ -275,7 +282,7 @@ ggplot(data = all,aes(pres,PA_4_2_1_1_1.c))+theme_bw()+
 eras = all[,c('date','rh.eramod','airt.eramod','ws.eramod','rad.eramod','tsoil.eramod','le.eramod','h.eramod','pres.eramod')]
 
 df = df[!duplicated(df$date),]
-df = merge(df,eras,by = 'date',all.x = T)
+df = merge(df,eras,by = 'date',all = T)
 
 write.csv(x = df,file = './outputs/gapfilling/churchill_2022_2025_era.csv',row.names = F,quote = F)
 

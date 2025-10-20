@@ -24,11 +24,8 @@ Sys.setenv(TZ = "UTC")
 
 Load Data
 ```{r}
+
 df = fread(input = "./outputs/gapfilling/cf3_gapfilled_clean_2022_2025.csv")
-
-# Subset out 2025 data to create annual file (starts at end of other ameriflux file)
-
-# df <- df[df$ts > as.POSIXct("2022-12-30 17:00", tz = "UTC"), ]
 
 ```
 
@@ -160,7 +157,7 @@ TS_4_12_1 = df$TS_2_38_4_12_1.c
 #wind and turbulence parameters ##############################
 MO_LENGTH = df$L
 ZL        = df$`(z-d)/L`
-TAU       = df$Tau
+TAU       = df$Tau.c
 
 U_SIGMA = sqrt(df$u_var)
 V_SIGMA = sqrt(df$v_var)
@@ -371,6 +368,171 @@ tsend   = CA_CF3$TIMESTAMP_END[nrow(CA_CF3)]
 filename = paste(siteID,resolution,tsstart,tsend,sep = '_')
 filename = paste("./ameriflux/",filename,".csv",sep = "")
 
-write.csv(x = CA_CF3,file = filename,row.names = F,na = "-9999")
+#write.csv(x = CA_CF3,file = filename,row.names = F,na = "-9999")
 ```
+
+
+## Create Internal File
+
+Variables to include in internal file: Uncleaned co2, ch4, LE, H, Tau, signal strength, DOY, hour, month, U, V, W, uncleaned biomet??, met/flux energy balance calculations, u flag, Footprint model (needs eddypro re-run before this fully works)
+
+```{r}
+
+# Uncleaned fluxes
+FC_UC   = df$co2_flux
+FCH4_UC = df$ch4_flux*1000 #convert from umol m-2 s-1 to nmol m-2 s-1
+TAU_UC = df$Tau
+H_UC = df$H
+LE_UC = df$LE
+
+#Signal strength
+RSSI_77 = df$rssi_77_mean
+SIG_STRENGTH_72 = df$co2_signal_strength_7200_mean
+
+#DOY, hour, month
+DOY = df$DOY
+HOUR = df$hour
+MONTH = df$month
+
+#Energy balance calculations
+EB_MET = df$met
+EB_FLUX = df$flux
+
+#U Flag 
+U_FLAG = df$u_flag
+
+#Wind components
+U = df$u_unrot
+V = df$v_unrot
+W = df$w_unrot
+
+#Footprint model
+X_OFFSET = df$x_offset
+X_PEAK = df$x_peak
+X_10 = df$`x_10%`
+X_30 = df$`x_30%`
+X_50 = df$`x_50%`
+X_70 = df$`x_70%`
+X_90 = df$`x_90%`
+
+```
+
+```{r}
+plot(FC_UC)
+plot(FCH4_UC)
+plot(H_UC)
+plot(LE_UC)
+plot(TAU_UC)
+
+plot(RSSI_77)
+plot(SIG_STRENGTH_72)
+
+plot(DOY)
+plot(HOUR)
+plot(MONTH)
+
+plot(EB_MET)
+plot(EB_FLUX)
+
+plot(U_FLAG)
+
+plot(U)
+plot(V)
+plot(W)
+
+#These will work after new eddypro runs
+plot(X_OFFSET)
+plot(X_PEAK)
+plot(X_10)
+plot(X_30)
+plot(X_50)
+plot(X_70)
+plot(X_90)
+```
+
+# Create internal dataframe
+```{r}
+INTERNAL = data.frame(TIMESTAMP_START,TIMESTAMP_END,
+  CO2,CH4,H2O
+,CO2_MIXING_RATIO,CH4_MIXING_RATIO
+#,CO2_SIGMA,CH4_SIGMA ,H2O_SIGMA 
+,FC,FCH4,FH2O
+,FC_F,FCH4_F,GPP_F,GPP_DT,RECO,RECO_DT
+,G_1_1_1,G_2_1_1
+,H
+,LE
+,PA     
+,RH
+,T_SONIC
+,TA   
+,VPD 
+,D_SNOW
+,P
+,WTD_1_1_1
+,ALB
+,LW_IN
+,LW_OUT
+,SW_IN
+,SW_OUT
+,NETRAD
+,PPFD_IN
+,PPFD_OUT
+,SWC_1_1_1
+,SWC_2_1_1
+,SWC_2_2_1
+,TS_1_1_1
+,TS_2_1_1
+,TS_2_2_1
+,TS_3_1_1
+,TS_3_2_1
+,TS_3_3_1
+,TS_3_4_1
+,TS_3_5_1
+,TS_3_6_1
+,TS_3_7_1
+,TS_3_8_1
+,TS_3_9_1
+,TS_3_10_1
+,TS_3_11_1
+,TS_3_12_1
+,TS_4_1_1
+,TS_4_2_1
+,TS_4_3_1
+,TS_4_4_1
+,TS_4_5_1
+,TS_4_6_1
+,TS_4_7_1
+,TS_4_8_1
+,TS_4_9_1
+,TS_4_10_1
+,TS_4_11_1
+,TS_4_12_1
+,MO_LENGTH,ZL,TAU,U_SIGMA,V_SIGMA,W_SIGMA,USTAR,WD,WS,WS_MAX
+,FC_SSITC_TEST,FCH4_SSITC_TEST,H_SSITC_TEST,LE_SSITC_TEST,TAU_SSITC_TEST, # End of OG names
+
+FC_UC,FCH4_UC,TAU_UC,H_UC,LE_UC,
+RSSI_77,SIG_STRENGTH_72,
+DOY,HOUR,MONTH,
+EB_MET,EB_FLUX,
+U_FLAG,
+U,V,W,
+X_OFFSET,X_PEAK,X_10,X_30,X_50,X_70,X_90 = df$`x_90%`
+
+)
+```
+
+
+Write off final csv with Ameriflux naming convention
+```{r}
+siteID_i = "CA-CF3"
+resolution_i = 'HH'
+tsstart_i = INTERNAL$TIMESTAMP_START[1]
+tsend_i   = INTERNAL$TIMESTAMP_END[nrow(INTERNAL)]
+
+filename_i = paste(siteID,resolution,'INTERNAL',tsstart,tsend,sep = '_')
+filename_i = paste("./internal/",filename_i,".csv",sep = "")
+
+write.csv(x = INTERNAL,file = filename_i,row.names = F,na = "-9999")
+```
+
 
