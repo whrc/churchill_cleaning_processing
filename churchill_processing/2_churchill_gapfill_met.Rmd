@@ -279,7 +279,7 @@ ggplot(data = all,aes(pres,PA_4_2_1_1_1.c))+theme_bw()+
 
 #reduce down to churchill size and add to final data set
 ```{r}
-eras = all[,c('date','rh.eramod','airt.eramod','ws.eramod','rad.eramod','tsoil.eramod','le.eramod','h.eramod','pres.eramod')]
+eras = all[,c('date','rh.eramod','airt.eramod','ws.eramod','rad.eramod','tsoil.eramod','le.eramod','h.eramod','pres.eramod','dew','st1','st2','le','pres','h','rad','airt','ppt','u','v','vwc1','vwc2')]
 
 df = df[!duplicated(df$date),]
 df = merge(df,eras,by = 'date',all = T)
