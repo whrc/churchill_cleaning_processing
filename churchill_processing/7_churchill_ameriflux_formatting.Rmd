@@ -374,7 +374,7 @@ filename = paste("./ameriflux/",filename,".csv",sep = "")
 
 ## Create Internal File
 
-Variables to include in internal file: Uncleaned co2, ch4, LE, H, Tau, signal strength, DOY, hour, month, U, V, W, uncleaned biomet??, met/flux energy balance calculations, u flag, Footprint model (needs eddypro re-run before this fully works)
+Variables to include in internal file: Uncleaned co2, ch4, LE, H, Tau, signal strength, DOY, hour, month, U, V, W, uncleaned biomet??, u flag, Footprint model (needs eddypro re-run before this fully works), random error (once calculated), add ERA5 original data variables
 
 ```{r}
 
@@ -394,14 +394,10 @@ DOY = df$DOY
 HOUR = df$hour
 MONTH = df$month
 
-#Energy balance calculations
-EB_MET = df$met
-EB_FLUX = df$flux
-
 #U Flag 
 U_FLAG = df$u_flag
 
-#Wind components
+#Wind components - replace these with mean
 U = df$u_unrot
 V = df$v_unrot
 W = df$w_unrot
@@ -516,7 +512,7 @@ DOY,HOUR,MONTH,
 EB_MET,EB_FLUX,
 U_FLAG,
 U,V,W,
-X_OFFSET,X_PEAK,X_10,X_30,X_50,X_70,X_90 = df$`x_90%`
+X_OFFSET,X_PEAK,X_10,X_30,X_50,X_70,X_90
 
 )
 ```
