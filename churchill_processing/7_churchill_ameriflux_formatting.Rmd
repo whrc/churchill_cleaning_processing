@@ -411,6 +411,23 @@ X_50 = df$`x_50%`
 X_70 = df$`x_70%`
 X_90 = df$`x_90%`
 
+#ERA5 Data
+DEW_ERA5 = df$dew
+ST1_ERA5 = df$st1
+ST2_ERA5 = df$st2
+LE_ERA5 = df$le
+PRES_ERA5 = df$pres
+H_ERA5 = df$h
+RAD_ERA5 = df$rad
+AIRT_ERA5 = df$airt
+PPT_ERA5 = df$ppt
+U_ERA5 = df$u
+V_ERA5 = df$v
+VWC1_ERA5 = df$vwc1
+VWC2_ERA5 = df$vwc2
+
+
+
 ```
 
 ```{r}
@@ -427,9 +444,6 @@ plot(DOY)
 plot(HOUR)
 plot(MONTH)
 
-plot(EB_MET)
-plot(EB_FLUX)
-
 plot(U_FLAG)
 
 plot(U)
@@ -444,6 +458,22 @@ plot(X_30)
 plot(X_50)
 plot(X_70)
 plot(X_90)
+
+
+
+plot(DEW_ERA5)
+plot(ST1_ERA5)
+plot(ST2_ERA5)
+plot(LE_ERA5)
+plot(PRES_ERA5)
+plot(H_ERA5)
+plot(RAD_ERA5)
+plot(AIRT_ERA5)
+plot(PPT_ERA5)
+plot(U_ERA5)
+plot(V_ERA5)
+plot(VWC1_ERA5)
+plot(VWC2_ERA5)
 ```
 
 # Create internal dataframe
@@ -509,10 +539,12 @@ INTERNAL = data.frame(TIMESTAMP_START,TIMESTAMP_END,
 FC_UC,FCH4_UC,TAU_UC,H_UC,LE_UC,
 RSSI_77,SIG_STRENGTH_72,
 DOY,HOUR,MONTH,
-EB_MET,EB_FLUX,
 U_FLAG,
 U,V,W,
-X_OFFSET,X_PEAK,X_10,X_30,X_50,X_70,X_90
+X_OFFSET,X_PEAK,X_10,X_30,X_50,X_70,X_90,
+DEW_ERA5,ST1_ERA5,ST2_ERA5,LE_ERA5,PRES_ERA5,H_ERA5,
+RAD_ERA5,AIRT_ERA5,PPT_ERA5,U_ERA5,V_ERA5,VWC1_ERA5,VWC2_ERA5
+
 
 )
 ```
