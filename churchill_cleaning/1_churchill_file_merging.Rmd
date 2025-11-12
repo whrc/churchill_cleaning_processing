@@ -46,10 +46,7 @@ for (i in 1:length(h)) {
 }
 
 #make all the lists into one dataframe
-df = dat[[1]]
-for (i in 2:length(dat)) {
-  df = rbind.fill(df,dat[[i]])
-}
+df = rbindlist(dat, use.names = T)
 
 #create a timestamp from the date and time
 df$ts = as.POSIXct(x = paste(df$date,df$time,sep = ' '),tz = 'UTC')
@@ -133,10 +130,7 @@ for (i in 1:length(files)) {
 }
 
 #make all the lists into one dataframe
-df = met_list[[1]]
-for (i in 2:length(met_list)) {
-  df = rbind.fill(df,met_list[[i]])
-}
+df = rbindlist(met_list, use.names = T)
 
 
 df = df[!duplicated(df$TIMESTAMP),]
@@ -162,4 +156,9 @@ write.csv(x = df,file = './outputs/cleaning/Churchill_met_merged_2025.csv',row.n
 
 ```
 
+
+Notes: 
+
+Add a few more plots for checks
+change other sites to rbindfill, copy use.names = T
 
