@@ -124,7 +124,7 @@ Plot NEE and what we might clean
 ```{r, warning=FALSE}
 ggplot(data = df)+
   geom_point(aes(x = TIMESTAMP, y = co2_flux))+
-  geom_hline(yintercept = c(-15,8))
+  geom_hline(yintercept = c(-15,8)) ## expand absolute limits here to do less cleaning
 
 #This filter removes points outside of absolute limits and high uptake, low light points
 co2_flux.limits = ifelse(df$co2_flux > 8 | df$co2_flux < -15 | 
@@ -141,7 +141,7 @@ Plot CH4 and what we might clean
 ggplot(data = df)+
   geom_point(aes(ts,ch4_flux))+
   scale_y_continuous(limits = c(-1,1))+
-  geom_hline(yintercept = c(-0.15,0.28))
+  geom_hline(yintercept = c(-0.15,0.28)) ## expand absolute limits here to do less cleaning
 
 ch4_flux.limits =ifelse(df$ch4_flux < -0.15 | df$ch4_flux > 0.28,1,0)
 ```
@@ -157,7 +157,7 @@ Clean based on graphs, create new variable (H.limits), and see cleaned product
 ggplot(data = df)+
   geom_point(aes(ts,H))+
   scale_y_continuous(limits = c(-200,500))+
-  geom_hline(yintercept = c(-200,300))
+  geom_hline(yintercept = c(-200,300)) ## expand absolute limits here to do less cleaning
 
 H.limits =ifelse(df$H < -200 | df$H > 300,1,0)
 ```
@@ -303,7 +303,9 @@ now filter the data based on this signal
 
 ```{r, warning=FALSE}
 #adjust this value (N) to tweak how many MADs to be away from the norm
-N = 4
+
+## Use 3 here for 7200, in future use 4 for 7500
+N = 3
 
 #Add clean value to dataframe (_.c)
 
@@ -313,8 +315,8 @@ df$co2_flux.c = ifelse(abs(co2fluxclean - Flux_filt) > (N * roll.mad),NA,co2flux
 ggplot(data = df)+geom_hline(yintercept = 0)+
   geom_point(aes(TIMESTAMP,co2_flux),col='red')+
   geom_point(aes(TIMESTAMP,co2_flux.c),col='black')+
-  # scale_y_continuous(limits=c(-15,15))+
-  # scale_x_datetime(limits = as.POSIXct(c("2025-07-30","2025-09-30")))
+  scale_y_continuous(limits=c(-15,15))+
+  scale_x_datetime(limits = as.POSIXct(c("2025-07-14","2025-07-20")))
   scale_x_datetime(limits = as.POSIXct(flux_dates,format="%F"))
 ```
 See data with multiple layers of the MAD filter to see if it should be changed
@@ -345,7 +347,7 @@ Flux_i    = filtfilt(b, a, na.omit(f)) #create a forward and reverse ARMA filter
 Flux_filt = f                          # make a copy of the full fluxes again
 Flux_filt[ind] = Flux_i                # apply the filter where the real data exist
 
-n = 7*48 # set the length of the rolling filter, 48 half hours in day * x days
+n = 7*48 # set the length of the rolling filter, 48 half hours in day * 7 days (keep this at 7)
 roll.mad = rollapply(data = Flux_filt,
                      width = n,
                      FUN = mad,
@@ -367,7 +369,9 @@ adjust this (N) to tweak how many MADs to be away from the norm, CH4 deserves mo
 
 
 ```{r, warning=FALSE}
-N = 7
+## Keep this consistent at 8
+
+N = 8
 
 df$ch4_flux.c = ifelse(abs(ch4fluxclean - Flux_filt) > (N * roll.mad),NA,ch4fluxclean)
 
@@ -375,7 +379,7 @@ ggplot(data = df)+geom_hline(yintercept = 0)+
   geom_point(aes(TIMESTAMP,ch4_flux,col='uncleaned'))+
   geom_point(aes(TIMESTAMP,ch4_flux.c,col='cleaned'))+
   scale_y_continuous(limits = c(-.25,.3))+
-  scale_x_datetime(limits = as.POSIXct(flux_dates,format="%F"))+
+  scale_x_datetime(limits = as.POSIXct(as.POSIXct(c('2025-03-04','2025-03-10'),format="%F"),format="%F"))+
   scale_color_manual(values=c('black','red'))
 ```
 
@@ -459,6 +463,7 @@ ggplot(df)+geom_hline(yintercept = 0)+
 Now filter the data based on this signal (N) adjust this to tweak how many MADs to be away from the norm, add clean value to dataframe (_.c) and Compare Clean vs. Uncleaned
 
 ```{r, warning=FALSE}
+#Leave at 3
 N = 3
 
 df$H.c = ifelse(abs(Hclean - Flux_filt) > (N * roll.mad),NA,Hclean)
@@ -520,7 +525,8 @@ ggplot(df)+geom_hline(yintercept = 0)+
 Now filter the data based on this signal (N) adjust this to tweak how many MADs to be away from the norm
 
 ```{r, warning=FALSE}
-N = 6
+# Leave at 3
+N = 3
 
 df$LE.c = ifelse(abs(LEclean - Flux_filt) > (N * roll.mad),NA,LEclean)
 
