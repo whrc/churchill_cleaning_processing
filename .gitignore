@@ -2,11 +2,10 @@
 .Rhistory
 .RData
 .Ruserdata
-/data
-/outputs
 /ameriflux
-/internal_data
-/era5
 /png
 /internal
-
+## /data is too large to push
+/data
+/outputs
+/era

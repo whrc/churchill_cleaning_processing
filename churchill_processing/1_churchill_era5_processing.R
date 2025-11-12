@@ -8,7 +8,7 @@ library(zoo)
 setwd('C:/Users/dtrangmoe/Documents/github/churchill_cleaning_processing')
 
 #read in the full dataset
-era = fread('./era5/ERA5hourly_2022_Oct2025_Churchill_2.csv')
+era = fread('./era5/ERA5hourly_2022_Oct2025_Churchill.csv')
 
 #make more R friendly names
 names(era)[c(17:30)] = c('date','dew','st1','st2','le','pres','h','rad','airt','ppt','u','v','vwc1','vwc2')
