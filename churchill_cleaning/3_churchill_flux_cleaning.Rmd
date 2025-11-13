@@ -56,6 +56,21 @@ cleaning code. Used to easily change date range for different data sets.
 flux_dates <- c('2025-01-01', '2025-09-30')
 ```
 
+## Create Flags
+
+```{r, warning=FALSE}
+df$Tau.flag <- as.numeric(df$qc_Tau)
+df$co2_flux.flag <- as.numeric(df$qc_co2_flux)
+df$ch4_flux.flag <- as.numeric(df$qc_ch4_flux)
+df$LE.flag <- as.numeric(df$qc_LE)
+df$H.flag <- as.numeric(df$qc_H)
+
+
+#check that it worked
+plot(df$qc_co2_flux, df$co2_flux.flag)
+
+```
+
 
 # Initial Clean
 
@@ -64,13 +79,14 @@ flux_dates <- c('2025-01-01', '2025-09-30')
 filter by the eddypro flags and create new variable _.qc
 
 ```{r, warning=FALSE}
-Tau.qc      = ifelse(df$qc_Tau == 2,1,0)
-co2_flux.qc = ifelse(df$qc_co2_flux == 2,1,0)
-ch4_flux.qc = ifelse(df$qc_ch4_flux == 2,1,0)
-LE.qc       = ifelse(df$qc_LE == 2,1,0)
-H.qc        = ifelse(df$qc_H == 2,1,0)
+Tau.qc      = replace(df$Tau,df$qc_Tau == 2,NA)
+co2_flux.qc = replace(df$co2_flux,df$qc_co2_flux == 2,NA)
+ch4_flux.qc = replace(df$ch4_flux,df$qc_ch4_flux == 2,NA)
+LE.qc       = replace(df$LE,df$qc_LE == 2,NA)
+H.qc        = replace(df$H,df$qc_H == 2,NA)
 ```
 
+## Diagnostics cleaning
 Clean some data based on instrument diagnostics
 ```{r}
 signal.threshold.co2 = ifelse(df$co2_signal_strength_7200_mean >= 75,0,1)
@@ -86,12 +102,23 @@ ggplot(data = df)+
   scale_y_continuous(limits = c(-0.5,0.25))
 
 ggplot(data = df)+
-  geom_point(aes(ts,h2o_flux,color=signal.threshold.h2o))+
-  scale_y_continuous(limits = c(-5,10))
-
-ggplot(data = df)+
   geom_point(aes(ts,LE,color=signal.threshold.h2o))+
   scale_y_continuous(limits = c(-200,500))
+
+
+co2_flux.ss = replace(df$co2_flux, df$co2_signal_strength_7200_mean <= 75,NA)
+ch4_flux.ss = replace(df$ch4_flux, df$rssi_77_mean <= 10,NA)
+LE.ss       = replace(df$LE, df$h2o_signal_strength_7200_mean <= 75,NA)
+
+# Make .flag = 5 everywhere where cleaning is done via signal strength
+df$co2_flux.flag <- ifelse(is.na(co2_flux.ss) & !is.na(df$co2_flux) & df$co2_flux.flag != 2, 5, df$co2_flux.flag)
+
+# Make .flag = 5 everywhere where cleaning is done via signal strength
+df$ch4_flux.flag <- ifelse(is.na(ch4_flux.ss) & !is.na(df$ch4_flux) & df$ch4_flux.flag != 2, 5, df$ch4_flux.flag)
+
+# Make .flag = 5 everywhere where cleaning is done via signal strength
+df$LE.flag <- ifelse(is.na(LE.ss) & !is.na(df$LE) & df$LE.flag != 2, 5, df$LE.flag)
+
 ```
 
 
@@ -112,9 +139,12 @@ Cut the crazy data and create new variable (Tau.limits)
 ```{r, warning=FALSE}
 
 Tau.limits = df$Tau
-Tau.limits = ifelse(df$Tau < -0.8 | df$Tau > .1,1,0)
+Tau.limits = replace(Tau.limits, df$Tau < -0.8 | df$Tau > .1,NA)
 
-summary(Tau.limits)
+# Make .flag = 3 everywhere where cleaning is done via absolute limits
+df$Tau.flag <- ifelse(is.na(Tau.limits) & !is.na(df$Tau) & df$Tau.flag != 2, 3, df$Tau.flag)
+
+hist(Tau.limits, breaks = 100)
 ```
 
 ### NEE
@@ -127,8 +157,13 @@ ggplot(data = df)+
   geom_hline(yintercept = c(-15,8)) ## expand absolute limits here to do less cleaning
 
 #This filter removes points outside of absolute limits and high uptake, low light points
-co2_flux.limits = ifelse(df$co2_flux > 8 | df$co2_flux < -15 | 
-                           (df$co2_flux < -5 & df$PPFD_7_21_1_1_1.c < 150),1,0)
+co2_flux.limits <- df$co2_flux
+co2_flux.limits = replace(co2_flux.limits, (df$co2_flux > 8 | df$co2_flux < -15 | (df$co2_flux < -5 & df$PPFD_7_21_1_1_1.c < 150)),NA)
+
+
+# Make .flag = 3 everywhere where cleaning is done via absolute limits
+df$co2_flux.flag <- ifelse(is.na(co2_flux.limits) & !is.na(df$co2_flux) & df$co2_flux.flag != 2 & df$co2_flux.flag != 5, 3, df$co2_flux.flag)
+
 ```
 
 
@@ -143,7 +178,11 @@ ggplot(data = df)+
   scale_y_continuous(limits = c(-1,1))+
   geom_hline(yintercept = c(-0.15,0.28)) ## expand absolute limits here to do less cleaning
 
-ch4_flux.limits =ifelse(df$ch4_flux < -0.15 | df$ch4_flux > 0.28,1,0)
+ch4_flux.limits <- df$ch4_flux
+ch4_flux.limits = replace(ch4_flux.limits, (df$ch4_flux < -0.15 | df$ch4_flux > 0.28),NA)
+
+# Make .flag = 3 everywhere where cleaning is done via absolute limits
+df$ch4_flux.flag <- ifelse(is.na(ch4_flux.limits) & !is.na(df$ch4_flux) & df$ch4_flux.flag != 2 & df$ch4_flux.flag != 5, 3, df$ch4_flux.flag)
 ```
 
 
@@ -159,7 +198,11 @@ ggplot(data = df)+
   scale_y_continuous(limits = c(-200,500))+
   geom_hline(yintercept = c(-200,300)) ## expand absolute limits here to do less cleaning
 
-H.limits =ifelse(df$H < -200 | df$H > 300,1,0)
+H.limits <- df$H
+H.limits=replace(H.limits, df$H < -200 | df$H > 300, NA)
+
+# Make .flag = 3 everywhere where cleaning is done via absolute limits
+df$H.flag <- ifelse(is.na(H.limits) & !is.na(df$H) & df$H.flag != 2, 3, df$H.flag)
 ```
 
 ### LE
@@ -174,30 +217,12 @@ ggplot(data = df)+
   scale_y_continuous(limits = c(-200,500))+
   geom_hline(yintercept = c(-50,450))
 
-LE.limits =ifelse(df$LE < -50 | df$LE > 450,1,0)
-```
+LE.limits <- df$LE
+LE.limits =replace(LE.limits, df$LE < -50 | df$LE > 450,NA)
 
-## Plot abs. limits cleaning 
-```{r}
-ggplot(data = df)+
-  geom_point(aes(ts,Tau,color=Tau.limits))+
-  scale_y_continuous(limits = c(-1.5, 0.5))
 
-ggplot(data = df)+
-  geom_point(aes(ts,co2_flux,color=co2_flux.limits))+
-  scale_y_continuous(limits = c(-35,60))
-
-ggplot(data = df)+
-  geom_point(aes(ts,ch4_flux,color=ch4_flux.limits))+
-  scale_y_continuous(limits = c(-0.6,0.4))
-
-ggplot(data = df)+
-  geom_point(aes(ts,H,color=H.limits))+
-  scale_y_continuous(limits = c(-215,690))
-
-ggplot(data = df)+
-  geom_point(aes(ts,LE,color=LE.limits))+
-  scale_y_continuous(limits = c(-100,1100))
+# Make .flag = 3 everywhere where cleaning is done via absolute limits
+df$LE.flag <- ifelse(is.na(LE.limits) & !is.na(df$LE) & df$LE.flag != 2 & df$LE.flag != 5, 3, df$LE.flag)
 
 ```
 
@@ -235,23 +260,15 @@ df$u_flag = ifelse(df$`u*` < Uthreshold,1,0)
 investigate the previous limits and combine all to create a new variable (clean), plot to see difference
 
 ```{r, warning=FALSE}
-co2fluxclean = ifelse(co2_flux.qc == 2 | 
-                      co2_flux.limits == 1 | 
-                      signal.threshold.co2 == 1,NA,df$co2_flux)
+co2fluxclean = ifelse(is.na(co2_flux.qc) | is.na(co2_flux.limits) | is.na(co2_flux.ss),NA,df$co2_flux)
 
-ch4fluxclean = ifelse(ch4_flux.qc == 2 | 
-                      ch4_flux.limits == 1 |
-                      signal.threshold.ch4 == 1,NA,df$ch4_flux)
+ch4fluxclean = ifelse(is.na(ch4_flux.qc) | is.na(ch4_flux.limits) | is.na(ch4_flux.ss),NA,df$ch4_flux)
 
-Hclean = ifelse(H.qc == 2 | 
-                H.limits == 1,NA,df$H)
+Hclean = ifelse(is.na(H.qc) | is.na(H.limits),NA,df$H)
 
-LEclean = ifelse(LE.qc == 2 | 
-                 LE.limits == 1 |
-                 signal.threshold.h2o == 1,NA,df$LE)
+LEclean = ifelse(is.na(LE.qc) | is.na(LE.limits) | is.na(LE.ss),NA,df$LE)
 
-Tauclean = ifelse(Tau.qc == 2 | 
-                  Tau.limits == 1,NA,df$Tau)
+Tauclean = ifelse(is.na(Tau.qc) | is.na(Tau.limits),NA,df$Tau)
 
 plot(df$ts,co2fluxclean)
 plot(df$ts,ch4fluxclean)
@@ -263,6 +280,24 @@ plot(df$ts,Tauclean)
 Add cleaned tau to dataframe (no MAD filter)
 ```{r, warning=FALSE}
 df$Tau.c = Tauclean
+
+df$Tau.flag <- as.factor(df$Tau.flag)
+summary(df$Tau.flag)
+
+color_map = c("0" = "yellow3", "1" = "darkblue" , "2" =  "red4", "3" = "pink3", "4" = "green4", "5" = "purple")
+
+# Flag = 0, 1, 2 : EP Flag
+# Flag = 3 : Absolute Limits Filter
+# Flag = 4 : Rolling MAD Filter
+# Flag = 5 : Diagnostic filter
+
+tau_plot = ggplot(data = df)+geom_hline(yintercept = 0)+
+  geom_point(aes(TIMESTAMP,Tau,color = Tau.flag))+
+  geom_point(aes(TIMESTAMP,Tau.c),col='black')+
+  #scale_y_continuous(limits=c(-12,8))+
+  scale_x_datetime(limits = as.POSIXct(c('2025-01-01','2025-09-30')))+
+scale_color_manual(values = color_map, name = "QC CO2 Flux")
+tau_plot
 ```
 
 
@@ -333,6 +368,32 @@ ggplot(data = df)+
   scale_x_datetime(limits = as.POSIXct(c('2025-09-15','2025-09-30'),format="%F"))+
   geom_line(aes(x = ts, y = PPFD_7_21_1_1_1.c/5000))
 ```
+
+Add flag data
+```{r}
+
+df$co2_flux.flag <- ifelse(is.na(df$co2_flux.c) & !is.na(co2fluxclean) & df$co2_flux.flag != 2 & df$co2_flux.flag != 3 & df$co2_flux.flag != 5, 4, df$co2_flux.flag)
+
+df$co2_flux.flag <- as.factor(df$co2_flux.flag)
+summary(df$co2_flux.flag)
+
+color_map = c("0" = "yellow3", "1" = "darkblue" , "2" =  "red4", "3" = "pink3", "4" = "green4", "5" = "purple")
+
+# Flag = 0, 1, 2 : EP Flag
+# Flag = 3 : Absolute Limits Filter
+# Flag = 4 : Rolling MAD Filter
+# Flag = 5 : Diagnostic filter
+
+nee_plot = ggplot(data = df)+geom_hline(yintercept = 0)+
+  geom_point(aes(TIMESTAMP,co2_flux,color = co2_flux.flag))+
+  geom_point(aes(TIMESTAMP,co2_flux.c),col='black')+
+  scale_y_continuous(limits=c(-12,8))+
+  scale_x_datetime(limits = as.POSIXct(c("2025-01-01", "2025-09-20")))+
+scale_color_manual(values = color_map, name = "QC CO2 Flux")
+nee_plot
+
+```
+
 
 ## CH4
 ```{r, warning=FALSE}
@@ -429,6 +490,32 @@ ggplot(data = df)+
 ```
 
 
+Add flag data
+```{r}
+
+df$ch4_flux.flag <- ifelse(is.na(df$ch4_flux.c) & !is.na(ch4fluxclean) & df$ch4_flux.flag != 2 & df$ch4_flux.flag != 3, 4, df$ch4_flux.flag)
+
+df$ch4_flux.flag <- as.factor(df$ch4_flux.flag)
+summary(df$ch4_flux.flag)
+
+color_map = c("0" = "yellow3", "1" = "darkblue" , "2" =  "red4", "3" = "pink3", "4" = "green4", "5" = "purple")
+
+# Flag = 0, 1, 2 : EP Flag
+# Flag = 3 : Absolute Limits Filter
+# Flag = 4 : Rolling MAD Filter
+# Flag = 5 : Diagnostic filter
+
+ch4_plot = ggplot(data = df)+geom_hline(yintercept = 0)+
+  geom_point(aes(TIMESTAMP,ch4_flux,color = ch4_flux.flag))+
+  geom_point(aes(TIMESTAMP,ch4_flux.c),col='black')+
+  scale_y_continuous(limits=c(-0.1,0.3))+
+  scale_x_datetime(limits = as.POSIXct(c("2025-06-17", "2025-06-23")))+
+scale_color_manual(values = color_map, name = "QC CH4 Flux")
+ch4_plot
+
+```
+
+
 ## H
 ```{r, warning=FALSE}
 # apply the moving window filter
@@ -488,6 +575,31 @@ ggplot(data = df)+
   geom_point(aes(df$ts,H.c),col='black')+
   #scale_y_continuous(limits = c(-100,100))+
   scale_x_datetime(limits = as.POSIXct(c('2025-08-19','2025-09-24')))
+```
+
+
+Add flag data
+```{r}
+
+df$H.flag <- ifelse(is.na(df$H.c) & !is.na(co2fluxclean) & df$H.flag != 2 & df$H.flag != 3, 4, df$H.flag)
+
+df$H.flag <- as.factor(df$H.flag)
+summary(df$H.flag)
+
+color_map = c("0" = "yellow3", "1" = "darkblue" , "2" =  "red4", "3" = "pink3", "4" = "green4", "5" = "purple")
+
+# Flag = 0, 1, 2 : EP Flag
+# Flag = 3 : Absolute Limits Filter
+# Flag = 4 : Rolling MAD Filter
+# Flag = 5 : Diagnostic filter
+
+h_plot = ggplot(data = df)+geom_hline(yintercept = 0)+
+  geom_point(aes(TIMESTAMP,H,color = H.flag))+
+  geom_point(aes(TIMESTAMP,H.c),col='black')+
+  scale_y_continuous(limits=c(-300,600))+
+  scale_x_datetime(limits = as.POSIXct(c("2025-01-01", "2025-09-20")))+
+scale_color_manual(values = color_map, name = "QC CO2 Flux")
+h_plot
 ```
 
 ## LE
@@ -551,6 +663,33 @@ ggplot(data = df)+
   scale_y_continuous(limits = c(-20,20))+
   scale_x_datetime(limits = as.POSIXct(c('2025-01-20','2025-2-15')))
 ```
+
+
+Add flag data
+```{r}
+
+df$LE.flag <- ifelse(is.na(df$LE.c) & !is.na(co2fluxclean) & df$LE.flag != 2 & df$LE.flag != 3, 4, df$LE.flag)
+
+df$LE.flag <- as.factor(df$LE.flag)
+summary(df$LE.flag)
+
+color_map = c("0" = "yellow3", "1" = "darkblue" , "2" =  "red4", "3" = "pink3", "4" = "green4", "5" = "purple")
+
+# Flag = 0, 1, 2 : EP Flag
+# Flag = 3 : Absolute Limits Filter
+# Flag = 4 : Rolling MAD Filter
+# Flag = 5 : Diagnostic filter
+
+le_plot = ggplot(data = df)+geom_hline(yintercept = 0)+
+  geom_point(aes(TIMESTAMP,LE,color = LE.flag))+
+  geom_point(aes(TIMESTAMP,LE.c),col='black')+
+  #scale_y_continuous(limits=c(-12,8))+
+  scale_x_datetime(limits = as.POSIXct(c("2025-01-01", "2025-09-20")))+
+scale_color_manual(values = color_map, name = "QC LE")
+le_plot
+
+```
+
 
 # Main Plots
 
