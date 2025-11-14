@@ -38,7 +38,11 @@ library(bigleaf) # for radiation check
 
 df <- fread('./data/cleaned/Churchill_Met_Flux_Clean_Ameriflux_2025.csv')
 
+df$ts <- df$ts-6*3600 #adjust timezone from UTC to CST
+df$TIMESTAMP <- df$TIMESTAMP-6*3600 #adjust timezone from UTC to CST
+
 df_month <- subset(df, df$TIMESTAMP >= as.POSIXct("2025-09-01 0000", tz = "UTC"))
+
 
 # data formatting for flag plots
 
@@ -293,29 +297,36 @@ eb_month
 
 Create potential radiation dataset
 ```{r}
+ts <- as.POSIXct(seq(from = as.POSIXct('2025-01-01 00:00', tz = 'UTC'),
+                           to = as.POSIXct('2025-10-01 00:00', tz = 'UTC'),
+                           by = 60*30),'yyyy-mm-dd HH:MM:SS', tz = 'UTC')
 
-JD = as.numeric(format(seq(from = as.POSIXct('2025-01-01 00:00'),
-                           to = as.POSIXct('2025-10-01 00:00'),
+JD <- as.numeric(format(seq(from = as.POSIXct('2025-01-01 00:00', tz = 'UTC'),
+                           to = as.POSIXct('2025-10-01 00:00', tz = 'UTC'),
                            by = 60*30),'%j'))
-h = as.numeric(format(seq(from = as.POSIXct('2025-01-01 00:00'),
-                           to = as.POSIXct('2025-10-01 00:00'),
+h <- as.numeric(format(seq(from = as.POSIXct('2025-01-01 00:00', tz = 'UTC'),
+                           to = as.POSIXct('2025-10-01 00:00', tz = 'UTC'),
                            by = 60*30),'%H'))
-m = as.numeric(format(seq(from = as.POSIXct('2025-01-01 00:00'),
-                          to = as.POSIXct('2025-10-01 00:00'),
+m <- as.numeric(format(seq(from = as.POSIXct('2025-01-01 00:00', tz = 'UTC'),
+                          to = as.POSIXct('2025-10-01 00:00', tz = 'UTC'),
                           by = 60*30),'%M'))
-H = h+ifelse(m == 30,0.5,0)
+H <- h+ifelse(m == 30,0.5,0)
 
 rpot <- potential.radiation(doy = JD,hour = H,latDeg = 59,longDeg = -94,timezone = -6,useSolartime = F)
 
-df$rpot <- rpot
+rpot <- as.data.frame(cbind(ts, rpot))
 
+df <- merge(df, rpot, by = 'ts', all.x = T)
 
-plot(rpot ~ JD, type = 'l'
-  , ylab = 'potential radiation (W m-2)')
-lines(rpot ~  JD, col = "blue")
-abline(v = 12, col = "blue", lty = "dotted")
-legend("bottomright", legend = c("solar time", "local winter time")
-, col = c("black", "blue"), inset = 0.05, lty = 1)
+#check that it worked
+ggplot(data = df)+
+  geom_line(aes(x = ts, y = rpot), color = "blue2")+
+  geom_line(aes(x = ts, y = SWIN_6_10_1_1_1.c))+
+  scale_x_datetime(limits = as.POSIXct(c("2025-03-01", "2025-03-10")))
+  #geom_vline(xintercept = as.POSIXct("2025-07-03 7:00"))
+
+ggplot(data = df)+
+  geom_point(aes(x = rpot, y = SWIN_6_10_1_1_1.c))
 
 ```
 
