@@ -5,40 +5,382 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = 'C:/Users/dtrangmoe/Documents/github/churchill_cleaning_processing') #use this to set your directory
+```
+
+
 This file generates plots for the monthly data check meetings. It doesn't do
 any cleaning or processing- not necessary to run this to get cleaned data set
 
+# Load packages, cleaned data 
+```{r, include=FALSE}
+rm(list = ls())
+
+library(data.table)
+library(ggplot2)
+library(cowplot)
+library(openair)
+library(plotrix)
+library(signal)
+library(svMisc)
+library(zoo)
+library(stringr)
+library(plyr)
+library(dplyr)
+library(patchwork) # formats plots
+library(bigleaf) # for radiation check
+```
+
+
+```{r, include = FALSE}
+
+df <- fread('./data/cleaned/Churchill_Met_Flux_Clean_Ameriflux_2025.csv')
+
+df_month <- subset(df, df$TIMESTAMP >= as.POSIXct("2025-09-01 0000", tz = "UTC"))
+
+# data formatting for flag plots
+
+df$co2_flux.flag <- as.factor(df$co2_flux.flag)
+df$ch4_flux.flag <- as.factor(df$ch4_flux.flag)
+
+color_map = c("0" = "yellow3", "1" = "darkblue" , "2" =  "red4", "3" = "orange", "4" = "green4", "5" = "purple")
+
+```
+
+
+
 # Timeseries Plots
 
-
 ## Year-to-Date CO2
+```{r}
+
+# Flag = 0, 1, 2 : EP Flag
+# Flag = 3 : Absolute Limits Filter
+# Flag = 4 : Rolling MAD Filter
+# Flag = 5 : Diagnostic filter
+
+nee_plot_ytd = ggplot(data = df)+geom_hline(yintercept = 0)+
+  geom_point(aes(TIMESTAMP,co2_flux,color = co2_flux.flag))+
+  geom_point(aes(TIMESTAMP,co2_flux.c),col='black')+
+  scale_y_continuous(limits=c(-12,8))+
+  scale_x_datetime(limits = as.POSIXct(c("2025-01-01", "2025-09-20")))+
+  labs(
+    x = NULL,
+    y = expression(paste( ~CO[2], ~"Flux (umol m",""^"-2","s",""^"-1",")"))
+  ) +
+scale_color_manual(values = color_map, name = "Cleaning Flag")
+nee_plot_ytd
+```
+
 
 ## Previous Month CO2
+```{r}
+
+# Flag = 0, 1, 2 : EP Flag
+# Flag = 3 : Absolute Limits Filter
+# Flag = 4 : Rolling MAD Filter
+# Flag = 5 : Diagnostic filter
+
+nee_plot_month = ggplot(data = df)+geom_hline(yintercept = 0)+
+  geom_point(aes(TIMESTAMP,co2_flux,color = co2_flux.flag))+
+  geom_point(aes(TIMESTAMP,co2_flux.c),col='black')+
+  scale_y_continuous(limits=c(-12,8))+
+    labs(
+    x = NULL,
+    y = expression(paste( ~CO[2], ~"Flux (umol m",""^"-2","s",""^"-1",")"))
+  ) +
+  scale_x_datetime(limits = as.POSIXct(c("2025-09-01", "2025-09-30")))+
+scale_color_manual(values = color_map, name = "QC CO2 Flux")
+nee_plot_month
+
+```
+
 
 ## Week zoom-in CO2
+```{r}
+
+# Flag = 0, 1, 2 : EP Flag
+# Flag = 3 : Absolute Limits Filter
+# Flag = 4 : Rolling MAD Filter
+# Flag = 5 : Diagnostic filter
+
+nee_plot_week = ggplot(data = df)+geom_hline(yintercept = 0)+
+  geom_point(aes(TIMESTAMP,co2_flux,color = co2_flux.flag))+
+  geom_point(aes(TIMESTAMP,co2_flux.c),col='black')+
+  scale_y_continuous(limits=c(-12,8))+
+    labs(
+    x = NULL,
+    y = expression(paste( ~CO[2], ~"Flux (umol m",""^"-2","s",""^"-1",")"))
+  ) +
+  scale_x_datetime(limits = as.POSIXct(c("2025-09-08", "2025-09-15")))+
+scale_color_manual(values = color_map, name = "QC CO2 Flux")
+nee_plot_week
+
+```
+
 
 
 ## Year-to-Date Methane
+```{r}
+
+# Flag = 0, 1, 2 : EP Flag
+# Flag = 3 : Absolute Limits Filter
+# Flag = 4 : Rolling MAD Filter
+# Flag = 5 : Diagnostic filter
+
+ch4_plot_year = ggplot(data = df)+geom_hline(yintercept = 0)+
+  geom_point(aes(TIMESTAMP,ch4_flux,color = ch4_flux.flag))+
+  geom_point(aes(TIMESTAMP,ch4_flux.c),col='black')+
+  scale_y_continuous(limits=c(-0.1,0.33))+
+  labs(
+    x = NULL,
+    y = expression(paste( ~CH[4], ~"Flux (umol m",""^"-2","s",""^"-1",")"))
+  ) +
+  scale_x_datetime(limits = as.POSIXct(c("2025-01-01", "2025-09-30")))+
+scale_color_manual(values = color_map, name = "QC CH4 Flux")
+ch4_plot_year
+
+```
+
 
 ## Previous Month Methane
+```{r}
+
+# Flag = 0, 1, 2 : EP Flag
+# Flag = 3 : Absolute Limits Filter
+# Flag = 4 : Rolling MAD Filter
+# Flag = 5 : Diagnostic filter
+
+ch4_plot_month = ggplot(data = df)+geom_hline(yintercept = 0)+
+  geom_point(aes(TIMESTAMP,ch4_flux,color = ch4_flux.flag))+
+  geom_point(aes(TIMESTAMP,ch4_flux.c),col='black')+
+  scale_y_continuous(limits=c(-0.1,0.33))+  
+  labs(
+    x = NULL,
+    y = expression(paste( ~CH[4], ~"Flux (umol m",""^"-2","s",""^"-1",")"))
+  ) +
+  scale_x_datetime(limits = as.POSIXct(c("2025-09-01", "2025-09-30")))+
+scale_color_manual(values = color_map, name = "QC CH4 Flux")
+ch4_plot_month
+
+```
+
 
 ## Week zoom-in Methane
+```{r}
+
+# Flag = 0, 1, 2 : EP Flag
+# Flag = 3 : Absolute Limits Filter
+# Flag = 4 : Rolling MAD Filter
+# Flag = 5 : Diagnostic filter
+
+ch4_plot_week = ggplot(data = df)+geom_hline(yintercept = 0)+
+  geom_point(aes(TIMESTAMP,ch4_flux,color = ch4_flux.flag))+
+  geom_point(aes(TIMESTAMP,ch4_flux.c),col='black')+
+  scale_y_continuous(limits=c(-0.1,0.33))+
+  labs(
+    x = NULL,
+    y = expression(paste( ~CH[4], ~"Flux (umol m",""^"-2","s",""^"-1",")"))
+  ) +
+  scale_x_datetime(limits = as.POSIXct(c("2025-09-08", "2025-09-15")))+
+scale_color_manual(values = color_map, name = "QC CH4 Flux")
+ch4_plot_week
+
+```
+
 
 
 # Energy Balance Plots
 
 ## Full Year-to-date
+```{r}
+
+df$met = ((df$LWIN_6_14_1_1_1.c + df$SWIN_6_10_1_1_1.c) -
+         (df$LWOUT_6_15_1_1_1.c + df$SWOUT_6_11_1_1_1.c)) -
+        ((df$SHF_6_37_1_1_1.c + df$SHF_6_37_2_1_1.c)/2)
+df$flux = df$H.c + df$LE.c
+
+# Fit linear model
+mod = lm(flux ~ met, data = df)
+summary_mod = summary(mod)
+
+# Extract slope and R²
+slope = coef(mod)["met"]
+r2 = summary_mod$r.squared
+cat("Slope:", slope, "\nR²:", r2, "\n")
+
+# Define axis limits
+x_lim = c(-200,500)
+y_lim = c(-200,500)
+
+
+# Plot
+eb_ytd <- ggplot(df, aes(x = met, y = flux)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", color = "blue", se = FALSE) +
+  geom_abline(slope = 1, intercept = 0,
+               linetype = "dashed", color = "red") +
+  geom_hline(yintercept = 0, linetype = "solid", color = "black") +
+  geom_vline(xintercept = 0, linetype = "solid", color = "black") +
+  coord_fixed(ratio = 1, xlim = x_lim, ylim = y_lim) +
+  labs(
+    x = expression("Rn - G  (Wm"^-2*")"),
+    y = expression("H + LE  (Wm"^-2*")"),
+    title = expression("Full Year EB")
+  ) +
+  annotate(
+    "text",
+    x = Inf, y = -Inf,
+    label = paste0("Slope = ", round(slope, 3), "\nR² = ", round(r2, 3)),
+    hjust = 1.1, vjust = -0.5, size = 4
+  ) +
+  theme_bw()
+eb_ytd
+```
+
 
 ## Previous Month
+```{r}
+
+df_month$met = ((df_month$LWIN_6_14_1_1_1.c + df_month$SWIN_6_10_1_1_1.c) -
+         (df_month$LWOUT_6_15_1_1_1.c + df_month$SWOUT_6_11_1_1_1.c)) -
+        ((df_month$SHF_6_37_1_1_1.c + df_month$SHF_6_37_2_1_1.c)/2)
+df_month$flux = df_month$H.c + df_month$LE.c
+
+# Fit linear model
+mod = lm(flux ~ met, data = df_month)
+summary_mod = summary(mod)
+
+# Extract slope and R²
+slope = coef(mod)["met"]
+r2 = summary_mod$r.squared
+cat("Slope:", slope, "\nR²:", r2, "\n")
+
+# Define axis limits
+x_lim = c(-200,500)
+y_lim = c(-200,500)
+
+# Plot
+eb_month <- ggplot(df_month, aes(x = met, y = flux)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", color = "blue", se = FALSE) +
+  geom_abline(slope = 1, intercept = 0,
+               linetype = "dashed", color = "red") +
+  geom_hline(yintercept = 0, linetype = "solid", color = "black") +
+  geom_vline(xintercept = 0, linetype = "solid", color = "black") +
+  coord_fixed(ratio = 1, xlim = x_lim, ylim = y_lim) +
+  labs(
+    x = expression("Rn - G  (Wm"^-2*")"),
+    y = expression("H + LE  (Wm"^-2*")"),
+    title = expression("Previous Month EB")
+  ) +
+  annotate(
+    "text",
+    x = Inf, y = -Inf,
+    label = paste0("Slope = ", round(slope, 3), "\nR² = ", round(r2, 3)),
+    hjust = 1.1, vjust = -0.5, size = 4
+  ) +
+  theme_bw()
+eb_month
+
+```
+
 
 
 # Timestamp Alignment Check
 
+Create potential radiation dataset
+```{r}
+
+JD = as.numeric(format(seq(from = as.POSIXct('2025-01-01 00:00'),
+                           to = as.POSIXct('2025-10-01 00:00'),
+                           by = 60*30),'%j'))
+h = as.numeric(format(seq(from = as.POSIXct('2025-01-01 00:00'),
+                           to = as.POSIXct('2025-10-01 00:00'),
+                           by = 60*30),'%H'))
+m = as.numeric(format(seq(from = as.POSIXct('2025-01-01 00:00'),
+                          to = as.POSIXct('2025-10-01 00:00'),
+                          by = 60*30),'%M'))
+H = h+ifelse(m == 30,0.5,0)
+
+rpot <- potential.radiation(doy = JD,hour = H,latDeg = 59,longDeg = -94,timezone = -6,useSolartime = F)
+
+df$rpot <- rpot
+
+
+plot(rpot ~ JD, type = 'l'
+  , ylab = 'potential radiation (W m-2)')
+lines(rpot ~  JD, col = "blue")
+abline(v = 12, col = "blue", lty = "dotted")
+legend("bottomright", legend = c("solar time", "local winter time")
+, col = c("black", "blue"), inset = 0.05, lty = 1)
+
+```
+
 ## Full Year-to-Date
+```{r}
+
+
+```
+
 
 ## Previous Month
+```{r}
+
+
+```
+
 
 ## Four-panel full timeseries check for entire month
+```{r}
 
 
-# Diurnal grid
+```
+
+
+
+# Diurnal Fluxes
+
+set hour and month vectors to be able to take the averages
+
+```{r, warning=FALSE}
+df$hour = as.numeric(format(df$ts,'%H'))
+df$month = as.numeric(format(df$ts,'%m'))
+
+diel = df %>%
+  group_by(hour,month) %>%
+  select(co2_flux.c,ch4_flux.c,LE.c,H.c, RN_6_5_1_1_1.c,hour,month) %>%
+  summarise_all(.funs = c(median,sd),na.rm=T)
+
+diel = subset(diel,!is.na(diel$month))
+```
+
+## NEE
+
+```{r, warning=FALSE}
+diurnal_nee <- ggplot(data = diel)+geom_hline(yintercept = 0)+
+  geom_line(aes(hour,co2_flux.c_fn1),lty=2)+
+  geom_ribbon(aes(x = hour,y = co2_flux.c_fn1,
+                  ymax = co2_flux.c_fn1 + co2_flux.c_fn2,
+                  ymin = co2_flux.c_fn1 - co2_flux.c_fn2),
+              alpha= 0.5)+
+  facet_wrap(~month)
+diurnal_nee
+```
+
+## CH4
+
+```{r, warning=FALSE}
+diurnal_ch4 <- ggplot(data = diel)+geom_hline(yintercept = 0)+
+  geom_line(aes(hour,ch4_flux.c_fn1),lty=2)+
+  geom_ribbon(aes(x = hour,y = ch4_flux.c_fn1,
+                  ymax = ch4_flux.c_fn1 + ch4_flux.c_fn2,
+                  ymin = ch4_flux.c_fn1 - ch4_flux.c_fn2),
+              alpha= 0.5)+
+  facet_wrap(~month)
+diurnal_ch4
+
+```
+
