@@ -1,0 +1,44 @@
+---
+title: "Data Quality Check"
+author: "Dani Trangmoe"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+This file generates plots for the monthly data check meetings. It doesn't do
+any cleaning or processing- not necessary to run this to get cleaned data set
+
+# Timeseries Plots
+
+
+## Year-to-Date CO2
+
+## Previous Month CO2
+
+## Week zoom-in CO2
+
+
+## Year-to-Date Methane
+
+## Previous Month Methane
+
+## Week zoom-in Methane
+
+
+# Energy Balance Plots
+
+## Full Year-to-date
+
+## Previous Month
+
+
+# Timestamp Alignment Check
+
+## Full Year-to-Date
+
+## Previous Month
+
+## Four-panel full timeseries check for entire month
+
+
+# Diurnal grid
