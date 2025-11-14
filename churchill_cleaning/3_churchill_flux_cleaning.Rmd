@@ -723,14 +723,14 @@ ch4 <- ggplot(data = df)+theme_bw()+geom_hline(yintercept = 0)+
 
 
 
-png(filename = './png/mainplotsflux.png',width = 12,height = 8,units = 'in',res = 2000)
-co2 / ch4  + plot_layout(guides = "collect", axes = "collect")
-dev.off()
-
-
-png(filename = './png/mainplotseb.png',width = 12,height = 8,units = 'in',res = 2000)
-le / h  + plot_layout(guides = "collect", axes = "collect")
-dev.off()
+# png(filename = './png/mainplotsflux.png',width = 12,height = 8,units = 'in',res = 2000)
+# co2 / ch4  + plot_layout(guides = "collect", axes = "collect")
+# dev.off()
+# 
+# 
+# png(filename = './png/mainplotseb.png',width = 12,height = 8,units = 'in',res = 2000)
+# le / h  + plot_layout(guides = "collect", axes = "collect")
+# dev.off()
 
 ```
 
