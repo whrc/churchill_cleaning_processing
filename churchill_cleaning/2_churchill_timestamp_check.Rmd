@@ -1,0 +1,134 @@
+---
+title: "Timestamp Check"
+author: "Dani Trangmoe"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = 'C:/Users/dtrangmoe/DocumenTIMESTAMP/github/churchill_cleaning_processing') #use this to set your directory
+```
+
+
+This file checks that timestamps are aligned and performs any necessary adjustmenTIMESTAMP
+
+# Load packages, cleaned data 
+```{r, include=FALSE}
+rm(list = ls())
+
+library(data.table)
+library(ggplot2)
+library(plotrix)
+library(zoo)
+library(stringr)
+library(plyr)
+library(dplyr)
+library(bigleaf) # for radiation check
+```
+
+
+```{r}
+
+df <- fread('./outputs/cleaning/Churchill_met_merged_2025.csv')
+
+df$TIMESTAMP <- as.POSIXct(ifelse(df$TIMESTAMP <= as.POSIXct("2025-06-28 23:30:00"), df$TIMESTAMP-6*3600, df$TIMESTAMP)) #adjust timezone from UTC to CST
+
+#Remove problematic chunk
+df <- filter(df, !(df$TIMESTAMP >= as.POSIXct("2025-02-26 18:00:00") &
+           df$TIMESTAMP <= as.POSIXct("2025-03-03 18:00:00")))
+
+#Refill timestamp to ensure full timeseries
+#check time stamps to ensure we have a complete series
+TIMESTAMP = seq(from = min(df$TIMESTAMP), to = max(df$TIMESTAMP),by = 60*30,tz = "UTC")
+tsdf = as.data.frame(TIMESTAMP)
+
+df = merge(tsdf,df,by = "TIMESTAMP",all = T)
+
+
+```
+
+
+
+
+# Timestamp Alignment Check
+
+Create potential radiation dataset
+```{r}
+TIMESTAMP <- as.POSIXct(seq(from = as.POSIXct('2025-01-01 00:00', tz = 'UTC'),
+                           to = as.POSIXct('2025-10-01 00:00', tz = 'UTC'),
+                           by = 60*30),'yyyy-mm-dd HH:MM:SS', tz = 'UTC')
+
+JD <- as.numeric(format(seq(from = as.POSIXct('2025-01-01 00:00', tz = 'UTC'),
+                           to = as.POSIXct('2025-10-01 00:00', tz = 'UTC'),
+                           by = 60*30),'%j'))
+h <- as.numeric(format(seq(from = as.POSIXct('2025-01-01 00:00', tz = 'UTC'),
+                           to = as.POSIXct('2025-10-01 00:00', tz = 'UTC'),
+                           by = 60*30),'%H'))
+m <- as.numeric(format(seq(from = as.POSIXct('2025-01-01 00:00', tz = 'UTC'),
+                          to = as.POSIXct('2025-10-01 00:00', tz = 'UTC'),
+                          by = 60*30),'%M'))
+H <- h+ifelse(m == 30,0.5,0)
+
+rpot <- potential.radiation(doy = JD,hour = H,latDeg = 59,longDeg = -94,timezone = -6,useSolartime = F)
+
+rpot <- as.data.frame(cbind(TIMESTAMP, rpot))
+
+df <- merge(df, rpot, by = 'TIMESTAMP', all = T)
+```
+
+
+One to one plot for check
+```{r}
+
+df$radflag <- ifelse(df$SWIN_6_10_1_1_1 > df$rpot, 1, 0)
+
+test <- subset(df, rpot < SWIN_6_10_1_1_1 & SWIN_6_10_1_1_1 > 500)
+
+ggplot(data = df)+
+  geom_point(aes(x = rpot, y = SWIN_6_10_1_1_1, color = radflag))+
+  geom_abline(yint = 0, slope = 1, color = "red")+
+  scale_x_continuous(limits = c(0, 1000))+
+  scale_y_continuous(limits = c(0, 1000))
+
+ggplot(data = df)+
+  geom_line(aes(TIMESTAMP, rpot), color = "purple3")+
+  geom_point(aes(TIMESTAMP, SWIN_6_10_1_1_1, color = radflag))+
+  scale_x_datetime(limits = as.POSIXct(c("2025-02-13","2025-02-21")))+
+  scale_y_continuous(limits = c(-10, 1000))
+  
+  
+```
+
+
+#Plots
+
+##### Known problematic periods: 
+
+February 26th to March 3rd, 2025
+
+```{r}
+
+ggplot(data = df)+
+  geom_line(aes(x = TIMESTAMP, y = rpot), color = "blue2")+
+  geom_line(aes(x = TIMESTAMP, y = SWIN_6_10_1_1_1))+
+  scale_x_datetime(limits = as.POSIXct(c("2025-02-20", "2025-03-08")))+
+  geom_vline(xintercept = as.POSIXct("2025-02-26 18:00"))+
+  geom_vline(xintercept = as.POSIXct("2025-03-03 18:00"))
+
+```
+
+Timestamp change on June 28th, 2025
+
+```{r}
+
+ggplot(data = df)+
+  geom_line(aes(x = TIMESTAMP, y = rpot), color = "blue2")+
+  geom_line(aes(x = TIMESTAMP, y = SWIN_6_10_1_1_1))+
+  scale_x_datetime(limits = as.POSIXct(c("2025-06-20", "2025-06-30")))+
+  geom_vline(xintercept = as.POSIXct("2025-06-24 18:00"))
+
+```
+
+
+
