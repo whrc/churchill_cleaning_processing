@@ -7,11 +7,11 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = 'C:/Users/dtrangmoe/DocumenTIMESTAMP/github/churchill_cleaning_processing') #use this to set your directory
+knitr::opts_knit$set(root.dir = 'C:/Users/dtrangmoe/Documents/github/churchill_cleaning_processing') #use this to set your directory
 ```
 
 
-This file checks that timestamps are aligned and performs any necessary adjustmenTIMESTAMP
+This file checks that timestamps are aligned and performs any necessary adjustments
 
 # Load packages, cleaned data 
 ```{r, include=FALSE}
@@ -50,7 +50,6 @@ df = merge(tsdf,df,by = "TIMESTAMP",all = T)
 
 
 
-
 # Timestamp Alignment Check
 
 Create potential radiation dataset
@@ -70,7 +69,7 @@ m <- as.numeric(format(seq(from = as.POSIXct('2025-01-01 00:00', tz = 'UTC'),
                           by = 60*30),'%M'))
 H <- h+ifelse(m == 30,0.5,0)
 
-rpot <- potential.radiation(doy = JD,hour = H,latDeg = 59,longDeg = -94,timezone = -6,useSolartime = F)
+rpot <- potential.radiation(doy = JD,hour = H,latDeg = 59,longDeg = -94,timezone = -6,useSolartime = F)*1.1
 
 rpot <- as.data.frame(cbind(TIMESTAMP, rpot))
 
@@ -90,20 +89,123 @@ ggplot(data = df)+
   geom_abline(yint = 0, slope = 1, color = "red")+
   scale_x_continuous(limits = c(0, 1000))+
   scale_y_continuous(limits = c(0, 1000))
-
-ggplot(data = df)+
-  geom_line(aes(TIMESTAMP, rpot), color = "purple3")+
-  geom_point(aes(TIMESTAMP, SWIN_6_10_1_1_1, color = radflag))+
-  scale_x_datetime(limits = as.POSIXct(c("2025-02-13","2025-02-21")))+
-  scale_y_continuous(limits = c(-10, 1000))
   
   
 ```
 
 
-#Plots
+### Create and display a plot of every two week period
 
-##### Known problematic periods: 
+# Create function
+```{r}
+generate_two_week_plots <- function(df, timestamp_col, value_col) {
+  
+  #Determine the overall date range
+  start_datetime <- min(df[[timestamp_col]])
+  end_datetime <- max(df[[timestamp_col]])
+
+  #Set the interval length: 14 days (in seconds)
+  interval_seconds <- 14 * 24 * 3600
+
+  #Initialize loop variables
+  current_start <- start_datetime
+  plot_count <- 1
+  
+  # The base plot object (data and aesthetics are defined once)
+  base_plot <- ggplot(data = df)+
+    aes(x = .data[[timestamp_col]], y = .data[[value_col]]) +
+    geom_point(aes(x = .data[[timestamp_col]], y = .data[[value_col]], color = .data[["radflag"]])) +
+    geom_line(aes(x = .data[[timestamp_col]], y = .data[["rpot"]]), color = "blue")+
+    labs(x = "Time", y = value_col) +
+    theme_minimal()
+  
+  #Loop through the time series in 14-day increments
+  while (current_start < end_datetime) {
+    
+    #Calculate the end time for the current 14-day period
+    current_end <- current_start + interval_seconds
+    
+    #Ensure the last plot doesn't go beyond the series end time
+    if (current_end > end_datetime) {
+      current_end <- end_datetime
+    }
+    
+    #Define the title based on the limits being plotted
+    plot_title <- paste0(
+      "Data from ", 
+      format(current_start, "%Y-%m-%d"), 
+      " to ", 
+      format(current_end, "%Y-%m-%d")
+    )
+    
+    #Build the plot with dynamic limits
+    p <- base_plot +
+      scale_x_datetime(
+        limits = c(current_start, current_end),
+        date_breaks = "2 day", 
+        date_labels = "%b %d"
+      ) +
+      ggtitle(plot_title)
+    
+    #Save the plot object to the global environment
+    plot_name <- paste0("plot_", plot_count)
+    assign(plot_name, p, envir = .GlobalEnv)
+    
+    #Move to the start of the next 14-day interval
+    current_start <- current_start + interval_seconds
+    plot_count <- plot_count + 1
+  }
+}
+
+generate_two_week_plots(df, "TIMESTAMP","SWIN_6_10_1_1_1")
+
+```
+
+
+## View all plots
+```{r}
+view_all_generated_plots <- function(pattern = "^plot_") {
+  
+  #Identify all objects in the global environment that start with 'plot_'
+  plot_names <- ls(envir = .GlobalEnv, pattern = pattern)
+  
+  #Extract the number for numeric sorting
+  plot_numbers <- as.numeric(gsub("\\D", "", plot_names))
+  
+  #Get the correct sorting order
+  correct_order_indices <- order(plot_numbers)
+  
+  #Reorder the plot names based on the correct numeric indices
+  sorted_plot_names <- plot_names[correct_order_indices]
+  message("Press [Enter] to display the next plot...")
+  
+  #Loop through each plot name
+  for (name in sorted_plot_names) {
+    
+    #Retrieve the object (the ggplot object) by its name (a string)
+    p <- get(name, envir = .GlobalEnv)
+    
+    #Print the plot to the RStudio plot pane
+    print(p)
+
+    readline(prompt = paste("Displaying:", name, "- Press [Enter] for next plot."))
+  }
+  
+  message("All plots have been displayed.")
+}
+
+
+view_all_generated_plots()
+
+```
+
+
+
+
+
+
+
+##### A zoom in on some known problematic periods: 
 
 February 26th to March 3rd, 2025
 
@@ -129,6 +231,4 @@ ggplot(data = df)+
   geom_vline(xintercept = as.POSIXct("2025-06-24 18:00"))
 
 ```
-
-
 
