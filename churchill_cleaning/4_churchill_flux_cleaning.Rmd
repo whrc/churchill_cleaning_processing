@@ -34,19 +34,9 @@ library(patchwork)
 Load in cleaned met data and flux data
 
 ```{r warning=FALSE}
-met = fread('./outputs/cleaning/Churchill_met_clean_2025.csv')
-df = fread('./outputs/cleaning/Churchill_fluxes_merged_2025.csv')
-# df = fread('C:/Users/karndt.WHRC/Desktop/sites/churchill/data/Churchill_fluxes_merged_2022_08_to_2024_10.csv')
 
-df$TIMESTAMP = df$ts
+df <- fread('./outputs/cleaning/Churchill_merged_met_clean_2025.csv')
 
-df= merge(df,met,by='TIMESTAMP',all = T)
-
-#check time stamps to ensure we have a complete series
-TIMESTAMP = seq(from = min(df$TIMESTAMP), to = max(df$TIMESTAMP),by = 60*30,tz = "UTC")
-tsdf = as.data.frame(TIMESTAMP)
-
-df = merge(tsdf,df,by = "TIMESTAMP",all = T)
 ```
 
 

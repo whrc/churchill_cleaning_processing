@@ -103,7 +103,8 @@ One to one plot for check
 
 df$radflag <- ifelse(df$SWIN_6_10_1_1_1 > df$rpot, 1, 0)
 
-test <- subset(df, rpot < SWIN_6_10_1_1_1 & SWIN_6_10_1_1_1 > 500)
+## For finding strange points
+#test <- subset(df, rpot < SWIN_6_10_1_1_1 & SWIN_6_10_1_1_1 > 500)
 
 ggplot(data = df)+
   geom_point(aes(x = rpot, y = SWIN_6_10_1_1_1, color = radflag))+
@@ -242,6 +243,7 @@ view_all_generated_plots()
 
 
 ```
+
 
 
 ##### A zoom in on some known problematic periods: 

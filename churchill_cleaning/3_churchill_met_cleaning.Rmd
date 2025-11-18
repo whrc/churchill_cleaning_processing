@@ -33,7 +33,7 @@ library(dplyr)
 ```
 
 
-Read in met file
+Read in uncleaned file
 ```{r}
 
 df <- fread('./outputs/cleaning/Churchill_met_flux_merged_aligned_2025.csv')
