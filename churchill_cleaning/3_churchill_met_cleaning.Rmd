@@ -36,7 +36,7 @@ library(dplyr)
 Read in met file
 ```{r}
 
-df <- fread('./outputs/cleaning/Churchill_met_merged_2025.csv')
+df <- fread('./outputs/cleaning/Churchill_met_flux_merged_aligned_2025.csv')
 
 ```
 
@@ -549,6 +549,6 @@ df$TS_2_38_3_12_1.c <- df$TS_2_38_3_12_1
 # Save
 
 ```{r, warning=FALSE}
-write.csv(x = df,file = './outputs/cleaning/Churchill_met_clean_2025.csv',row.names = F,quote = F)
+write.csv(x = df,file = './outputs/cleaning/Churchill_merged_met_clean_2025.csv',row.names = F,quote = F)
 ```
 

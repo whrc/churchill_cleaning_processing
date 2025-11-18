@@ -156,9 +156,7 @@ write.csv(x = df,file = './outputs/cleaning/Churchill_met_merged_2025.csv',row.n
 
 ```
 
-
 Notes: 
 
-Add a few more plots for checks
-change other sites to rbindfill, copy use.names = T
+change other sites to rbindlist, copy use.names = T
 
