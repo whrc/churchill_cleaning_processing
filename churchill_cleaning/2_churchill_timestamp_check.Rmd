@@ -13,7 +13,7 @@ knitr::opts_knit$set(root.dir = 'C:/Users/dtrangmoe/Documents/github/churchill_c
 
 This file merges met and flux data, checks that timestamps are aligned, and performs any necessary adjustments
 
-# Load packages, cleaned data 
+Load packages 
 ```{r, include=FALSE}
 rm(list = ls())
 
@@ -28,15 +28,25 @@ library(bigleaf) # for radiation check
 ```
 
 
-## Merge met and flux data
+# Merge met and flux data
 
+Load data
 ```{r}
 
 met <- fread('./outputs/cleaning/Churchill_met_merged_2025.csv')
 df <- fread('./outputs/cleaning/Churchill_fluxes_merged_2025.csv')
 
+```
+
+## Adjust flux timestamps only, merge
+```{r}
+
 df$TIMESTAMP = df$ts
 
+#Adjustment here
+df$TIMESTAMP <- as.POSIXct(ifelse(df$TIMESTAMP >= as.POSIXct("2025-05-01 23:30:00") & df$TIMESTAMP <= as.POSIXct("2025-06-28 23:30:00"), df$TIMESTAMP+6*3600, df$TIMESTAMP)) 
+
+#Merge here
 df= merge(df,met,by='TIMESTAMP',all = T)
 
 #check time stamps to ensure we have a complete series
@@ -49,7 +59,7 @@ rm(met, tsdf)
 
 ```
 
-## Adjust timestamps here!
+## Align merged datasets here
 
 ```{r}
 
@@ -71,7 +81,7 @@ df = merge(tsdf,df,by = "TIMESTAMP",all = T)
 
 
 
-# Timestamp Alignment Check
+# Radiation timestamp alignment check
 
 Create potential radiation dataset
 ```{r}
@@ -117,31 +127,11 @@ ggplot(data = df)+
 ```
 
 
-Brief check to make sure growing season flux measurement diurnal trend makes sense (to make sure flux and met merge aligned properly)
+## Create and display a plot of every two week period
+
+### Create function
 ```{r}
-
-ggplot(data = df)+
-  geom_line(aes(x = TIMESTAMP, y = rpot), color = "blue2")+
-  geom_point(aes(x = TIMESTAMP, y = co2_flux*50))+
-  scale_x_datetime(limits = as.POSIXct(c("2025-07-01", "2025-07-14")))
-
-```
-
-
-# Write timestamp-aligned CSV file
-```{r}
-
-write.csv(x = df,file = './outputs/cleaning/Churchill_met_flux_merged_aligned_2025.csv',row.names = F,quote = F)
-
-```
-
-
-
-### Create and display a plot of every two week period
-
-# Create function
-```{r}
-generate_two_week_plots <- function(df, timestamp_col, value_col) {
+generate_two_week_plots_rad <- function(df, timestamp_col, value_col) {
   
   #Determine the overall date range
   start_datetime <- min(df[[timestamp_col]])
@@ -191,7 +181,7 @@ generate_two_week_plots <- function(df, timestamp_col, value_col) {
       ggtitle(plot_title)
     
     #Save the plot object to the global environment
-    plot_name <- paste0("plot_", plot_count)
+    plot_name <- paste0("rad_plot_", plot_count)
     assign(plot_name, p, envir = .GlobalEnv)
     
     #Move to the start of the next 14-day interval
@@ -200,13 +190,13 @@ generate_two_week_plots <- function(df, timestamp_col, value_col) {
   }
 }
 
-generate_two_week_plots(df, "TIMESTAMP","SWIN_6_10_1_1_1")
+generate_two_week_plots_rad(df, "TIMESTAMP","SWIN_6_10_1_1_1")
 ```
 
 
-## View all plots
+### View all plots
 ```{r}
-view_all_generated_plots <- function(pattern = "^plot_") {
+view_all_generated_plots_rad <- function(pattern = "^rad_plot_") {
   
   #Identify all objects in the global environment that start with 'plot_'
   plot_names <- ls(envir = .GlobalEnv, pattern = pattern)
@@ -237,7 +227,7 @@ view_all_generated_plots <- function(pattern = "^plot_") {
 }
 
 
-view_all_generated_plots()
+view_all_generated_plots_rad()
 
 
 
@@ -246,9 +236,136 @@ view_all_generated_plots()
 
 
 
-##### A zoom in on some known problematic periods: 
 
-February 26th to March 3rd, 2025
+# Flux vs. met alignment check - uses HMP and sonic temperature
+
+One to one plot for initial check
+```{r}
+
+ggplot(data = df)+
+  geom_point(aes(x = TA_2_1_1_1_1, y = sonic_temperature-273.15, color = TIMESTAMP))+
+  geom_abline(yint = 0, slope = 1, color = "red")+
+  scale_x_continuous(limits = c(-43, 35))+
+  scale_y_continuous(limits = c(-43, 35))
+
+  
+```
+
+
+## Create and display a plot of every two week period
+
+### Create function
+```{r}
+generate_two_week_plots_temp <- function(df, timestamp_col, value_col_1, value_col_2) {
+  
+  #Determine the overall date range
+  start_datetime <- min(df[[timestamp_col]])
+  end_datetime <- max(df[[timestamp_col]])
+
+  #Set the interval length: 14 days (in seconds)
+  interval_seconds <- 14 * 24 * 3600
+
+  #Initialize loop variables
+  current_start <- start_datetime
+  plot_count <- 1
+  
+  # The base plot object (data and aesthetics are defined once)
+  base_plot <- ggplot(data = df)+
+    geom_point(aes(x = .data[[timestamp_col]], y = .data[[value_col_1]])) +
+    geom_point(aes(x = .data[[timestamp_col]], y = .data[[value_col_2]]-273.15), color = "blue")+
+    labs(x = "Time", y = "Temp") +
+    theme_minimal()
+  
+  #Loop through the time series in 14-day increments
+  while (current_start < end_datetime) {
+    
+    #Calculate the end time for the current 14-day period
+    current_end <- current_start + interval_seconds
+    
+    #Ensure the last plot doesn't go beyond the series end time
+    if (current_end > end_datetime) {
+      current_end <- end_datetime
+    }
+    
+    #Define the title based on the limits being plotted
+    plot_title <- paste0(
+      "Data from ", 
+      format(current_start, "%Y-%m-%d"), 
+      " to ", 
+      format(current_end, "%Y-%m-%d")
+    )
+    
+    #Build the plot with dynamic limits
+    p <- base_plot +
+      scale_x_datetime(
+        limits = c(current_start, current_end),
+        date_breaks = "2 day", 
+        date_labels = "%b %d"
+      ) +
+      ggtitle(plot_title)
+    
+    #Save the plot object to the global environment
+    plot_name <- paste0("temp_plot_", plot_count)
+    assign(plot_name, p, envir = .GlobalEnv)
+    
+    #Move to the start of the next 14-day interval
+    current_start <- current_start + interval_seconds
+    plot_count <- plot_count + 1
+  }
+}
+
+generate_two_week_plots_temp(df, "TIMESTAMP","TA_2_1_1_1_1", "sonic_temperature")
+```
+
+
+### View all plots
+```{r}
+view_all_generated_plots_temp <- function(pattern = "^temp_plot_") {
+  
+  #Identify all objects in the global environment that start with 'plot_'
+  plot_names <- ls(envir = .GlobalEnv, pattern = pattern)
+  
+  #Extract the number for numeric sorting
+  plot_numbers <- as.numeric(gsub("\\D", "", plot_names))
+  
+  #Get the correct sorting order
+  correct_order_indices <- order(plot_numbers)
+  
+  #Reorder the plot names based on the correct numeric indices
+  sorted_plot_names <- plot_names[correct_order_indices]
+  message("Press [Enter] to display the next plot...")
+  
+  #Loop through each plot name
+  for (name in sorted_plot_names) {
+    
+    #Retrieve the object (the ggplot object) by its name (a string)
+    p <- get(name, envir = .GlobalEnv)
+    
+    #Print the plot to the RStudio plot pane
+    print(p)
+
+    readline(prompt = paste("Displaying:", name, "- Press [Enter] for next plot."))
+  }
+  
+  message("All plots have been displayed.")
+}
+
+
+view_all_generated_plots_temp()
+
+
+
+
+```
+
+# Add diurnals here too
+
+
+
+
+# A zoom in on some known problematic periods: 
+
+February 26th to March 3rd, 2025: both flux and met misaligned, chopped data
 
 ```{r}
 
@@ -256,12 +373,23 @@ ggplot(data = df)+
   geom_line(aes(x = TIMESTAMP, y = rpot), color = "blue2")+
   geom_line(aes(x = TIMESTAMP, y = SWIN_6_10_1_1_1))+
   scale_x_datetime(limits = as.POSIXct(c("2025-02-20", "2025-03-08")))+
-  geom_vline(xintercept = as.POSIXct("2025-02-26 18:00"))+
-  geom_vline(xintercept = as.POSIXct("2025-03-03 18:00"))
+  geom_vline(xintercept = as.POSIXct("2025-02-26 12:00"))+
+  geom_vline(xintercept = as.POSIXct("2025-03-03 12:00"))
 
 ```
 
-Timestamp change on June 28th, 2025
+April 28th to June 28th, 2025: Flux and met timestamps not lining up
+
+```{r}
+
+ggplot(data = df)+
+  geom_line(aes(x = TIMESTAMP, y = sonic_temperature-273.15), color = "blue2")+
+  geom_line(aes(x = TIMESTAMP, y = TA_2_1_1_1_1))+
+  scale_x_datetime(limits = as.POSIXct(c("2025-04-26", "2025-07-01")))
+
+```
+
+Timestamp change for whole system on June 28th, 2025
 
 ```{r}
 
@@ -269,7 +397,17 @@ ggplot(data = df)+
   geom_line(aes(x = TIMESTAMP, y = rpot), color = "blue2")+
   geom_line(aes(x = TIMESTAMP, y = SWIN_6_10_1_1_1))+
   scale_x_datetime(limits = as.POSIXct(c("2025-06-20", "2025-06-30")))+
-  geom_vline(xintercept = as.POSIXct("2025-06-24 18:00"))
+  geom_vline(xintercept = as.POSIXct("2025-06-24 08:00"))
 
 ```
+
+
+# Write aligned CSV file
+```{r}
+
+write.csv(x = df,file = './outputs/cleaning/Churchill_met_flux_merged_aligned_2025.csv',row.names = F,quote = F)
+
+```
+
+
 
