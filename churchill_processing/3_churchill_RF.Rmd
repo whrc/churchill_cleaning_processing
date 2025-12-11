@@ -57,7 +57,7 @@ hist(train$swc)
 hist(test$swc)
 
 #run random forest to predict missing SWC values
-rf.swc = randomForest(formula = swc ~ tair + rh + rg + ws + tsoil + vpd + pres + le + h,data = train,ntree = 100, importance = TRUE)
+rf.swc = randomForest(formula = swc ~ tair + rh + rg + ws + tsoil + vpd + pres + le + h,data = train,ntree = 20, importance = TRUE)
 
 #predict it on the full data set
 swc.rf = predict(object = rf.swc,newdata = ncf)
@@ -111,7 +111,7 @@ hist(cc$nee)
 hist(train$nee)
 hist(test$nee)
 
-rfnee = randomForest(formula = nee ~ tair + rh + rg + ws + tsoil + swc + vpd + le + pres + h, data = train, ntree = 100, importance = TRUE)
+rfnee = randomForest(formula = nee ~ tair + rh + rg + ws + tsoil + swc + vpd + le + pres + h, data = train, ntree = 20, importance = TRUE)
 
 pnee = predict(object = rfnee,newdata = ncf)
 
@@ -177,7 +177,7 @@ summary(cc$fch4)
 summary(train$fch4)
 summary(test$fch4)
 
-rfch4 = randomForest(formula = fch4 ~ tair + rh + rg + ws + tsoil + vpd + swc + h + le,data = train,ntree = 100,importance = TRUE)
+rfch4 = randomForest(formula = fch4 ~ tair + rh + rg + ws + tsoil + vpd + swc + h + le,data = train,ntree = 20,importance = TRUE)
 
 pch4 = predict(object = rfch4,newdata = ncf)
 

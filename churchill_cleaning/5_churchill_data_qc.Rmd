@@ -32,6 +32,7 @@ library(plyr)
 library(dplyr)
 library(patchwork) # formats plots
 library(bigleaf) # for radiation check
+Sys.setenv(TZ = "UTC")
 ```
 
 
@@ -39,10 +40,8 @@ library(bigleaf) # for radiation check
 
 df <- fread('./data/cleaned/Churchill_Met_Flux_Clean_Ameriflux_2025.csv')
 
-df$ts <- df$ts-6*3600 #adjust timezone from UTC to CST
-df$TIMESTAMP <- df$TIMESTAMP-6*3600 #adjust timezone from UTC to CST
 
-df_month <- subset(df, df$TIMESTAMP >= as.POSIXct("2025-09-01 0000", tz = "UTC"))
+df_month <- subset(df, df$TIMESTAMP >= as.POSIXct("2025-10-01 0000", tz = "UTC"))
 
 
 # data formatting for flag plots
@@ -80,7 +79,7 @@ nee_plot_ytd = ggplot(data = df)+geom_hline(yintercept = 0)+
   geom_point(aes(TIMESTAMP,co2_flux,color = co2_flux.flag))+
   geom_point(aes(TIMESTAMP,co2_flux.c),col='black')+
   scale_y_continuous(limits=c(-12,8))+
-  scale_x_datetime(limits = as.POSIXct(c("2025-01-01", "2025-09-20")))+
+  scale_x_datetime(limits = as.POSIXct(c("2025-01-01", "2025-11-30")))+
   labs(
     x = NULL,
     y = expression(paste( ~CO[2], ~"Flux (umol m",""^"-2","s",""^"-1",")"))
@@ -90,7 +89,7 @@ nee_plot_ytd
 ```
 
 
-## Previous Month CO2
+### Previous Month CO2
 ```{r, warning=FALSE, echo=FALSE}
 
 # Flag = 0, 1, 2 : EP Flag
@@ -106,14 +105,14 @@ nee_plot_month = ggplot(data = df)+geom_hline(yintercept = 0)+
     x = NULL,
     y = expression(paste( ~CO[2], ~"Flux (umol m",""^"-2","s",""^"-1",")"))
   ) +
-  scale_x_datetime(limits = as.POSIXct(c("2025-09-01", "2025-09-30")))+
+  scale_x_datetime(limits = as.POSIXct(c("2025-10-01", "2025-11-30")))+
 scale_color_manual(values = color_map, name = "QC CO2 Flux")
 nee_plot_month
 
 ```
 
 
-## Week zoom-in CO2
+### Week zoom-in CO2 (add all weeks here in the future)
 ```{r, warning=FALSE, echo=FALSE}
 
 # Flag = 0, 1, 2 : EP Flag
@@ -124,12 +123,12 @@ nee_plot_month
 nee_plot_week = ggplot(data = df)+geom_hline(yintercept = 0)+
   geom_point(aes(TIMESTAMP,co2_flux,color = co2_flux.flag))+
   geom_point(aes(TIMESTAMP,co2_flux.c),col='black')+
-  scale_y_continuous(limits=c(-12,8))+
+  scale_y_continuous(limits=c(-2.5,2.5))+
     labs(
     x = NULL,
     y = expression(paste( ~CO[2], ~"Flux (umol m",""^"-2","s",""^"-1",")"))
   ) +
-  scale_x_datetime(limits = as.POSIXct(c("2025-09-08", "2025-09-15")))+
+  scale_x_datetime(limits = as.POSIXct(c("2025-10-08", "2025-10-15")))+
 scale_color_manual(values = color_map, name = "QC CO2 Flux")
 nee_plot_week
 
@@ -156,7 +155,7 @@ ch4_plot_year = ggplot(data = df)+geom_hline(yintercept = 0)+
     x = NULL,
     y = expression(paste( ~CH[4], ~"Flux (umol m",""^"-2","s",""^"-1",")"))
   ) +
-  scale_x_datetime(limits = as.POSIXct(c("2025-01-01", "2025-09-30")))+
+  scale_x_datetime(limits = as.POSIXct(c("2025-01-01", "2025-11-30")))+
 scale_color_manual(values = color_map, name = "QC CH4 Flux")
 ch4_plot_year
 
@@ -174,19 +173,19 @@ ch4_plot_year
 ch4_plot_month = ggplot(data = df)+geom_hline(yintercept = 0)+
   geom_point(aes(TIMESTAMP,ch4_flux,color = ch4_flux.flag))+
   geom_point(aes(TIMESTAMP,ch4_flux.c),col='black')+
-  scale_y_continuous(limits=c(-0.1,0.33))+  
+  scale_y_continuous(limits=c(-0.2,0.2))+  
   labs(
     x = NULL,
     y = expression(paste( ~CH[4], ~"Flux (umol m",""^"-2","s",""^"-1",")"))
   ) +
-  scale_x_datetime(limits = as.POSIXct(c("2025-09-01", "2025-09-30")))+
+  scale_x_datetime(limits = as.POSIXct(c("2025-10-01", "2025-11-30")))+
 scale_color_manual(values = color_map, name = "QC CH4 Flux")
 ch4_plot_month
 
 ```
 
 
-#### Week zoom-in Methane
+#### Week zoom-in Methane (add all weeks here in the future)
 ```{r, warning=FALSE, echo=FALSE}
 
 # Flag = 0, 1, 2 : EP Flag
@@ -197,12 +196,12 @@ ch4_plot_month
 ch4_plot_week = ggplot(data = df)+geom_hline(yintercept = 0)+
   geom_point(aes(TIMESTAMP,ch4_flux,color = ch4_flux.flag))+
   geom_point(aes(TIMESTAMP,ch4_flux.c),col='black')+
-  scale_y_continuous(limits=c(-0.1,0.33))+
+  scale_y_continuous(limits=c(-0.2,0.2))+
   labs(
     x = NULL,
     y = expression(paste( ~CH[4], ~"Flux (umol m",""^"-2","s",""^"-1",")"))
   ) +
-  scale_x_datetime(limits = as.POSIXct(c("2025-09-08", "2025-09-15")))+
+  scale_x_datetime(limits = as.POSIXct(c("2025-10-08", "2025-10-15")))+
 scale_color_manual(values = color_map, name = "QC CH4 Flux")
 ch4_plot_week
 
@@ -339,7 +338,7 @@ ggplot(data = df_month)+
 ```{r, warning=FALSE, echo=FALSE}
 # set hour and month vectors to be able to take the averages
 
-df <- dplyr::filter(df, !df$TIMESTAMP < as.POSIXct("2025-01-21 00:00:00"))
+df <- dplyr::filter(df, !df$TIMESTAMP < as.POSIXct("2022-09-01 00:00:00"))
 
 df$hour = as.numeric(format(df$ts,'%H'))
 df$month = as.numeric(format(df$ts,'%m'))

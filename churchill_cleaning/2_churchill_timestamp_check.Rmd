@@ -25,6 +25,7 @@ library(stringr)
 library(plyr)
 library(dplyr)
 library(bigleaf) # for radiation check
+Sys.setenv(TZ = "UTC")
 ```
 
 
@@ -42,6 +43,7 @@ df <- fread('./outputs/cleaning/Churchill_fluxes_merged_2022_2025.csv')
 ```{r}
 
 df$TIMESTAMP = df$ts
+df$ts <- NULL
 
 #Adjustment here
 df$TIMESTAMP <- as.POSIXct(ifelse(df$TIMESTAMP >= as.POSIXct("2025-05-01 23:30:00") & df$TIMESTAMP <= as.POSIXct("2025-06-28 23:30:00"), df$TIMESTAMP+6*3600, df$TIMESTAMP)) 
@@ -55,6 +57,10 @@ tsdf = as.data.frame(TIMESTAMP)
 
 df = merge(tsdf,df,by = "TIMESTAMP",all = T)
 
+### Adjust all data to UTC - FIX ME LATER!!
+
+#df$TIMESTAMP <- as.POSIXct(df$TIMESTAMP-6*3600) 
+
 rm(met, tsdf)
 
 ```
@@ -63,7 +69,7 @@ rm(met, tsdf)
 
 ```{r}
 
-#adjust timezone from UTC to CST
+#adjust timezone from UTC to CST where needed
 
 df$TIMESTAMP <- as.POSIXct(ifelse(df$TIMESTAMP <= as.POSIXct("2025-06-28 23:30:00"), df$TIMESTAMP-6*3600, df$TIMESTAMP)) 
 #Remove problematic chunk
@@ -105,13 +111,19 @@ H <- h+ifelse(m == 30,0.5,0)
 
 rpot <- potential.radiation(doy = JD,hour = H,latDeg = 59,longDeg = -94,timezone = -6,useSolartime = F)*1.1
 
+
 rpot <- as.data.frame(cbind(TIMESTAMP, rpot))
+
+
+
+### FIX ME!!!!
+#rpot$TIMESTAMP <- rpot$TIMESTAMP - 6*3600
 
 df <- merge(df, rpot, by = 'TIMESTAMP', all = T)
 ```
 
 
-One to one plot for check
+Preliminary checks
 ```{r}
 
 df$radflag <- ifelse(df$SWIN_6_10_1_1_1 > df$rpot, 1, 0)
@@ -125,6 +137,15 @@ ggplot(data = df)+
   scale_x_continuous(limits = c(0, 1000))+
   scale_y_continuous(limits = c(0, 1000))
 
+## Check that solar noon makes sense
+
+ggplot(data = df)+
+    geom_vline(xintercept = as.POSIXct("2024-08-12 12:00:00"))+
+    geom_point(aes(x = TIMESTAMP, y = SWIN_6_10_1_1_1, color = radflag)) +
+    geom_line(aes(x = TIMESTAMP, y = rpot), color = "blue")+
+    scale_x_datetime(limits = as.POSIXct(c("2024-08-08","2024-08-20")))+
+    labs(x = "Time", y = "Rad")+
+    theme_minimal()
   
   
 ```
@@ -230,7 +251,8 @@ view_all_generated_plots_rad <- function(pattern = "^rad_plot_") {
 }
 
 
-view_all_generated_plots_rad()
+#view_all_generated_plots_rad()
+
 
 
 
@@ -355,12 +377,99 @@ view_all_generated_plots_temp <- function(pattern = "^temp_plot_") {
 }
 
 
-view_all_generated_plots_temp()
+#view_all_generated_plots_temp()
 
 
 ```
 
-# Add diurnals here too
+
+# Diurnal Fluxes
+
+set hour and month vectors to be able to take the averages
+
+```{r, warning=FALSE}
+df$hour = as.numeric(format(df$TIMESTAMP,'%H'))
+df$month = as.numeric(format(df$TIMESTAMP,'%m'))
+
+diel = df %>%
+  group_by(hour,month) %>%
+  select(co2_flux,ch4_flux,LE,H, RN_6_5_1_1_1,hour,month) %>%
+  summarise_all(.funs = c(median,sd),na.rm=T)
+
+diel = subset(diel,!is.na(diel$month))
+```
+
+## NEE
+
+```{r, warning=FALSE}
+ggplot(data = diel)+geom_hline(yintercept = 0)+
+  geom_line(aes(hour,co2_flux_fn1),lty=2)+
+  geom_ribbon(aes(x = hour,y = co2_flux_fn1,
+                  ymax = co2_flux_fn1 + co2_flux_fn2,
+                  ymin = co2_flux_fn1 - co2_flux_fn2),
+              alpha= 0.5)+
+  facet_wrap(~month)
+levels(diel$month)
+```
+
+## CH4
+
+```{r, warning=FALSE}
+ggplot(data = diel)+geom_hline(yintercept = 0)+
+  geom_line(aes(hour,ch4_flux_fn1),lty=2)+
+  geom_ribbon(aes(x = hour,y = ch4_flux_fn1,
+                  ymax = ch4_flux_fn1 + ch4_flux_fn2,
+                  ymin = ch4_flux_fn1 - ch4_flux_fn2),
+              alpha= 0.5)+
+  facet_wrap(~month)
+
+ggplot(data = diel)+geom_hline(yintercept = 0)+
+  geom_line(aes(hour,ch4_flux_fn1*43.2),lty=2)+
+  geom_ribbon(aes(x = hour,y = ch4_flux_fn1*43.2,
+                  ymax = ch4_flux_fn1*43.2 + ch4_flux_fn2*43.2,
+                  ymin = ch4_flux_fn1*43.2 - ch4_flux_fn2*43.2),
+              alpha= 0.5)+
+  scale_y_continuous(limits = c(-1,6))+
+  facet_wrap(~month)
+```
+
+## H
+
+```{r, warning=FALSE}
+ggplot(data = diel)+geom_hline(yintercept = 0)+
+  geom_line(aes(hour,H_fn1),lty=2)+
+  geom_ribbon(aes(x = hour,y = H_fn1,
+                  ymax = H_fn1 + H_fn2,
+                  ymin = H_fn1 - H_fn2),
+              alpha= 0.5)+
+  facet_wrap(~month)
+```
+
+## LE
+
+```{r, warning=FALSE}
+ggplot(data = diel)+geom_hline(yintercept = 0)+
+  geom_line(aes(hour,LE_fn1),lty=2)+
+  geom_ribbon(aes(x = hour,y = LE_fn1,
+                  ymax = LE_fn1 + LE_fn2,
+                  ymin = LE_fn1 - LE_fn2),
+              alpha= 0.5)+
+  facet_wrap(~month)
+```
+
+
+## Net Rad
+
+```{r, warning=FALSE}
+ggplot(data = diel)+geom_hline(yintercept = 0)+
+  geom_line(aes(hour,RN_6_5_1_1_1_fn1),lty=2)+
+  geom_ribbon(aes(x = hour,y = RN_6_5_1_1_1_fn1,
+                  ymax = RN_6_5_1_1_1_fn1 + RN_6_5_1_1_1_fn2,
+                  ymin = RN_6_5_1_1_1_fn1 - RN_6_5_1_1_1_fn2),
+              alpha= 0.5)+
+  facet_wrap(~month)
+levels(diel$month)
+```
 
 
 
@@ -399,7 +508,7 @@ ggplot(data = df)+
   geom_line(aes(x = TIMESTAMP, y = rpot), color = "blue2")+
   geom_line(aes(x = TIMESTAMP, y = SWIN_6_10_1_1_1))+
   scale_x_datetime(limits = as.POSIXct(c("2025-06-20", "2025-06-30")))+
-  geom_vline(xintercept = as.POSIXct("2025-06-24 08:00"))
+  geom_vline(xintercept = as.POSIXct("2025-06-24 12:00"))
 
 ```
 

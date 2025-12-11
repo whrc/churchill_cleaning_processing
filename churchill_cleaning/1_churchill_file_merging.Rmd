@@ -23,6 +23,7 @@ library(openair)
 library(viridis)
 library(dplyr)
 library(lubridate)
+Sys.setenv(TZ = "UTC")
 
 ```
 

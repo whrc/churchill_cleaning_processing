@@ -19,11 +19,11 @@ dif = gf$Hour - hour
 min = dif*60
 time = paste(hour,min,sep = ':')
 date = paste(gf$Year,gf$DoY,sep = '-')
-ts   = as.POSIXct(paste(date,time,sep = ' '),format = '%Y-%j %H:%M')
-gf$ts = ts
+TIMESTAMP   = as.POSIXct(paste(date,time,sep = ' '),format = '%Y-%j %H:%M')
+gf$TIMESTAMP = TIMESTAMP
 
 #reduce the gap filled data set
-gfdat = data.frame(gf$ts,
+gfdat = data.frame(gf$TIMESTAMP,
                    gf$Rg_f,
 #                   gf$H_f,
 #                   gf$LE_f,
@@ -40,7 +40,7 @@ gfdat = data.frame(gf$ts,
                    gf$GPP_f,
                    gf$GPP_DT)
 
-names(gfdat) = c('ts',
+names(gfdat) = c('TIMESTAMP',
                  'Rg_f',
 #                 'H_f',
 #                 'LE_f',
@@ -58,11 +58,11 @@ names(gfdat) = c('ts',
                  'Reco_DT')
 
 #merge data frames
-dat = merge(dat,gfdat,by = 'ts')
-dat$dup = duplicated(x = dat$ts)
+dat = merge(dat,gfdat,by = 'TIMESTAMP')
+dat$dup = duplicated(x = dat$TIMESTAMP)
 dat = subset(dat,dat$dup == 'FALSE')
 
-summary(dat$ts)
+summary(dat$TIMESTAMP)
 
 write.csv(x = dat,file = './outputs/gapfilling/cf3_gapfilled_clean_2022_2025.csv',quote = F,row.names = F)
 

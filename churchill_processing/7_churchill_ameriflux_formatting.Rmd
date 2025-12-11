@@ -31,7 +31,7 @@ df = fread(input = "./outputs/gapfilling/cf3_gapfilled_clean_2022_2025.csv")
 
 Format the time stamps at start and end
 ```{r}
-TIMESTAMP_END = df$ts
+TIMESTAMP_END = df$TIMESTAMP
 
 yeare = format(TIMESTAMP_END,"%Y")
 monthe = format(TIMESTAMP_END,"%m")
@@ -41,7 +41,7 @@ mine = format(TIMESTAMP_END,"%M")
 
 TIMESTAMP_END = paste(yeare,monthe,daye,houre,mine,sep = '')
 
-TIMESTAMP_START = df$ts - 30*60
+TIMESTAMP_START = df$TIMESTAMP - 30*60
 
 years = format(TIMESTAMP_START,"%Y")
 months = format(TIMESTAMP_START,"%m")
@@ -368,7 +368,7 @@ tsend   = CA_CF3$TIMESTAMP_END[nrow(CA_CF3)]
 filename = paste(siteID,resolution,tsstart,tsend,sep = '_')
 filename = paste("./ameriflux/",filename,".csv",sep = "")
 
-#write.csv(x = CA_CF3,file = filename,row.names = F,na = "-9999")
+write.csv(x = CA_CF3,file = filename,row.names = F,na = "-9999")
 ```
 
 

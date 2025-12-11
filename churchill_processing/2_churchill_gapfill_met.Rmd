@@ -25,26 +25,19 @@ Sys.setenv(TZ = "UTC")
 Load Data
 These files are found on the buckets under /cleaned
 ```{r}
-c22 = fread(input = "./data/cleaned/Churchill_Met_Flux_Clean_Ameriflux_2022.csv")
-c23 = fread(input = "./data/cleaned/Churchill_Met_Flux_Clean_Ameriflux_2023.csv")
-c24 = fread(input = "./data/cleaned/Churchill_Met_Flux_Clean_Ameriflux_2024.csv")
+# c22 = fread(input = "./data/cleaned/Churchill_Met_Flux_Clean_Ameriflux_2022.csv")
+# c23 = fread(input = "./data/cleaned/Churchill_Met_Flux_Clean_Ameriflux_2023.csv")
+# c24 = fread(input = "./data/cleaned/Churchill_Met_Flux_Clean_Ameriflux_2024.csv")
 c25 = fread(input = "./data/cleaned/Churchill_Met_Flux_Clean_Ameriflux_2025.csv")
 
-
-df <- rbind(c22,c23,c24,c25,fill=T)
-
-# Adjust timestamps to CST
-
-## Fix data set timestamp adjustment here- MOVE TS ADJUSTMENT TO FILE MERGING
-
-df$ts <- df$ts-6*3600 #adjust timezone from UTC to CST
-df$TIMESTAMP <- df$TIMESTAMP-6*3600 #adjust timezone from UTC to CST
+# df <- rbind(c22,c23,c24,c25,fill=T)
+df <- c25
 
 # create date, time, DOY in the correct  time zone
 df$DOY <- yday(df$TIMESTAMP)
 df$time <- format(df$TIMESTAMP, format = "%H:%M")
 
-df <- subset(df,df$ts >= as.POSIXct(x = "2022-08-07 00:00"))
+df <- subset(df,df$TIMESTAMP >= as.POSIXct(x = "2022-08-07 00:00", tz = "CST"))
 ```
 
 
@@ -58,7 +51,7 @@ df$SHF_6_37_2_1_1.c = na.spline(df$SHF_6_37_2_1_1.c,maxgap = gap)
 
 #meteorology and weather #################################
 df$TA_2_1_1_1_1     = na.spline(df$TA_2_1_1_1_1,maxgap = gap)
-df$PA_4_2_1_1_1.c   = na.spline(df$PA_4_2_1_1_1.c,maxgap = gap)
+df$PA_4_2_1_1_1.c   = na.spline(df$PA_4_2_1_1_1,maxgap = gap)
 df$RH_19_3_1_1_1.c  = na.spline(df$RH_19_3_1_1_1.c,maxgap = gap)
 
 #Radiation #####################################
@@ -112,7 +105,7 @@ df$TS_2_38_4_12_1.c = na.spline(df$TS_2_38_4_12_1.c,maxgap = gap)
 
 ```{r}
 summary(df$RH_19_3_1_1_1.c) #check on the data coverage after filling small gaps
-plot(df$ts,df$RH_19_3_1_1_1.c)
+plot(df$TIMESTAMP,df$RH_19_3_1_1_1.c)
 
 #save off a copy of the newly merged data
 write.csv(x = df,file = "./outputs/gapfilling/churchill_2022_2025.csv",row.names = F)
@@ -124,7 +117,7 @@ Add ERA5 data
 era = fread('./outputs/gapfilling/era5_churchill25.csv')
 
 #rename to match up timestamps and merge datasets
-df$date = df$ts
+df$date = df$TIMESTAMP
 
 #merge together
 all = merge(era,df,by = 'date',all = T)
@@ -132,6 +125,35 @@ all = all[!duplicated(all$date),]
 ```
 
 We're now going to merge era5 data with site level data and create regression adjusted values for each variable
+
+#Rg
+```{r}
+ggplot(data = all)+
+  geom_point(aes(date,rad,col='ERA5'))+
+  geom_point(aes(date,SWIN_6_10_1_1_1.c,col='Site'))
+
+#zoom in on a time period to make sure timestamps line up and solar noon makes sense
+#Problem days:
+#2025-03-03
+#2025-06-28 (known clock change in change log)
+
+ggplot(data = all)+
+  geom_point(aes(date,rad,col='ERA5'))+
+  geom_point(aes(date,SWIN_6_10_1_1_1.c,col='Site'))+
+  scale_x_datetime(limits = as.POSIXct(c('2023-02-23','2023-03-05')))+
+  geom_vline(xintercept = as.POSIXct("2023-02-25 12:00:00"))
+
+rad.mod = lm(formula = all$SWIN_6_10_1_1_1.c ~ all$rad)
+summary(rad.mod)
+
+all$rad.eramod = all$rad*rad.mod$coefficients[2] + rad.mod$coefficients[1]   
+
+ggplot(data = all,aes(rad,SWIN_6_10_1_1_1.c))+theme_bw()+
+  geom_point()+
+  geom_smooth(method = 'lm')+
+  geom_abline(slope = 1,intercept = 0,col='red',lty=2)
+```
+
 RH
 ```{r}
 rh.mod = lm(formula = all$RH_19_3_1_1_1.c ~ all$rh)
@@ -184,34 +206,6 @@ ggplot(data = all)+
   geom_point(aes(date,tsoil.eramod,col='Lin. Reg.'))
 
 #why is linear regression less than both datasets here?
-```
-
-#Rg
-```{r}
-ggplot(data = all)+
-  geom_point(aes(date,rad,col='ERA5'))+
-  geom_point(aes(date,SWIN_6_10_1_1_1.c,col='Site'))
-
-#zoom in on a time period to make sure timestamps line up and solar noon makes sense
-#Problem days:
-#2025-03-03
-#2025-06-28 (known clock change in change log)
-# add cleaning code check in file merging code instead of here
-
-ggplot(data = all)+
-  geom_point(aes(date,rad,col='ERA5'))+
-  geom_point(aes(date,SWIN_6_10_1_1_1.c,col='Site'))+
-  scale_x_datetime(limits = as.POSIXct(c('2025-02-23','2025-03-05')))
-
-rad.mod = lm(formula = all$SWIN_6_10_1_1_1.c ~ all$rad)
-summary(rad.mod)
-
-all$rad.eramod = all$rad*rad.mod$coefficients[2] + rad.mod$coefficients[1]   
-
-ggplot(data = all,aes(rad,SWIN_6_10_1_1_1.c))+theme_bw()+
-  geom_point()+
-  geom_smooth(method = 'lm')+
-  geom_abline(slope = 1,intercept = 0,col='red',lty=2)
 ```
 
 #ws

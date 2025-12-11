@@ -8,12 +8,12 @@ library(data.table)
 dat = fread('./outputs/gapfilling/churchill_2022_2025_gf.csv')
 
 #time variables #########################################################
-dat$ts = as.POSIXct(dat$ts)
+dat$TIMESTAMP = as.POSIXct(dat$date)
 
-Year = format(dat$ts,'%Y')
-DoY  = format(dat$ts,'%j')
-h    = as.numeric(format(dat$ts,'%H')) #full hours
-h.5  = as.numeric(ifelse(format(dat$ts,'%M') == '00',0,0.5)) #half hour decimals
+Year = format(dat$TIMESTAMP,'%Y')
+DoY  = format(dat$TIMESTAMP,'%j')
+h    = as.numeric(format(dat$TIMESTAMP,'%H')) #full hours
+h.5  = as.numeric(ifelse(format(dat$TIMESTAMP,'%M') == '00',0,0.5)) #half hour decimals
 Hour = h+h.5 #Hour in the expected format
 
 #make the gapfilled dataset using real data where possible

@@ -29,6 +29,7 @@ library(stringr)
 library(plyr)
 library(dplyr)
 library(patchwork)
+Sys.setenv(TZ = "UTC")
 ```
 
 Load in cleaned met data and flux data
@@ -84,15 +85,15 @@ signal.threshold.h2o = ifelse(df$h2o_signal_strength_7200_mean >= 75,0,1)
 signal.threshold.ch4 = ifelse(df$rssi_77_mean >= 10,0,1)
 
 ggplot(data = df)+
-  geom_point(aes(ts,co2_flux,color=signal.threshold.co2))+
+  geom_point(aes(TIMESTAMP,co2_flux,color=signal.threshold.co2))+
   scale_y_continuous(limits = c(-20,20))
 
 ggplot(data = df)+
-  geom_point(aes(ts,ch4_flux,color=signal.threshold.ch4))+
+  geom_point(aes(TIMESTAMP,ch4_flux,color=signal.threshold.ch4))+
   scale_y_continuous(limits = c(-0.5,0.25))
 
 ggplot(data = df)+
-  geom_point(aes(ts,LE,color=signal.threshold.h2o))+
+  geom_point(aes(TIMESTAMP,LE,color=signal.threshold.h2o))+
   scale_y_continuous(limits = c(-200,500))
 
 
@@ -164,7 +165,7 @@ Plot CH4 and what we might clean
 
 ```{r, warning=FALSE}
 ggplot(data = df)+
-  geom_point(aes(ts,ch4_flux))+
+  geom_point(aes(TIMESTAMP,ch4_flux))+
   scale_y_continuous(limits = c(-1,1))+
   geom_hline(yintercept = c(-0.15,0.28)) ## expand absolute limits here to do less cleaning
 
@@ -184,7 +185,7 @@ Clean based on graphs, create new variable (H.limits), and see cleaned product
 
 ```{r, warning=FALSE}
 ggplot(data = df)+
-  geom_point(aes(ts,H))+
+  geom_point(aes(TIMESTAMP,H))+
   scale_y_continuous(limits = c(-200,500))+
   geom_hline(yintercept = c(-200,300)) ## expand absolute limits here to do less cleaning
 
@@ -203,7 +204,7 @@ Clean based on graphs, create new variable (H.limits), and see cleaned product
 
 ```{r, warning=FALSE}
 ggplot(data = df)+
-  geom_point(aes(ts,LE))+
+  geom_point(aes(TIMESTAMP,LE))+
   scale_y_continuous(limits = c(-200,500))+
   geom_hline(yintercept = c(-50,450))
 
@@ -260,11 +261,11 @@ LEclean = ifelse(is.na(LE.qc) | is.na(LE.limits) | is.na(LE.ss),NA,df$LE)
 
 Tauclean = ifelse(is.na(Tau.qc) | is.na(Tau.limits),NA,df$Tau)
 
-plot(df$ts,co2fluxclean)
-plot(df$ts,ch4fluxclean)
-plot(df$ts,Hclean)
-plot(df$ts,LEclean)
-plot(df$ts,Tauclean)
+plot(df$TIMESTAMP,co2fluxclean)
+plot(df$TIMESTAMP,ch4fluxclean)
+plot(df$TIMESTAMP,Hclean)
+plot(df$TIMESTAMP,LEclean)
+plot(df$TIMESTAMP,Tauclean)
 ```
 
 Add cleaned tau to dataframe (no MAD filter)
@@ -316,9 +317,9 @@ roll.mad = rollapply(data = Flux_filt,
 roll.mad[is.na(Flux_filt)] = NA  #make NA values where NAs exist in the real data
 
 ggplot(df)+geom_hline(yintercept = 0)+
-  geom_point(aes(ts,co2fluxclean,col='CO2 flux'))+
-  geom_line(aes(ts,Flux_filt,col='Filter'))+
-  geom_line(aes(ts,roll.mad,col='MAD'))+
+  geom_point(aes(TIMESTAMP,co2fluxclean,col='CO2 flux'))+
+  geom_line(aes(TIMESTAMP,Flux_filt,col='Filter'))+
+  geom_line(aes(TIMESTAMP,roll.mad,col='MAD'))+
   scale_y_continuous(limits = c(-10,10))+
   scale_x_datetime(limits = as.POSIXct(flux_dates,format="%F"))+
   scale_color_manual(values=c('black','yellow','red'))
@@ -342,21 +343,20 @@ ggplot(data = df)+geom_hline(yintercept = 0)+
   geom_point(aes(TIMESTAMP,co2_flux.c),col='black')+
   scale_y_continuous(limits=c(-15,15))+
   scale_x_datetime(limits = as.POSIXct(c("2025-07-14","2025-07-20")))
-  scale_x_datetime(limits = as.POSIXct(flux_dates,format="%F"))
 ```
 See data with multiple layers of the MAD filter to see if it should be changed
 
 ```{r, warning=FALSE}
 ggplot(data = df)+
-  geom_ribbon(aes(x = ts,ymax = Flux_filt+roll.mad*6,ymin = Flux_filt-roll.mad*6,fill='6'))+
-  geom_ribbon(aes(x = ts,ymax = Flux_filt+roll.mad*3,ymin = Flux_filt-roll.mad*3,fill='3'))+
-  geom_ribbon(aes(x = ts,ymax = Flux_filt+roll.mad*2,ymin = Flux_filt-roll.mad*2,fill='2'))+
-  geom_ribbon(aes(x = ts,ymax = Flux_filt+roll.mad*1,ymin = Flux_filt-roll.mad*1,fill='1'))+
-  geom_point(aes(ts,co2fluxclean),col='red')+
-  geom_point(aes(ts,co2_flux.c),col='black')+
+  geom_ribbon(aes(x = TIMESTAMP,ymax = Flux_filt+roll.mad*6,ymin = Flux_filt-roll.mad*6,fill='6'))+
+  geom_ribbon(aes(x = TIMESTAMP,ymax = Flux_filt+roll.mad*3,ymin = Flux_filt-roll.mad*3,fill='3'))+
+  geom_ribbon(aes(x = TIMESTAMP,ymax = Flux_filt+roll.mad*2,ymin = Flux_filt-roll.mad*2,fill='2'))+
+  geom_ribbon(aes(x = TIMESTAMP,ymax = Flux_filt+roll.mad*1,ymin = Flux_filt-roll.mad*1,fill='1'))+
+  geom_point(aes(TIMESTAMP,co2fluxclean),col='red')+
+  geom_point(aes(TIMESTAMP,co2_flux.c),col='black')+
   scale_y_continuous(limits = c(-40,40))+
   scale_x_datetime(limits = as.POSIXct(c('2025-09-15','2025-09-30'),format="%F"))+
-  geom_line(aes(x = ts, y = PPFD_7_21_1_1_1.c/5000))
+  geom_line(aes(x = TIMESTAMP, y = PPFD_7_21_1_1_1.c/5000))
 ```
 
 Add flag data
@@ -408,9 +408,9 @@ roll.mad = rollapply(data = Flux_filt,
 roll.mad[is.na(Flux_filt)] = NA  #make NA values where NAs exist in the real data
 
 ggplot(df)+geom_hline(yintercept = 0)+
-  geom_point(aes(ts,ch4fluxclean,col='CH4 flux'))+
-  geom_line(aes(ts,Flux_filt,col='Filter'))+
-  geom_line(aes(ts,roll.mad,col='MAD'))+
+  geom_point(aes(TIMESTAMP,ch4fluxclean,col='CH4 flux'))+
+  geom_line(aes(TIMESTAMP,Flux_filt,col='Filter'))+
+  geom_line(aes(TIMESTAMP,roll.mad,col='MAD'))+
   scale_y_continuous(limits = c(-.25,.3))+
   scale_x_datetime(limits = as.POSIXct(flux_dates,format="%F"))+
   scale_color_manual(values=c('black','yellow','red'))
@@ -438,24 +438,24 @@ See data with multiple layers of the MAD filter to see if it should be changed
 
 ```{r, warning=FALSE}
 CH4Filter = ggplot(data = df)+geom_hline(yintercept = 0)+
-  geom_point(aes(df$ts,ch4fluxclean),col='red')+
-  geom_point(aes(df$ts,ch4_flux.c),col='black')+
+  geom_point(aes(df$TIMESTAMP,ch4fluxclean),col='red')+
+  geom_point(aes(df$TIMESTAMP,ch4_flux.c),col='black')+
   scale_y_continuous(limits = c(-.1,.5))+
   scale_x_datetime(limits = as.POSIXct(c('2025-7-1','2025-9-1'),format="%F"))
 
 CH4RSSI = ggplot(data = df)+geom_hline(yintercept = 0)+
-  geom_line(aes(x=ts,y=rssi_77_mean))+
+  geom_line(aes(x=TIMESTAMP,y=rssi_77_mean))+
   scale_y_continuous(limits = c(-1,60))+
   scale_x_datetime(limits = as.POSIXct(c('2025-7-1','2025-9-1'),format="%F"))
 
 CH4RSSI = ggplot(data = df)+geom_hline(yintercept = 0)+
-  geom_line(aes(x=ts,y=rssi_77_mean))+
+  geom_line(aes(x=TIMESTAMP,y=rssi_77_mean))+
   scale_y_continuous(limits = c(-1,60))+
   scale_x_datetime(limits = as.POSIXct(c('2025-7-1','2025-9-1'),format="%F"))
 
 #added co2 flux to compare co2/ch4 data coverage
 CO2FLUX = ggplot(data = df)+geom_hline(yintercept = 0)+
-  geom_point(aes(x=ts,y=co2_flux))+
+  geom_point(aes(x=TIMESTAMP,y=co2_flux))+
   scale_y_continuous(limits = c(-10,10))+
   scale_x_datetime(limits = as.POSIXct(c('2025-7-1','2025-9-1'),format="%F"))
 
@@ -468,15 +468,15 @@ See data with multiple layers of the MAD filter to see if it should be changed
 
 ```{r, warning=FALSE}
 ggplot(data = df)+
-  geom_ribbon(aes(x = ts,ymax = Flux_filt+roll.mad*6,ymin = Flux_filt-roll.mad*6,fill='6'))+
-  geom_ribbon(aes(x = ts,ymax = Flux_filt+roll.mad*3,ymin = Flux_filt-roll.mad*3,fill='3'))+
-  geom_ribbon(aes(x = ts,ymax = Flux_filt+roll.mad*2,ymin = Flux_filt-roll.mad*2,fill='2'))+
-  geom_ribbon(aes(x = ts,ymax = Flux_filt+roll.mad*1,ymin = Flux_filt-roll.mad*1,fill='1'))+
-  geom_point(aes(ts,ch4fluxclean),col='red')+
-  geom_point(aes(ts,ch4_flux.c),col='black')+
+  geom_ribbon(aes(x = TIMESTAMP,ymax = Flux_filt+roll.mad*6,ymin = Flux_filt-roll.mad*6,fill='6'))+
+  geom_ribbon(aes(x = TIMESTAMP,ymax = Flux_filt+roll.mad*3,ymin = Flux_filt-roll.mad*3,fill='3'))+
+  geom_ribbon(aes(x = TIMESTAMP,ymax = Flux_filt+roll.mad*2,ymin = Flux_filt-roll.mad*2,fill='2'))+
+  geom_ribbon(aes(x = TIMESTAMP,ymax = Flux_filt+roll.mad*1,ymin = Flux_filt-roll.mad*1,fill='1'))+
+  geom_point(aes(TIMESTAMP,ch4fluxclean),col='red')+
+  geom_point(aes(TIMESTAMP,ch4_flux.c),col='black')+
   scale_y_continuous(limits = c(-0.6,0.6))+
   scale_x_datetime(limits = as.POSIXct(c('2025-04-03','2025-08-10'),format="%F"))+
-  geom_line(aes(x = ts, y = PPFD_7_21_1_1_1.c/100000))
+  geom_line(aes(x = TIMESTAMP, y = PPFD_7_21_1_1_1.c/100000))
 ```
 
 
@@ -529,9 +529,9 @@ roll.mad = rollapply(data = Flux_filt,
 roll.mad[is.na(Flux_filt)] = NA  #make NA values where NAs exist in the real data
 
 ggplot(df)+geom_hline(yintercept = 0)+
-  geom_point(aes(ts,Hclean,col='H'))+
-  geom_line(aes(ts,Flux_filt,col='Filter'))+
-  geom_line(aes(ts,roll.mad,col='MAD'))+
+  geom_point(aes(TIMESTAMP,Hclean,col='H'))+
+  geom_line(aes(TIMESTAMP,Flux_filt,col='Filter'))+
+  geom_line(aes(TIMESTAMP,roll.mad,col='MAD'))+
   scale_y_continuous(limits = c(-180,350))+
   scale_x_datetime(limits = as.POSIXct(flux_dates,format="%F"))+
   scale_color_manual(values=c('yellow','black','red'))
@@ -557,12 +557,12 @@ See data with multiple layers of the MAD filter to see if it should be changed
 
 ```{r, warning=FALSE}
 ggplot(data = df)+
-  geom_ribbon(aes(x = df$ts,ymax = Flux_filt+roll.mad*6,ymin = Flux_filt-roll.mad*6,fill='6'))+
-  geom_ribbon(aes(x = df$ts,ymax = Flux_filt+roll.mad*3,ymin = Flux_filt-roll.mad*3,fill='3'))+
-  geom_ribbon(aes(x = df$ts,ymax = Flux_filt+roll.mad*2,ymin = Flux_filt-roll.mad*2,fill='2'))+
-  geom_ribbon(aes(x = df$ts,ymax = Flux_filt+roll.mad*1,ymin = Flux_filt-roll.mad*1,fill='1'))+
-  geom_point(aes(df$ts,Hclean),col='red')+
-  geom_point(aes(df$ts,H.c),col='black')+
+  geom_ribbon(aes(x = df$TIMESTAMP,ymax = Flux_filt+roll.mad*6,ymin = Flux_filt-roll.mad*6,fill='6'))+
+  geom_ribbon(aes(x = df$TIMESTAMP,ymax = Flux_filt+roll.mad*3,ymin = Flux_filt-roll.mad*3,fill='3'))+
+  geom_ribbon(aes(x = df$TIMESTAMP,ymax = Flux_filt+roll.mad*2,ymin = Flux_filt-roll.mad*2,fill='2'))+
+  geom_ribbon(aes(x = df$TIMESTAMP,ymax = Flux_filt+roll.mad*1,ymin = Flux_filt-roll.mad*1,fill='1'))+
+  geom_point(aes(df$TIMESTAMP,Hclean),col='red')+
+  geom_point(aes(df$TIMESTAMP,H.c),col='black')+
   #scale_y_continuous(limits = c(-100,100))+
   scale_x_datetime(limits = as.POSIXct(c('2025-08-19','2025-09-24')))
 ```
@@ -616,9 +616,9 @@ roll.mad = rollapply(data = Flux_filt,
 roll.mad[is.na(Flux_filt)] = NA  #make NA values where NAs exist in the real data
 
 ggplot(df)+geom_hline(yintercept = 0)+
-  geom_point(aes(ts,LEclean,col='LE'))+
-  geom_line(aes(ts,Flux_filt,col='Filter'))+
-  geom_line(aes(ts,roll.mad,col='MAD'))+
+  geom_point(aes(TIMESTAMP,LEclean,col='LE'))+
+  geom_line(aes(TIMESTAMP,Flux_filt,col='Filter'))+
+  geom_line(aes(TIMESTAMP,roll.mad,col='MAD'))+
   scale_y_continuous(limits = c(-50,400))+
   scale_x_datetime(limits = as.POSIXct(flux_dates,format="%F"))+
   scale_color_manual(values=c('yellow','black','red'))
@@ -644,12 +644,12 @@ See data with multiple layers of the MAD filter to see if it should be changed
 
 ```{r, warning=FALSE}
 ggplot(data = df)+
-  geom_ribbon(aes(x = df$ts,ymax = Flux_filt+roll.mad*6,ymin = Flux_filt-roll.mad*6,fill='6'))+
-  geom_ribbon(aes(x = df$ts,ymax = Flux_filt+roll.mad*3,ymin = Flux_filt-roll.mad*3,fill='3'))+
-  geom_ribbon(aes(x = df$ts,ymax = Flux_filt+roll.mad*2,ymin = Flux_filt-roll.mad*2,fill='2'))+
-  geom_ribbon(aes(x = df$ts,ymax = Flux_filt+roll.mad*1,ymin = Flux_filt-roll.mad*1,fill='1'))+
-  geom_point(aes(df$ts,LEclean),col='red')+
-  geom_point(aes(df$ts,LE.c),col='black')+
+  geom_ribbon(aes(x = df$TIMESTAMP,ymax = Flux_filt+roll.mad*6,ymin = Flux_filt-roll.mad*6,fill='6'))+
+  geom_ribbon(aes(x = df$TIMESTAMP,ymax = Flux_filt+roll.mad*3,ymin = Flux_filt-roll.mad*3,fill='3'))+
+  geom_ribbon(aes(x = df$TIMESTAMP,ymax = Flux_filt+roll.mad*2,ymin = Flux_filt-roll.mad*2,fill='2'))+
+  geom_ribbon(aes(x = df$TIMESTAMP,ymax = Flux_filt+roll.mad*1,ymin = Flux_filt-roll.mad*1,fill='1'))+
+  geom_point(aes(df$TIMESTAMP,LEclean),col='red')+
+  geom_point(aes(df$TIMESTAMP,LE.c),col='black')+
   scale_y_continuous(limits = c(-20,20))+
   scale_x_datetime(limits = as.POSIXct(c('2025-01-20','2025-2-15')))
 ```
@@ -685,28 +685,28 @@ le_plot
 
 ```{r, warning=FALSE}
 le <- ggplot(data = df)+theme_bw()+geom_hline(yintercept = 0)+
-  geom_point(aes(ts,LE,col='Filt.'))+
-  geom_point(aes(ts,LE.c,col='clean'))+
+  geom_point(aes(TIMESTAMP,LE,col='Filt.'))+
+  geom_point(aes(TIMESTAMP,LE.c,col='clean'))+
   scale_y_continuous(expression('LE ('*W~m^-2*')'))+
   scale_color_manual(values = c('black','red'))
   
 
 h <- ggplot(data = df)+theme_bw()+geom_hline(yintercept = 0)+
-  geom_point(aes(ts,H,col='Filt.'))+
-  geom_point(aes(ts,H.c,col='clean'))+
+  geom_point(aes(TIMESTAMP,H,col='Filt.'))+
+  geom_point(aes(TIMESTAMP,H.c,col='clean'))+
   scale_y_continuous(expression('H ('*W~m^-2*')'))+
   scale_color_manual(values = c('black','red'))
 
 co2 <- ggplot(data = df)+theme_bw()+geom_hline(yintercept = 0)+
-  geom_point(aes(ts,co2_flux,col='Filt.'))+
-  geom_point(aes(ts,co2_flux.c,col='clean'))+
+  geom_point(aes(TIMESTAMP,co2_flux,col='Filt.'))+
+  geom_point(aes(TIMESTAMP,co2_flux.c,col='clean'))+
   scale_y_continuous (expression('NEE ('*mu*mol~m^-2~s^-1*')'),
                       limits = c(-20,20))+
   scale_color_manual(values = c('black','red'))
 
 ch4 <- ggplot(data = df)+theme_bw()+geom_hline(yintercept = 0)+
-  geom_point(aes(ts,ch4_flux*43.2,col='Filt.'))+
-  geom_point(aes(ts,ch4_flux.c*43.2,col='clean'))+
+  geom_point(aes(TIMESTAMP,ch4_flux*43.2,col='Filt.'))+
+  geom_point(aes(TIMESTAMP,ch4_flux.c*43.2,col='clean'))+
   scale_y_continuous(expression(CH[4]~'flux ('*mu*mol~m^-2~s^-1*')'),
                      limits = c(-3,8))+
   scale_color_manual(values = c('black','red'))
@@ -748,8 +748,8 @@ ggplot(data = df)+
 set hour and month vectors to be able to take the averages
 
 ```{r, warning=FALSE}
-df$hour = as.numeric(format(df$ts,'%H'))
-df$month = as.numeric(format(df$ts,'%m'))
+df$hour = as.numeric(format(df$TIMESTAMP,'%H'))
+df$month = as.numeric(format(df$TIMESTAMP,'%m'))
 
 diel = df %>%
   group_by(hour,month) %>%
