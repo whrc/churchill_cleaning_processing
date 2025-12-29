@@ -40,8 +40,8 @@ Sys.setenv(TZ = "UTC")
 
 df <- fread('./data/cleaned/Churchill_Met_Flux_Clean_Ameriflux_2025.csv')
 
-
-df_month <- subset(df, df$TIMESTAMP >= as.POSIXct("2025-10-01 0000", tz = "UTC"))
+# create a dataframe with only the time period of interest
+df_month <- subset(df, month(df$TIMESTAMP) == 10 | 11 & year(df$TIMESTAMP) == 2025)
 
 
 # data formatting for flag plots
@@ -57,10 +57,10 @@ color_map = c("0" = "yellow3", "1" = "darkblue" , "2" =  "red4", "3" = "orange",
 
 # Timeseries Plots
 
-Flag = 0, 1, 2 : EP Flag
-Flag = 3 : Absolute Limits Filter
-Flag = 4 : Rolling MAD Filter
-Flag = 5 : Diagnostic filter
+Flag = 0, 1, 2 : EddyPro Quality Flag <br>
+Flag = 3 : Absolute Limits Filter <br>
+Flag = 4 : Rolling MAD (Mean Average Deviation) Filter <br>
+Flag = 5 : Diagnostic filter <br>
 
 
 ## CO2
@@ -87,7 +87,7 @@ nee_plot_ytd = ggplot(data = df)+geom_hline(yintercept = 0)+
 scale_color_manual(values = color_map, name = "Cleaning Flag")
 nee_plot_ytd
 ```
-
+Flag = 0, 1, 2 : EddyPro Quality Flag; Flag = 3 : Absolute Limits Filter; Flag = 4 : Rolling MAD (Mean Average Deviation) Filter; Flag = 5 : Diagnostic filter
 
 ### Previous Month CO2
 ```{r, warning=FALSE, echo=FALSE}
@@ -111,29 +111,44 @@ nee_plot_month
 
 ```
 
+### Weekly Zoom-In on CO2
 
-### Week zoom-in CO2 (add all weeks here in the future)
 ```{r, warning=FALSE, echo=FALSE}
+interval <- 14 * 24 * 3600  # one week in seconds
 
-# Flag = 0, 1, 2 : EP Flag
-# Flag = 3 : Absolute Limits Filter
-# Flag = 4 : Rolling MAD Filter
-# Flag = 5 : Diagnostic filter
+# Create weekly breaks
+breaks <- seq(
+  from = min(df_month$TIMESTAMP),
+  to   = max(df_month$TIMESTAMP),
+  by   = interval
+)
 
-nee_plot_week = ggplot(data = df)+geom_hline(yintercept = 0)+
-  geom_point(aes(TIMESTAMP,co2_flux,color = co2_flux.flag))+
-  geom_point(aes(TIMESTAMP,co2_flux.c),col='black')+
-  scale_y_continuous(limits=c(-2.5,2.5))+
+# Ensure last endpoint is included
+breaks <- c(breaks, max(df_month$TIMESTAMP))
+
+# Base plotting function
+plot_week <- function(start, end) {
+  ggplot(df) +
+    geom_hline(yintercept = 0) +
+    geom_point(aes(TIMESTAMP, co2_flux, color = co2_flux.flag)) +
+    geom_point(aes(TIMESTAMP, co2_flux.c), color = "black") +
+    scale_x_datetime(limits = c(start, end)) +
+    scale_y_continuous(limits = c(-2.5, 2.5)) +
+    scale_color_manual(values = color_map, name = "QC CO2 Flux") +
     labs(
-    x = NULL,
-    y = expression(paste( ~CO[2], ~"Flux (umol m",""^"-2","s",""^"-1",")"))
-  ) +
-  scale_x_datetime(limits = as.POSIXct(c("2025-10-08", "2025-10-15")))+
-scale_color_manual(values = color_map, name = "QC CO2 Flux")
-nee_plot_week
+      x = NULL,
+      y = expression(paste(CO[2], " Flux (µmol m"^-2, " s"^-1, ")"))
+    )
+}
 
+# Generate plots
+plots <- Map(plot_week, breaks[-length(breaks)], breaks[-1])
+
+# Arrange
+(plots[[1]] + plots[[2]]) /
+(plots[[3]] + plots[[4]]) +
+  plot_layout(guides = "collect", axes = "collect")
 ```
-
 
 ## Methane
 
@@ -185,28 +200,43 @@ ch4_plot_month
 ```
 
 
-#### Week zoom-in Methane (add all weeks here in the future)
+### Weekly Zoom-In on CH4
 ```{r, warning=FALSE, echo=FALSE}
+interval <- 7 * 24 * 3600  # one week in seconds
 
-# Flag = 0, 1, 2 : EP Flag
-# Flag = 3 : Absolute Limits Filter
-# Flag = 4 : Rolling MAD Filter
-# Flag = 5 : Diagnostic filter
+# Create weekly breaks
+breaks <- seq(
+  from = min(df_month$TIMESTAMP),
+  to   = max(df_month$TIMESTAMP),
+  by   = interval
+)
 
-ch4_plot_week = ggplot(data = df)+geom_hline(yintercept = 0)+
-  geom_point(aes(TIMESTAMP,ch4_flux,color = ch4_flux.flag))+
-  geom_point(aes(TIMESTAMP,ch4_flux.c),col='black')+
-  scale_y_continuous(limits=c(-0.2,0.2))+
-  labs(
-    x = NULL,
-    y = expression(paste( ~CH[4], ~"Flux (umol m",""^"-2","s",""^"-1",")"))
-  ) +
-  scale_x_datetime(limits = as.POSIXct(c("2025-10-08", "2025-10-15")))+
-scale_color_manual(values = color_map, name = "QC CH4 Flux")
-ch4_plot_week
+# Ensure last endpoint is included
+breaks <- c(breaks, max(df_month$TIMESTAMP))
 
+# Base plotting function
+plot_week <- function(start, end) {
+  ggplot(df) +
+    geom_hline(yintercept = 0) +
+    geom_point(aes(TIMESTAMP, ch4_flux, color = ch4_flux.flag)) +
+    geom_point(aes(TIMESTAMP, ch4_flux.c), color = "black") +
+    scale_x_datetime(limits = c(start, end)) +
+    scale_y_continuous(limits = c(-0.2, 0.2)) +
+    scale_color_manual(values = color_map, name = "QC CH4 Flux") +
+    labs(
+      x = NULL,
+      y = expression(paste( ~CH[4], ~"Flux (umol m",""^"-2","s",""^"-1",")"))
+    )
+}
+
+# Generate plots
+plots <- Map(plot_week, breaks[-length(breaks)], breaks[-1])
+
+# Arrange
+(plots[[1]] + plots[[2]]) /
+(plots[[3]] + plots[[4]]) +
+  plot_layout(guides = "collect", axes = "collect")
 ```
-
 
 
 # Energy Balance Plots
@@ -308,7 +338,8 @@ eb_month
 
 # Timestamp Alignment Check
 
-Measured shortwave radiation vs. calculated potential radiation
+Measured shortwave radiation vs. calculated potential radiation <br>
+Most points should be below the 1:1 line in these plots (where measured radiation is below potential radiation)
 
 #### Full Year-to-Date
 ```{r, warning=FALSE, echo=FALSE}
@@ -316,7 +347,12 @@ ggplot(data = df)+
   geom_point(aes(x = rpot, y = SWIN_6_10_1_1_1, color = radflag))+
   geom_abline(yint = 0, slope = 1, color = "red")+
   scale_x_continuous(limits = c(0, 1000))+
-  scale_y_continuous(limits = c(0, 1000))
+  scale_y_continuous(limits = c(0, 1000))+
+  labs(
+    x = expression("Measured Radiation (SW In)"),
+    y = expression("Calculated Potential Radiation"),
+    title = NULL
+  )
 
 ```
 
@@ -328,7 +364,12 @@ ggplot(data = df_month)+
   geom_point(aes(x = rpot, y = SWIN_6_10_1_1_1, color = radflag))+
   geom_abline(yint = 0, slope = 1, color = "red")+
   scale_x_continuous(limits = c(0, 1000))+
-  scale_y_continuous(limits = c(0, 1000))
+  scale_y_continuous(limits = c(0, 1000))+
+  labs(
+    x = expression("Measured Radiation (SW In)"),
+    y = expression("Calculated Potential Radiation"),
+    title = NULL
+  )
 
 ```
 
@@ -340,18 +381,19 @@ ggplot(data = df_month)+
 
 df <- dplyr::filter(df, !df$TIMESTAMP < as.POSIXct("2022-09-01 00:00:00"))
 
-df$hour = as.numeric(format(df$ts,'%H'))
-df$month = as.numeric(format(df$ts,'%m'))
+df$hour = as.numeric(format(df$TIMESTAMP,'%H'))
+df$month = as.numeric(format(df$TIMESTAMP,'%m'))
 
 diel = df %>%
   group_by(hour,month) %>%
   select(co2_flux.c,ch4_flux.c,LE.c,H.c, RN_6_5_1_1_1.c,hour,month) %>%
   summarise_all(.funs = c(median,sd),na.rm=T)
+  
 
 diel = subset(diel,!is.na(diel$month))
 ```
 
-#### NEE
+#### NEE Diurnals
 
 ```{r, warning=FALSE, echo=FALSE}
 diurnal_nee <- ggplot(data = diel)+geom_hline(yintercept = 0)+
@@ -360,11 +402,16 @@ diurnal_nee <- ggplot(data = diel)+geom_hline(yintercept = 0)+
                   ymax = co2_flux.c_fn1 + co2_flux.c_fn2,
                   ymin = co2_flux.c_fn1 - co2_flux.c_fn2),
               alpha= 0.5)+
-  facet_wrap(~month)
+  facet_wrap(~month)+
+  labs(
+    x = expression("Hour"),
+    y = expression(paste(CO[2], " Flux (µmol m"^-2, " s"^-1, ")")),
+    title = NULL
+  )
 diurnal_nee
 ```
 
-#### CH4
+#### CH4 Diurnals
 
 ```{r, warning=FALSE, echo=FALSE}
 diurnal_ch4 <- ggplot(data = diel)+geom_hline(yintercept = 0)+
@@ -373,7 +420,12 @@ diurnal_ch4 <- ggplot(data = diel)+geom_hline(yintercept = 0)+
                   ymax = ch4_flux.c_fn1 + ch4_flux.c_fn2,
                   ymin = ch4_flux.c_fn1 - ch4_flux.c_fn2),
               alpha= 0.5)+
-  facet_wrap(~month)
+  facet_wrap(~month)+
+  labs(
+    x = expression("Hour"),
+    y = expression(paste( ~CH[4], ~"Flux (umol m",""^"-2","s",""^"-1",")")),
+    title = NULL
+  )
 diurnal_ch4
 
 ```
