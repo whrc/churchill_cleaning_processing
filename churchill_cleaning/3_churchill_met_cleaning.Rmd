@@ -44,7 +44,7 @@ df <- fread('./outputs/cleaning/Churchill_met_flux_merged_aligned_2025.csv')
 Creates a variable to input a date range for the plots in the biomet section of
 cleaning code. Used to easily change date range for different data sets. 
 ```{r, warning=FALSE}
-biomet_dates <- c('2022-08-01', '2025-12-01')
+biomet_dates <- c('2025-08-01', '2026-01-01')
 ```
 
 
@@ -95,32 +95,36 @@ plot(df$RH_19_3_1_1_1.c)
 ```{r,warning=FALSE}
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,PA_4_2_1_1_1),col='black')+
-  scale_y_continuous(#limits = c(90000,110000),
+  scale_y_continuous(limits = c(0,120),
                      expression ('Barometric Pressure ('*kPa*')'))+
-  scale_x_datetime(limits = as.POSIXct(c("2022-08-06","2022-12-31")))
+  scale_x_datetime(limits = as.POSIXct(biomet_dates))
 ```
 
 Unit adjustment and cleaning
 ```{r}
 
-## Pick up here - not working :(
-
 PA_4_2_1_1_1.limits <- df$PA_4_2_1_1_1
 
-PA_4_2_1_1_1.limits <- ifelse(PA_4_2_1_1_1.limits < 10, PA_4_2_1_1_1.limits*100 ,PA_4_2_1_1_1.limits)
-
+# Adjust units in Pa to kPa
 PA_4_2_1_1_1.limits <- ifelse(PA_4_2_1_1_1.limits > 150, PA_4_2_1_1_1.limits/1000 ,PA_4_2_1_1_1.limits)
 
+# Correct incorrect unit adjustment
+PA_4_2_1_1_1.limits <- ifelse(PA_4_2_1_1_1.limits < 10, PA_4_2_1_1_1.limits*100 ,PA_4_2_1_1_1.limits)
+
 plot(PA_4_2_1_1_1.limits)
-# 
-# PA_4_2_1_1_1.limits <- ifelse(PA_4_2_1_1_1.limits < 60, NA ,PA_4_2_1_1_1.limits)
+summary(PA_4_2_1_1_1.limits)
+
+# Remove outside of absolute limits - picked 97 due to problematic chunk in 2022
+PA_4_2_1_1_1.limits <- ifelse(PA_4_2_1_1_1.limits < 97 | PA_4_2_1_1_1.limits > 110, NA ,PA_4_2_1_1_1.limits)
 
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,PA_4_2_1_1_1.limits),col='black')+
   scale_y_continuous(#limits = c(0,200),
                      expression ('Barometric Pressure ('*kPa*')'))+
-  scale_x_datetime(limits = as.POSIXct(c("2022-10-01","2023-02-05")))+
-  scale_y_continuous(limits = c(-1, 2))
+  scale_x_datetime(limits = as.POSIXct(biomet_dates))+
+  scale_y_continuous(limits = c(90, 115))
+
+df$PA_4_2_1_1_1.c <- PA_4_2_1_1_1.limits
 
 
 
@@ -143,23 +147,41 @@ df$SHF_6_37_2_1_1.c <- df$SHF_6_37_2_1_1
 
 # Snow Depth 
 
+Turns snow-free data into NAs
 ```{r, warning=FALSE}
 hist(df$SD_10_99_1_1_1,breaks=100)
 
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,SD_10_99_1_1_1),col='black')+
-  geom_line(aes(TIMESTAMP,PPFDR_7_23_1_1_1/500), col = 'green')+
-  scale_y_continuous(#limits = c(-1.5,.75),
+  #geom_line(aes(TIMESTAMP,PPFDR_7_23_1_1_1/500), col = 'green')+
+  scale_y_continuous(limits = c(-.5,5),
                      expression('Snow Depth ('*m*')'))+
   geom_hline(yintercept = 0, color = "red")+
   geom_hline(yintercept = 1, color = "red")+
-  geom_vline(xintercept = as.POSIXct("2025-05-21"), color = "red")
-#+ geom_vline(xintercept = as.POSIXct("2025-10-23"), color = "red") # add in fall
+  geom_vline(xintercept = as.POSIXct("2025-05-23"), color = "red")+ # Y3 Spring
+  geom_vline(xintercept = as.POSIXct("2025-10-26"), color = "red")+ # Y3 Fall
+  geom_vline(xintercept = as.POSIXct("2024-5-19"), color = "red")+ # Y2 Spring
+  geom_vline(xintercept = as.POSIXct("2024-10-25"), color = "red")+ # Y2 Fall
+  geom_vline(xintercept = as.POSIXct("2023-5-18"), color = "red")+ # Y1 Spring
+  geom_vline(xintercept = as.POSIXct("2023-10-26"), color = "red")+ # Y1 Fall
+  geom_vline(xintercept = as.POSIXct("2022-10-16"), color = "red") # Y0 Fall
+
 
 SD_10_99_1_1_1.limits=df$SD_10_99_1_1_1
 SD_10_99_1_1_1.limits = ifelse(df$SD_10_99_1_1_1 < 0,0,SD_10_99_1_1_1.limits)
 SD_10_99_1_1_1.limits = ifelse(df$SD_10_99_1_1_1 > 1,NA,SD_10_99_1_1_1.limits)
-SD_10_99_1_1_1.limits = ifelse(df$TIMESTAMP > as.POSIXct('2025-05-21'),NA,SD_10_99_1_1_1.limits)
+
+# Remove 2025 growing season
+SD_10_99_1_1_1.limits = ifelse(df$TIMESTAMP > as.POSIXct('2025-05-23') & df$TIMESTAMP < as.POSIXct('2025-10-26'),NA,SD_10_99_1_1_1.limits)
+
+# Remove 2024 growing season
+SD_10_99_1_1_1.limits = ifelse(df$TIMESTAMP > as.POSIXct('2024-05-19') & df$TIMESTAMP < as.POSIXct('2024-10-25'),NA,SD_10_99_1_1_1.limits)
+
+# Remove 2023 growing season
+SD_10_99_1_1_1.limits = ifelse(df$TIMESTAMP > as.POSIXct('2023-05-18') & df$TIMESTAMP < as.POSIXct('2023-10-26'),NA,SD_10_99_1_1_1.limits)
+
+# Remove 2022 growing season
+SD_10_99_1_1_1.limits = ifelse(df$TIMESTAMP < as.POSIXct('2022-10-16'),NA,SD_10_99_1_1_1.limits)
                                
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,SD_10_99_1_1_1.limits),col='black')+
@@ -232,7 +254,7 @@ ggplot(data = df)+
   geom_point(aes(TIMESTAMP,SD_10_99_1_1_1.c),col='black')+
   geom_line(aes(TIMESTAMP,WS_16_33_1_1_1/10),col='black')+
   #scale_y_continuous(limits = c(-.25,.5))+
-  scale_x_datetime(limits = as.POSIXct(c('2025-03-06','2025-03-25'),format="%F"))
+  scale_x_datetime(limits = as.POSIXct(c('2025-10-06','2025-12-30'),format="%F"))
 
 ```
 
@@ -241,10 +263,12 @@ ggplot(data = df)+
 ```{r, warning=FALSE}
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,PPFD_7_21_1_1_1),col='black')+
+  scale_x_datetime(limits = as.POSIXct(biomet_dates))+
   scale_y_continuous(limits = c(-25,2000),
                      expression('PAR ('*mu*mol/m^2/s*')'))
 
-#make sure max and min make sense here
+
+#make sure max and min make sense here - no negatives!!
 summary(df$PPFD_7_21_1_1_1)
 ```
 
@@ -260,36 +284,27 @@ summary(df$PPFD_7_21_1_1_1)
 df$PPFD_7_21_1_1_1.c <- df$PPFD_7_21_1_1_1
 ```
 
-
 # PAR Reflected 
 
+There are some off points here but I tried a rolling filter with no luck - could add very specific absolute limits if needed
 ```{r, warning=FALSE}
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,PPFDR_7_23_1_1_1),col='black')+
+  scale_x_datetime(limits = as.POSIXct(biomet_dates))+
   scale_y_continuous(limits = c(-25,1600),
                      expression('PAR Reflected ('*mu*mol/m^2/s*')'))
 
-#make sure max/min make sense here
+#make sure max/min make sense here - no negatives!!
 summary(df$PPFDR_7_23_1_1_1)
+
+PPFDR_7_23_1_1_1.c <- df$PPFDR_7_23_1_1_1
 ```
-
-```{r, warning=FALSE}
-
-# hist(df$PPFDR_7_23_1_1_1,breaks=100)
-# plot(df$TIMESTAMP,df$PPFDR_7_23_1_1_1,ylim = c(0,5850));abline(h=1400, col= 'red');abline(h=-1, col='red')
-# PPFDR_7_23_1_1_1.limits=df$PPFDR_7_23_1_1_1
-# PPFDR_7_23_1_1_1.limits = ifelse(df$PPFDR_7_23_1_1_1 < -1 | df$PPFDR_7_23_1_1_1 > 600 & df$TIMESTAMP <= '2022-10-31',NA,df$PPFDR_7_23_1_1_1)
-# hist(PPFDR_7_23_1_1_1.limits,breaks=100)
-# plot(PPFDR_7_23_1_1_1.limits)
-
-df$PPFDR_7_23_1_1_1.c <- df$PPFDR_7_23_1_1_1
-```
-
 
 # Net Radiation 
 ```{r, warning=FALSE}
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP, RN_6_5_1_1_1),col='black')+
+  scale_x_datetime(limits = as.POSIXct(biomet_dates))+
   scale_y_continuous(#limits = c(-125,850),
                      expression('Net Radiation ('*W/m^2*')'))
 
@@ -297,12 +312,12 @@ summary(df$RN_6_5_1_1_1)
 ```
 
 ```{r, warning=FALSE}
-# RN_6_5_1_1_1.limits <- df$RN_6_5_1_1_1
-# hist(df$RN_6_5_1_1_1,breaks=100)
-# plot(df$TIMESTAMP,df$RN_6_5_1_1_1,ylim = c(-400,850));abline(h=835,col= 'red');abline(h=-300, col='red')
-# RN_6_5_1_1_1.limits = replace(df$RN_6_5_1_1_1, df$RN_6_5_1_1_1 < -300 | df$RN_6_5_1_1_1 > 835,NA)
-# hist(RN_6_5_1_1_1.limits,breaks=100)
-# plot(df$TIMESTAMP,RN_6_5_1_1_1.limits)
+RN_6_5_1_1_1.limits <- df$RN_6_5_1_1_1
+hist(df$RN_6_5_1_1_1,breaks=100)
+plot(df$TIMESTAMP,df$RN_6_5_1_1_1,ylim = c(-400,850));abline(h=780,col= 'red');abline(h=-150, col='red')
+RN_6_5_1_1_1.limits = replace(df$RN_6_5_1_1_1, df$RN_6_5_1_1_1 < -150 | df$RN_6_5_1_1_1 > 780,NA)
+hist(RN_6_5_1_1_1.limits,breaks=100)
+plot(df$TIMESTAMP,RN_6_5_1_1_1.limits)
 
 
 df$RN_6_5_1_1_1.c <- df$RN_6_5_1_1_1
@@ -313,21 +328,23 @@ df$RN_6_5_1_1_1.c <- df$RN_6_5_1_1_1
 ```{r, warning=FALSE}
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,SWIN_6_10_1_1_1))+
+  scale_x_datetime(limits = as.POSIXct(biomet_dates))+
   scale_y_continuous(#limits = c(-10,1000),
                      expression('Shortwave In ('*W/m^2*')'))
 
+#check for funky values - no negatives!
 summary(df$SWIN_6_10_1_1_1)
 ```
 
 
 ```{r, warning=FALSE}
 
+#Get rid of negatives
 SWIN_6_10_1_1_1.limits <- df$SWIN_6_10_1_1_1
 
 SWIN_6_10_1_1_1.limits[df$SWIN_6_10_1_1_1 < 0] <- 0
 
 df$SWIN_6_10_1_1_1.c <- SWIN_6_10_1_1_1.limits
-
 
 ```
 
@@ -336,10 +353,11 @@ df$SWIN_6_10_1_1_1.c <- SWIN_6_10_1_1_1.limits
 ```{r, warning=FALSE}
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,SWOUT_6_11_1_1_1))+
+  scale_x_datetime(limits = as.POSIXct(biomet_dates))+
   scale_y_continuous(limits = c(-10,750),
-                     expression('Shortwave Out ('*W/m^2*')'))+
-  scale_x_datetime(limits = as.POSIXct(biomet_dates))
+                     expression('Shortwave Out ('*W/m^2*')'))
 
+#Check for funky values - no negatives!
 summary(df$SWOUT_6_11_1_1_1)
 ```
 
@@ -365,7 +383,6 @@ ggplot(data = df)+
 
 albedo.limits = replace(albedo, albedo < .05 | albedo > 1,NA)
 
-
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,albedo.limits))+
   scale_y_continuous(limits = c(-.2,1.2),
@@ -375,6 +392,7 @@ ggplot(data = df)+
 
 ```
 
+## Rolling MAD
 ```{r, warning=FALSE}
 f = albedo.limits # first make a new flux vector to apply the above filters
 # prepare the inputs for a zero-phase (forward and reverse) filter  
@@ -429,6 +447,7 @@ ggplot(df)+geom_hline(yintercept = 0)+
 
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,LWIN_6_14_1_1_1))+
+  scale_x_datetime(limits = as.POSIXct(biomet_dates))+
   scale_y_continuous(#limits = c(50,750),
                      expression('Longwave In ('*W/m^2*')'))+
   scale_x_datetime(limits = as.POSIXct(biomet_dates))
@@ -439,7 +458,11 @@ ggplot(data = df)+
 
 hist(df$LWIN_6_14_1_1_1,breaks=100)
 
-df$LWIN_6_14_1_1_1.c = df$LWIN_6_14_1_1_1
+LWIN_6_14_1_1_1.limits = replace(df$LWIN_6_14_1_1_1, df$LWIN_6_14_1_1_1 > 500,NA)
+
+df$LWIN_6_14_1_1_1.c = LWIN_6_14_1_1_1.limits
+
+hist(df$LWIN_6_14_1_1_1.c)
 
 ```
 
@@ -458,7 +481,12 @@ ggplot(data = df)+
 
 hist(df$LWOUT_6_15_1_1_1,breaks=100)
 
-df$LWOUT_6_15_1_1_1.c = df$LWOUT_6_15_1_1_1
+LWOUT_6_15_1_1_1.limits = replace(df$LWOUT_6_15_1_1_1, df$LWOUT_6_15_1_1_1 > 550,NA)
+
+df$LWOUT_6_15_1_1_1.c = LWOUT_6_15_1_1_1.limits
+
+hist(df$LWOUT_6_15_1_1_1.c)
+
 ```
 
 # Water Temp (From water table depth sensor)
@@ -468,8 +496,9 @@ ggplot(data = df)+
   geom_point(aes(TIMESTAMP,TW_2_45_1_1_1))+
   scale_y_continuous(#limits = c(150,750),
                      expression('Water Temp (Celcius)'))+
-  scale_x_datetime(limits = as.POSIXct(c(biomet_dates)))+
-  geom_vline(aes(xintercept = as.POSIXct('2025-05-25'))) #for cutting freezing water table depth data
+  scale_x_datetime(limits = as.POSIXct(c("2025-09-01","2025-11-30")))+
+  geom_vline(aes(xintercept = as.POSIXct('2025-05-25')))+
+  geom_vline(aes(xintercept = as.POSIXct('2025-11-05'))) #for cutting freezing water table depth data
 
 ```
 
@@ -481,17 +510,17 @@ ggplot(data = df)+
   scale_y_continuous(#limits = c(150,750),
                      expression('Water Table Depth (m)'))+
   scale_x_datetime(limits = as.POSIXct(c(biomet_dates)))+
-  geom_vline(aes(xintercept = as.POSIXct('2025-05-25')))  #for cutting freezing water table depth data
+  geom_vline(aes(xintercept = as.POSIXct('2025-05-25')))+
+  geom_vline(aes(xintercept = as.POSIXct('2025-11-05')))  #for cutting freezing water table depth data
 
 
-df$WTD_10_42_1_1_1.c <- ifelse(df$TIMESTAMP < as.POSIXct('2025-05-25'), NA, df$WTD_10_42_1_1_1)
+df$WTD_10_42_1_1_1.c <- ifelse(df$TIMESTAMP < as.POSIXct('2025-05-25') | df$TIMESTAMP > as.POSIXct('2025-11-05'), NA, df$WTD_10_42_1_1_1)
 
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,WTD_10_42_1_1_1.c))+
   scale_y_continuous(#limits = c(150,750),
                      expression('Water Table Depth (m)'))+
-  scale_x_datetime(limits = as.POSIXct(c(biomet_dates)))+
-  geom_vline(aes(xintercept = as.POSIXct('2025-05-25'))) 
+  scale_x_datetime(limits = as.POSIXct(c(biomet_dates)))
 
 
 ```
@@ -515,7 +544,8 @@ ggplot(data = df)+ theme_bw()+
   geom_line(aes(TIMESTAMP,TS_2_38_4_9_1,color='70 cm'))+
   geom_line(aes(TIMESTAMP,TS_2_38_4_10_1,color='80 cm'))+
   geom_line(aes(TIMESTAMP,TS_2_38_4_11_1,color='90 cm'))+
-  geom_line(aes(TIMESTAMP,TS_2_38_4_12_1,color='1 m')) 
+  geom_line(aes(TIMESTAMP,TS_2_38_4_12_1,color='1 m'))+
+  scale_x_datetime(limits = as.POSIXct(biomet_dates))
 ```
   
 
@@ -534,25 +564,92 @@ ggplot(data = df)+ theme_bw()+
   geom_line(aes(TIMESTAMP,TS_2_38_3_9_1,color='70 cm'))+
   geom_line(aes(TIMESTAMP,TS_2_38_3_10_1,color='80 cm'))+
   geom_line(aes(TIMESTAMP,TS_2_38_3_11_1,color='90 cm'))+
-  geom_line(aes(TIMESTAMP,TS_2_38_3_12_1,color='1 m')) 
+  geom_line(aes(TIMESTAMP,TS_2_38_3_12_1,color='1 m'))+
+  scale_x_datetime(limits = as.POSIXct(biomet_dates))
 ```
+
+# Cleaning
+```{r}
+
+soil_temps <- c(
+      "TS_2_38_4_1_1", "TS_2_38_4_2_1", "TS_2_38_4_3_1", "TS_2_38_4_4_1", "TS_2_38_4_5_1", "TS_2_38_4_6_1", "TS_2_38_4_7_1", "TS_2_38_4_8_1", "TS_2_38_4_9_1", "TS_2_38_4_10_1", "TS_2_38_4_11_1", "TS_2_38_4_12_1", 
+      "TS_2_38_3_1_1", "TS_2_38_3_2_1", "TS_2_38_3_3_1", "TS_2_38_3_4_1", "TS_2_38_3_5_1", "TS_2_38_3_6_1", "TS_2_38_3_7_1", "TS_2_38_3_8_1", "TS_2_38_3_9_1", "TS_2_38_3_10_1", "TS_2_38_3_11_1", "TS_2_38_3_12_1"
+            )
+
+soil_temps.limits <- c(
+      "TS_2_38_4_1_1.limits", "TS_2_38_4_2_1.limits", "TS_2_38_4_3_1.limits", "TS_2_38_4_4_1.limits", "TS_2_38_4_5_1.limits", "TS_2_38_4_6_1.limits", "TS_2_38_4_7_1.limits", "TS_2_38_4_8_1.limits", "TS_2_38_4_9_1.limits", "TS_2_38_4_10_1.limits", "TS_2_38_4_11_1.limits", "TS_2_38_4_12_1.limits", 
+      "TS_2_38_3_1_1.limits", "TS_2_38_3_2_1.limits", "TS_2_38_3_3_1.limits", "TS_2_38_3_4_1.limits", "TS_2_38_3_5_1.limits", "TS_2_38_3_6_1.limits", "TS_2_38_3_7_1.limits", "TS_2_38_3_8_1.limits", "TS_2_38_3_9_1.limits", "TS_2_38_3_10_1.limits", "TS_2_38_3_11_1.limits", "TS_2_38_3_12_1.limits"
+            )
+
+#create kelvin conversion function
+kelvin_to_celsius <- function(x) {
+  ifelse(x > 200, x - 273.15, x)
+}
+
+## Creates .limits variables
+### SAVES ALL IN DATAFRAME FOR BETTER WORKFLOW - MAKE SURE TO TAKE OUT OF FINAL DATAFRAME!
+df <- df %>%
+  mutate(across(all_of(soil_temps),
+                kelvin_to_celsius,
+                .names = "{.col}.limits"))
+
+plot(df$TS_2_38_3_1_1.limits)
+
+```
+
+# Remove problematic chunk 
+
+```{r}
+
+ggplot(data = df)+
+  geom_point(aes(TIMESTAMP,TS_2_38_3_1_1.limits))+
+  geom_point(aes(TIMESTAMP,TS_2_38_3_9_1.limits))+
+  geom_point(aes(TIMESTAMP,TS_2_38_4_1_1.limits))+
+  geom_point(aes(TIMESTAMP,TS_2_38_4_11_1.limits))+
+  scale_y_continuous(limits = c(-25,15))+
+  scale_x_datetime(limits = as.POSIXct(c("2022-10-10","2022-11-15")))+
+  geom_vline(aes(xintercept = as.POSIXct('2022-10-21')))+
+  geom_vline(aes(xintercept = as.POSIXct('2022-11-07')))
+
+start_time <- as.POSIXct("2022-10-21", tz = "UTC")
+end_time   <- as.POSIXct("2022-11-07", tz = "UTC")
+
+# rows to remove
+rm_idx <- df$TIMESTAMP >= start_time & df$TIMESTAMP <= end_time
+
+# set values to NA in all soil temp columns
+df[rm_idx, soil_temps.limits] <- NA
+
+ggplot(data = df)+
+  geom_point(aes(TIMESTAMP,TS_2_38_3_8_1.limits))+
+  geom_point(aes(TIMESTAMP,TS_2_38_3_9_1.limits))+
+  geom_point(aes(TIMESTAMP,TS_2_38_4_1_1.limits))+
+  geom_point(aes(TIMESTAMP,TS_2_38_4_11_1.limits))+
+  scale_y_continuous(limits = c(-20,15))+
+  scale_x_datetime(limits = as.POSIXct(c("2022-10-10","2022-11-15")))+
+  geom_vline(aes(xintercept = as.POSIXct('2022-10-21')))+
+  geom_vline(aes(xintercept = as.POSIXct('2022-11-07')))
+
+
+```
+
 
 # Hummocks clean
 
 ```{r, warning=FALSE}
 
-df$TS_2_38_4_1_1.c <- df$TS_2_38_4_1_1
-df$TS_2_38_4_2_1.c <- df$TS_2_38_4_2_1
-df$TS_2_38_4_3_1.c <- df$TS_2_38_4_3_1
-df$TS_2_38_4_4_1.c <- df$TS_2_38_4_4_1
-df$TS_2_38_4_5_1.c <- df$TS_2_38_4_5_1
-df$TS_2_38_4_6_1.c <- df$TS_2_38_4_6_1
-df$TS_2_38_4_7_1.c <- df$TS_2_38_4_7_1
-df$TS_2_38_4_8_1.c <- df$TS_2_38_4_8_1
-df$TS_2_38_4_9_1.c <- df$TS_2_38_4_9_1
-df$TS_2_38_4_10_1.c <- df$TS_2_38_4_10_1
-df$TS_2_38_4_11_1.c <- df$TS_2_38_4_11_1
-df$TS_2_38_4_12_1.c <- df$TS_2_38_4_12_1
+df$TS_2_38_4_1_1.c <- df$TS_2_38_4_1_1.limits
+df$TS_2_38_4_2_1.c <- df$TS_2_38_4_2_1.limits
+df$TS_2_38_4_3_1.c <- df$TS_2_38_4_3_1.limits
+df$TS_2_38_4_4_1.c <- df$TS_2_38_4_4_1.limits
+df$TS_2_38_4_5_1.c <- df$TS_2_38_4_5_1.limits
+df$TS_2_38_4_6_1.c <- df$TS_2_38_4_6_1.limits
+df$TS_2_38_4_7_1.c <- df$TS_2_38_4_7_1.limits
+df$TS_2_38_4_8_1.c <- df$TS_2_38_4_8_1.limits
+df$TS_2_38_4_9_1.c <- df$TS_2_38_4_9_1.limits
+df$TS_2_38_4_10_1.c <- df$TS_2_38_4_10_1.limits
+df$TS_2_38_4_11_1.c <- df$TS_2_38_4_11_1.limits
+df$TS_2_38_4_12_1.c <- df$TS_2_38_4_12_1.limits
 
 ```
 
@@ -560,21 +657,29 @@ df$TS_2_38_4_12_1.c <- df$TS_2_38_4_12_1
 
 ```{r, warning=FALSE}
 
-df$TS_2_38_3_1_1.c <- df$TS_2_38_3_1_1
-df$TS_2_38_3_2_1.c <- df$TS_2_38_3_2_1
-df$TS_2_38_3_3_1.c <- df$TS_2_38_3_3_1
-df$TS_2_38_3_4_1.c <- df$TS_2_38_3_4_1
-df$TS_2_38_3_5_1.c <- df$TS_2_38_3_5_1
-df$TS_2_38_3_6_1.c <- df$TS_2_38_3_6_1
-df$TS_2_38_3_7_1.c <- df$TS_2_38_3_7_1
-df$TS_2_38_3_8_1.c <- df$TS_2_38_3_8_1
-df$TS_2_38_3_9_1.c <- df$TS_2_38_3_9_1
-df$TS_2_38_3_10_1.c <- df$TS_2_38_3_10_1
-df$TS_2_38_3_11_1.c <- df$TS_2_38_3_11_1
-df$TS_2_38_3_12_1.c <- df$TS_2_38_3_12_1
+df$TS_2_38_3_1_1.c <- df$TS_2_38_3_1_1.limits
+df$TS_2_38_3_2_1.c <- df$TS_2_38_3_2_1.limits
+df$TS_2_38_3_3_1.c <- df$TS_2_38_3_3_1.limits
+df$TS_2_38_3_4_1.c <- df$TS_2_38_3_4_1.limits
+df$TS_2_38_3_5_1.c <- df$TS_2_38_3_5_1.limits
+df$TS_2_38_3_6_1.c <- df$TS_2_38_3_6_1.limits
+df$TS_2_38_3_7_1.c <- df$TS_2_38_3_7_1.limits
+df$TS_2_38_3_8_1.c <- df$TS_2_38_3_8_1.limits
+df$TS_2_38_3_9_1.c <- df$TS_2_38_3_9_1.limits
+df$TS_2_38_3_10_1.c <- df$TS_2_38_3_10_1.limits
+df$TS_2_38_3_11_1.c <- df$TS_2_38_3_11_1.limits
+df$TS_2_38_3_12_1.c <- df$TS_2_38_3_12_1.limits
 
 ```
 
+Remove .limits columns
+
+```{r}
+
+df <- df %>%
+  select(-all_of(soil_temps.limits))
+
+```
 
 
 # Save
