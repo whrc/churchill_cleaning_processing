@@ -41,7 +41,7 @@ Sys.setenv(TZ = "UTC")
 df <- fread('./data/cleaned/Churchill_Met_Flux_Clean_Ameriflux_2025.csv')
 
 # create a dataframe with only the time period of interest
-df_month <- subset(df, month(df$TIMESTAMP) == 10 | 11 & year(df$TIMESTAMP) == 2025)
+df_month <- subset(df, month(df$TIMESTAMP) == 10 & year(df$TIMESTAMP) == 2025)
 
 
 # data formatting for flag plots
@@ -87,7 +87,8 @@ nee_plot_ytd = ggplot(data = df)+geom_hline(yintercept = 0)+
 scale_color_manual(values = color_map, name = "Cleaning Flag")
 nee_plot_ytd
 ```
-Flag = 0, 1, 2 : EddyPro Quality Flag; Flag = 3 : Absolute Limits Filter; Flag = 4 : Rolling MAD (Mean Average Deviation) Filter; Flag = 5 : Diagnostic filter
+<br>
+Flag = 0, 1, 2 : EddyPro Quality Flag; Flag = 3 : Absolute Limits Filter; Flag = 4 : Rolling MAD (Mean Average Deviation) Filter; Flag = 5 : Diagnostic filter <br>
 
 ### Previous Month CO2
 ```{r, warning=FALSE, echo=FALSE}
@@ -110,11 +111,13 @@ scale_color_manual(values = color_map, name = "QC CO2 Flux")
 nee_plot_month
 
 ```
+<br>
+Flag = 0, 1, 2 : EddyPro Quality Flag; Flag = 3 : Absolute Limits Filter; Flag = 4 : Rolling MAD (Mean Average Deviation) Filter; Flag = 5 : Diagnostic filter <br>
 
 ### Weekly Zoom-In on CO2
 
 ```{r, warning=FALSE, echo=FALSE}
-interval <- 14 * 24 * 3600  # one week in seconds
+interval <- 7 * 24 * 3600  # one week in seconds
 
 # Create weekly breaks
 breaks <- seq(
@@ -129,10 +132,11 @@ breaks <- c(breaks, max(df_month$TIMESTAMP))
 # Base plotting function
 plot_week <- function(start, end) {
   ggplot(df) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))+
     geom_hline(yintercept = 0) +
     geom_point(aes(TIMESTAMP, co2_flux, color = co2_flux.flag)) +
     geom_point(aes(TIMESTAMP, co2_flux.c), color = "black") +
-    scale_x_datetime(limits = c(start, end)) +
+    scale_x_datetime(limits = c(start, end), date_breaks = "1 day", date_labels = "%b %d") +
     scale_y_continuous(limits = c(-2.5, 2.5)) +
     scale_color_manual(values = color_map, name = "QC CO2 Flux") +
     labs(
@@ -144,11 +148,32 @@ plot_week <- function(start, end) {
 # Generate plots
 plots <- Map(plot_week, breaks[-length(breaks)], breaks[-1])
 
-# Arrange
-(plots[[1]] + plots[[2]]) /
-(plots[[3]] + plots[[4]]) +
+(plots[[1]]+plots[[2]])/(plots[[3]]+plots[[4]]+plots)+
   plot_layout(guides = "collect", axes = "collect")
 ```
+
+
+#### Week 1
+```{r, warning=FALSE, echo=FALSE}
+plots[[1]]
+```
+
+#### Week 2
+```{r, warning=FALSE, echo=FALSE}
+plots[[2]]
+```
+
+#### Week 3
+```{r, warning=FALSE, echo=FALSE}
+plots[[3]]
+```
+
+#### Week 4
+```{r, warning=FALSE, echo=FALSE}
+plots[[4]]
+```
+<br>
+Flag = 0, 1, 2 : EddyPro Quality Flag; Flag = 3 : Absolute Limits Filter; Flag = 4 : Rolling MAD (Mean Average Deviation) Filter; Flag = 5 : Diagnostic filter<br>
 
 ## Methane
 
@@ -175,7 +200,8 @@ scale_color_manual(values = color_map, name = "QC CH4 Flux")
 ch4_plot_year
 
 ```
-
+<br>
+Flag = 0, 1, 2 : EddyPro Quality Flag; Flag = 3 : Absolute Limits Filter; Flag = 4 : Rolling MAD (Mean Average Deviation) Filter; Flag = 5 : Diagnostic filter <br>
 
 #### Previous Month Methane
 ```{r, warning=FALSE, echo=FALSE}
@@ -198,7 +224,8 @@ scale_color_manual(values = color_map, name = "QC CH4 Flux")
 ch4_plot_month
 
 ```
-
+<br>
+Flag = 0, 1, 2 : EddyPro Quality Flag; Flag = 3 : Absolute Limits Filter; Flag = 4 : Rolling MAD (Mean Average Deviation) Filter; Flag = 5 : Diagnostic filter <br>
 
 ### Weekly Zoom-In on CH4
 ```{r, warning=FALSE, echo=FALSE}
@@ -233,11 +260,12 @@ plot_week <- function(start, end) {
 plots <- Map(plot_week, breaks[-length(breaks)], breaks[-1])
 
 # Arrange
-(plots[[1]] + plots[[2]]) /
-(plots[[3]] + plots[[4]]) +
+(plots[[1]] / plots[[2]] /
+plots[[3]] / plots[[4]]) +
   plot_layout(guides = "collect", axes = "collect")
 ```
-
+<br>
+Flag = 0, 1, 2 : EddyPro Quality Flag; Flag = 3 : Absolute Limits Filter; Flag = 4 : Rolling MAD (Mean Average Deviation) Filter; Flag = 5 : Diagnostic filter <br>
 
 # Energy Balance Plots
 
