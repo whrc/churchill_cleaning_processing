@@ -65,7 +65,7 @@ Flag = 5 : Diagnostic filter <br>
 
 ## CO2
 
-CO2 is cleaned with absolute limits of 12 & -15, and a limit of 3 MADs away from the mean over a 7 day window in the summer and a limit of 8 MADs away from the mean over a 7 day window in the winter
+CO2 is cleaned with absolute limits of 12 & -15, and a limit of 3 MADs away from the mean over a 7 day window in the summer and a limit of 5 MADs away from the mean over a 7 day window in the winter
 
 #### Year-to-Date CO2
 ```{r, warning=FALSE, echo=FALSE}
