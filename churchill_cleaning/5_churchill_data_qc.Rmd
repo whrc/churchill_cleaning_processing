@@ -227,6 +227,7 @@ ch4_plot_month
 Flag = 0, 1, 2 : EddyPro Quality Flag; Flag = 3 : Absolute Limits Filter; Flag = 4 : Rolling MAD (Mean Average Deviation) Filter; Flag = 5 : Diagnostic filter <br>
 
 ### Weekly Zoom-In on CH4
+
 ```{r, warning=FALSE, echo=FALSE}
 interval <- 7 * 24 * 3600  # one week in seconds
 
@@ -237,34 +238,53 @@ breaks <- seq(
   by   = interval
 )
 
-# Ensure last endpoint is included
+# Replace last endpoint with last day of the month
+breaks <- head(breaks, -1)
 breaks <- c(breaks, max(df_month$TIMESTAMP))
 
 # Base plotting function
 plot_week <- function(start, end) {
   ggplot(df) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))+
     geom_hline(yintercept = 0) +
     geom_point(aes(TIMESTAMP, ch4_flux, color = ch4_flux.flag)) +
     geom_point(aes(TIMESTAMP, ch4_flux.c), color = "black") +
-    scale_x_datetime(limits = c(start, end)) +
-    scale_y_continuous(limits = c(-0.2, 0.2)) +
+    scale_x_datetime(limits = c(start, end), date_breaks = "1 day", date_labels = "%b %d") +
+    scale_y_continuous(limits = c(-0.1, 0.2)) +
     scale_color_manual(values = color_map, name = "QC CH4 Flux") +
     labs(
       x = NULL,
-      y = expression(paste( ~CH[4], ~"Flux (umol m",""^"-2","s",""^"-1",")"))
+      y = expression(paste(CH[4], " Flux (umol m",""^"-2","s",""^"-1",")"))
     )
 }
 
 # Generate plots
 plots <- Map(plot_week, breaks[-length(breaks)], breaks[-1])
+```
 
-# Arrange
-(plots[[1]] / plots[[2]] /
-plots[[3]] / plots[[4]]) +
-  plot_layout(guides = "collect", axes = "collect")
+
+#### Week 1
+```{r, warning=FALSE, echo=FALSE}
+plots[[1]]
+```
+
+#### Week 2
+```{r, warning=FALSE, echo=FALSE}
+plots[[2]]
+```
+
+#### Week 3
+```{r, warning=FALSE, echo=FALSE}
+plots[[3]]
+```
+
+#### Week 4
+```{r, warning=FALSE, echo=FALSE}
+plots[[4]]
 ```
 <br>
-Flag = 0, 1, 2 : EddyPro Quality Flag; Flag = 3 : Absolute Limits Filter; Flag = 4 : Rolling MAD (Mean Average Deviation) Filter; Flag = 5 : Diagnostic filter <br>
+Flag = 0, 1, 2 : EddyPro Quality Flag; Flag = 3 : Absolute Limits Filter; Flag = 4 : Rolling MAD (Mean Average Deviation) Filter; Flag = 5 : Diagnostic filter<br>
+
 
 # Energy Balance Plots
 
