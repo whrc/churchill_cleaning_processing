@@ -297,7 +297,7 @@ ggplot(data = df)+
 #make sure max/min make sense here - no negatives!!
 summary(df$PPFDR_7_23_1_1_1)
 
-PPFDR_7_23_1_1_1.c <- df$PPFDR_7_23_1_1_1
+df$PPFDR_7_23_1_1_1.c <- df$PPFDR_7_23_1_1_1
 ```
 
 # Net Radiation 
