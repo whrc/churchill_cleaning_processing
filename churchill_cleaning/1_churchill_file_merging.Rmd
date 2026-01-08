@@ -155,13 +155,15 @@ plot(df$TIMESTAMP, df$TA_2_1_1_1_1)
 df$TA_2_1_1_1_1 <- ifelse(df$TA_2_1_1_1_1 > 100, df$TA_2_1_1_1_1 - 273.15, df$TA_2_1_1_1_1)
 
 plot(df$TIMESTAMP, df$TA_2_1_1_1_1)
+```
+
+
+Write met CV
+```{r}
 
 write.csv(x = df,file = './outputs/cleaning/Churchill_met_merged_2022_2025.csv',row.names = F,quote = F)
 
 
 ```
 
-Notes: 
-
-change other sites to rbindlist, copy use.names = T
 
