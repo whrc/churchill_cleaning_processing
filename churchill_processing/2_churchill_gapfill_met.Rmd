@@ -37,7 +37,7 @@ df <- c25
 df$DOY <- yday(df$TIMESTAMP)
 df$time <- format(df$TIMESTAMP, format = "%H:%M")
 
-df <- subset(df,df$TIMESTAMP >= as.POSIXct(x = "2022-08-07 00:00", tz = "CST"))
+df <- subset(df,df$TIMESTAMP >= as.POSIXct(x = "2022-08-07 00:00"))
 ```
 
 
@@ -50,8 +50,8 @@ df$SHF_6_37_1_1_1.c = na.spline(df$SHF_6_37_1_1_1.c,maxgap = gap)
 df$SHF_6_37_2_1_1.c = na.spline(df$SHF_6_37_2_1_1.c,maxgap = gap)
 
 #meteorology and weather #################################
-df$TA_2_1_1_1_1     = na.spline(df$TA_2_1_1_1_1,maxgap = gap)
-df$PA_4_2_1_1_1.c   = na.spline(df$PA_4_2_1_1_1,maxgap = gap)
+df$TA_2_1_1_1_1     = na.spline(df$TA_2_1_1_1_1.c,maxgap = gap)
+df$PA_4_2_1_1_1.c   = na.spline(df$PA_4_2_1_1_1.c,maxgap = gap)
 df$RH_19_3_1_1_1.c  = na.spline(df$RH_19_3_1_1_1.c,maxgap = gap)
 
 #Radiation #####################################
