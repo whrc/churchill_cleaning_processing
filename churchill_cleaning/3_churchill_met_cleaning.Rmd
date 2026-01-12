@@ -30,6 +30,7 @@ library(zoo)
 library(stringr)
 library(plyr)
 library(dplyr)
+library(lubridate)
 Sys.setenv(TZ = "UTC")
 ```
 
@@ -263,8 +264,8 @@ ggplot(data = df)+
 ```{r, warning=FALSE}
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,PPFD_7_21_1_1_1),col='black')+
-  scale_x_datetime(limits = as.POSIXct(biomet_dates))+
-  scale_y_continuous(limits = c(-25,2000),
+  scale_x_datetime(limits = as.POSIXct(c("2022-07-01","2026-01-01")))+
+  scale_y_continuous(#limits = c(-25,2000),
                      expression('PAR ('*mu*mol/m^2/s*')'))
 
 
@@ -290,14 +291,19 @@ There are some off points here but I tried a rolling filter with no luck - could
 ```{r, warning=FALSE}
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,PPFDR_7_23_1_1_1),col='black')+
-  scale_x_datetime(limits = as.POSIXct(biomet_dates))+
-  scale_y_continuous(limits = c(-25,1600),
-                     expression('PAR Reflected ('*mu*mol/m^2/s*')'))
+  scale_x_datetime(limits = as.POSIXct(c("2022-07-01","2026-01-01")))+
+  scale_y_continuous(#limits = c(-25,1600),
+                     expression('PAR Reflected ('*mu*mol/m^2/s*')'))+
+  geom_hline(yintercept = 800)
+
+## Remove weird 2022 chunk
+
+PPFDR_7_23_1_1_1.limits <- ifelse(year(df$TIMESTAMP) == 2022 & df$PPFDR_7_23_1_1_1 > 800, NA, df$PPFDR_7_23_1_1_1)
 
 #make sure max/min make sense here - no negatives!!
-summary(df$PPFDR_7_23_1_1_1)
+summary(PPFDR_7_23_1_1_1.limits)
 
-df$PPFDR_7_23_1_1_1.c <- df$PPFDR_7_23_1_1_1
+df$PPFDR_7_23_1_1_1.c <- PPFDR_7_23_1_1_1.limits
 ```
 
 # Net Radiation 
@@ -529,7 +535,36 @@ ggplot(data = df)+
 
 # Soil Temps
 
-#All Hummock Therms
+##CS655 Temps
+```{r}
+
+ggplot(data = df)+ theme_bw()+
+  geom_hline(yintercept = 0)+
+  geom_line(aes(TIMESTAMP,TS_2_38_1_1_1,color='1_1'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_2_1_1,color='2_1'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_2_2_1,color='2_2'))
+
+
+## Convert these to kelvin separately
+
+TS_2_38_1_1_1.limits <- ifelse(df$TS_2_38_1_1_1 > 200, df$TS_2_38_1_1_1 - 273.15, df$TS_2_38_1_1_1)
+TS_2_38_2_1_1.limits <- ifelse(df$TS_2_38_2_1_1 > 200, df$TS_2_38_2_1_1 - 273.15, df$TS_2_38_2_1_1)
+TS_2_38_2_2_1.limits <- ifelse(df$TS_2_38_2_2_1 > 200, df$TS_2_38_2_2_1 - 273.15, df$TS_2_38_2_2_1)
+
+df$TS_2_38_1_1_1.c <- TS_2_38_1_1_1.limits
+df$TS_2_38_2_1_1.c <- TS_2_38_2_1_1.limits
+df$TS_2_38_2_2_1.c <- TS_2_38_2_2_1.limits
+
+ggplot(data = df)+ theme_bw()+
+  geom_hline(yintercept = 0)+
+  geom_line(aes(TIMESTAMP,TS_2_38_1_1_1.c,color='1_1'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_2_1_1.c,color='2_1'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_2_2_1.c,color='2_2'))
+
+
+```
+
+##All Hummock Therms
 ```{r}
 ggplot(data = df)+ theme_bw()+
   geom_hline(yintercept = 0)+
@@ -549,7 +584,7 @@ ggplot(data = df)+ theme_bw()+
 ```
   
 
-# All Open Water therms
+## All Open Water therms
 ```{r, warning=FALSE}
 ggplot(data = df)+ theme_bw()+
   geom_hline(yintercept = 0)+
@@ -568,116 +603,141 @@ ggplot(data = df)+ theme_bw()+
   scale_x_datetime(limits = as.POSIXct(biomet_dates))
 ```
 
-# Cleaning
+Bulk temp cleaning
+Does kelvin conversion, removes problematic chunk
 ```{r}
 
-soil_temps <- c(
-      "TS_2_38_4_1_1", "TS_2_38_4_2_1", "TS_2_38_4_3_1", "TS_2_38_4_4_1", "TS_2_38_4_5_1", "TS_2_38_4_6_1", "TS_2_38_4_7_1", "TS_2_38_4_8_1", "TS_2_38_4_9_1", "TS_2_38_4_10_1", "TS_2_38_4_11_1", "TS_2_38_4_12_1", 
-      "TS_2_38_3_1_1", "TS_2_38_3_2_1", "TS_2_38_3_3_1", "TS_2_38_3_4_1", "TS_2_38_3_5_1", "TS_2_38_3_6_1", "TS_2_38_3_7_1", "TS_2_38_3_8_1", "TS_2_38_3_9_1", "TS_2_38_3_10_1", "TS_2_38_3_11_1", "TS_2_38_3_12_1"
-            )
-
-soil_temps.limits <- c(
-      "TS_2_38_4_1_1.limits", "TS_2_38_4_2_1.limits", "TS_2_38_4_3_1.limits", "TS_2_38_4_4_1.limits", "TS_2_38_4_5_1.limits", "TS_2_38_4_6_1.limits", "TS_2_38_4_7_1.limits", "TS_2_38_4_8_1.limits", "TS_2_38_4_9_1.limits", "TS_2_38_4_10_1.limits", "TS_2_38_4_11_1.limits", "TS_2_38_4_12_1.limits", 
-      "TS_2_38_3_1_1.limits", "TS_2_38_3_2_1.limits", "TS_2_38_3_3_1.limits", "TS_2_38_3_4_1.limits", "TS_2_38_3_5_1.limits", "TS_2_38_3_6_1.limits", "TS_2_38_3_7_1.limits", "TS_2_38_3_8_1.limits", "TS_2_38_3_9_1.limits", "TS_2_38_3_10_1.limits", "TS_2_38_3_11_1.limits", "TS_2_38_3_12_1.limits"
-            )
-
-#create kelvin conversion function
-kelvin_to_celsius <- function(x) {
-  ifelse(x > 200, x - 273.15, x)
-}
-
-## Creates .limits variables
-### SAVES ALL IN DATAFRAME FOR BETTER WORKFLOW - MAKE SURE TO TAKE OUT OF FINAL DATAFRAME!
-df <- df %>%
-  mutate(across(all_of(soil_temps),
-                kelvin_to_celsius,
-                .names = "{.col}.limits"))
-
-plot(df$TS_2_38_3_1_1.limits)
-
-```
-
-# Remove problematic chunk 
-
-```{r}
-
-ggplot(data = df)+
-  geom_point(aes(TIMESTAMP,TS_2_38_3_1_1.limits))+
-  geom_point(aes(TIMESTAMP,TS_2_38_3_9_1.limits))+
-  geom_point(aes(TIMESTAMP,TS_2_38_4_1_1.limits))+
-  geom_point(aes(TIMESTAMP,TS_2_38_4_11_1.limits))+
-  scale_y_continuous(limits = c(-25,15))+
-  scale_x_datetime(limits = as.POSIXct(c("2022-10-10","2022-11-15")))+
-  geom_vline(aes(xintercept = as.POSIXct('2022-10-21')))+
-  geom_vline(aes(xintercept = as.POSIXct('2022-11-07')))
-
+# time window to remove
 start_time <- as.POSIXct("2022-10-21", tz = "UTC")
 end_time   <- as.POSIXct("2022-11-07", tz = "UTC")
 
-# rows to remove
-rm_idx <- df$TIMESTAMP >= start_time & df$TIMESTAMP <= end_time
+# TS variables to process
+ts_vars <- c(
+  paste0("TS_2_38_4_", 1:12, "_1"),
+  paste0("TS_2_38_3_", 1:12, "_1")
+)
 
-# set values to NA in all soil temp columns
-df[rm_idx, soil_temps.limits] <- NA
+# logical index for rows to remove
+time_idx <- df$TIMESTAMP >= start_time & df$TIMESTAMP <= end_time
 
-ggplot(data = df)+
-  geom_point(aes(TIMESTAMP,TS_2_38_3_8_1.limits))+
-  geom_point(aes(TIMESTAMP,TS_2_38_3_9_1.limits))+
-  geom_point(aes(TIMESTAMP,TS_2_38_4_1_1.limits))+
-  geom_point(aes(TIMESTAMP,TS_2_38_4_11_1.limits))+
-  scale_y_continuous(limits = c(-20,15))+
-  scale_x_datetime(limits = as.POSIXct(c("2022-10-10","2022-11-15")))+
-  geom_vline(aes(xintercept = as.POSIXct('2022-10-21')))+
-  geom_vline(aes(xintercept = as.POSIXct('2022-11-07')))
+# loop
+for (v in ts_vars) {
 
+  # Kelvin → Celsius conversion
+  x <- ifelse(df[[v]] > 200, df[[v]] - 273.15, df[[v]])
+  
+  # Absolute limits removal
+  x <- ifelse(df[[v]] > 40 | df[[v]] < -40, NA, df[[v]])
 
-```
+  # remove time chunk
+  x[time_idx] <- NA
 
-
-# Hummocks clean
-
-```{r, warning=FALSE}
-
-df$TS_2_38_4_1_1.c <- df$TS_2_38_4_1_1.limits
-df$TS_2_38_4_2_1.c <- df$TS_2_38_4_2_1.limits
-df$TS_2_38_4_3_1.c <- df$TS_2_38_4_3_1.limits
-df$TS_2_38_4_4_1.c <- df$TS_2_38_4_4_1.limits
-df$TS_2_38_4_5_1.c <- df$TS_2_38_4_5_1.limits
-df$TS_2_38_4_6_1.c <- df$TS_2_38_4_6_1.limits
-df$TS_2_38_4_7_1.c <- df$TS_2_38_4_7_1.limits
-df$TS_2_38_4_8_1.c <- df$TS_2_38_4_8_1.limits
-df$TS_2_38_4_9_1.c <- df$TS_2_38_4_9_1.limits
-df$TS_2_38_4_10_1.c <- df$TS_2_38_4_10_1.limits
-df$TS_2_38_4_11_1.c <- df$TS_2_38_4_11_1.limits
-df$TS_2_38_4_12_1.c <- df$TS_2_38_4_12_1.limits
+  # save as standalone .limits object
+  assign(paste0(v, ".limits"), x)
+}
 
 ```
 
-# Open Water clean
-
-```{r, warning=FALSE}
-
-df$TS_2_38_3_1_1.c <- df$TS_2_38_3_1_1.limits
-df$TS_2_38_3_2_1.c <- df$TS_2_38_3_2_1.limits
-df$TS_2_38_3_3_1.c <- df$TS_2_38_3_3_1.limits
-df$TS_2_38_3_4_1.c <- df$TS_2_38_3_4_1.limits
-df$TS_2_38_3_5_1.c <- df$TS_2_38_3_5_1.limits
-df$TS_2_38_3_6_1.c <- df$TS_2_38_3_6_1.limits
-df$TS_2_38_3_7_1.c <- df$TS_2_38_3_7_1.limits
-df$TS_2_38_3_8_1.c <- df$TS_2_38_3_8_1.limits
-df$TS_2_38_3_9_1.c <- df$TS_2_38_3_9_1.limits
-df$TS_2_38_3_10_1.c <- df$TS_2_38_3_10_1.limits
-df$TS_2_38_3_11_1.c <- df$TS_2_38_3_11_1.limits
-df$TS_2_38_3_12_1.c <- df$TS_2_38_3_12_1.limits
-
-```
-
-Remove .limits columns
-
+Random problematic chunks
 ```{r}
 
-df <- df %>%
-  select(-all_of(soil_temps.limits))
+#3_1_1
+plot(TS_2_38_3_1_1.limits)
+TS_2_38_3_1_1.limits[0:5400] <- NA
+TS_2_38_3_1_1.limits[11700:15300] <- NA
+plot(TS_2_38_3_1_1.limits)
+
+#3_12_1
+plot(TS_2_38_3_12_1.limits)
+TS_2_38_3_12_1.limits[0:15500] <- NA
+plot(TS_2_38_3_12_1.limits)
+
+#4_11_1
+plot(TS_2_38_4_11_1.limits)
+TS_2_38_4_11_1.limits[0:9600] <- NA
+TS_2_38_4_11_1.limits[13000:15300] <- NA
+plot(TS_2_38_4_11_1.limits)
+
+#4_12_1
+plot(TS_2_38_4_12_1.limits)
+TS_2_38_4_12_1.limits[15200:18000] <- NA
+plot(TS_2_38_4_12_1.limits)
+
+```
+
+
+```{r}
+ggplot(data = df)+ theme_bw()+
+  geom_hline(yintercept = 0)+
+  geom_line(aes(TIMESTAMP,TS_2_38_4_1_1.limits,color='Surface'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_4_2_1.limits,color='5 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_4_3_1.limits,color='10 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_4_4_1.limits,color='20 cm'))+  
+  geom_line(aes(TIMESTAMP,TS_2_38_4_5_1.limits,color='30 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_4_6_1.limits,color='40 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_4_7_1.limits,color='50 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_4_8_1.limits,color='60 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_4_9_1.limits,color='70 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_4_10_1.limits,color='80 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_4_11_1.limits,color='90 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_4_12_1.limits,color='1 m'))+
+  scale_x_datetime(limits = as.POSIXct(c("2022-07-01","2026-01-01")))
+```
+  
+
+```{r, warning=FALSE}
+ggplot(data = df)+ theme_bw()+
+  geom_hline(yintercept = 0)+
+  geom_line(aes(TIMESTAMP,TS_2_38_3_1_1.limits,color='Surface'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_3_2_1.limits,color='5 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_3_3_1.limits,color='10 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_3_4_1.limits,color='20 cm'))+  
+  geom_line(aes(TIMESTAMP,TS_2_38_3_5_1.limits,color='30 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_3_6_1.limits,color='40 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_3_7_1.limits,color='50 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_3_8_1.limits,color='60 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_3_9_1.limits,color='70 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_3_10_1.limits,color='80 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_3_11_1.limits,color='90 cm'))+
+  geom_line(aes(TIMESTAMP,TS_2_38_3_12_1.limits,color='1 m'))+
+  scale_x_datetime(limits = as.POSIXct(c("2022-07-01","2026-01-01")))
+```
+
+## Hummocks clean
+
+```{r, warning=FALSE}
+
+df$TS_2_38_4_1_1.c <- TS_2_38_4_1_1.limits
+df$TS_2_38_4_2_1.c <- TS_2_38_4_2_1.limits
+df$TS_2_38_4_3_1.c <- TS_2_38_4_3_1.limits
+df$TS_2_38_4_4_1.c <- TS_2_38_4_4_1.limits
+df$TS_2_38_4_5_1.c <- TS_2_38_4_5_1.limits
+df$TS_2_38_4_6_1.c <- TS_2_38_4_6_1.limits
+df$TS_2_38_4_7_1.c <- TS_2_38_4_7_1.limits
+df$TS_2_38_4_8_1.c <- TS_2_38_4_8_1.limits
+df$TS_2_38_4_9_1.c <- TS_2_38_4_9_1.limits
+df$TS_2_38_4_10_1.c <- TS_2_38_4_10_1.limits
+df$TS_2_38_4_11_1.c <- TS_2_38_4_11_1.limits
+df$TS_2_38_4_12_1.c <- TS_2_38_4_12_1.limits
+
+```
+
+## Open Water clean
+
+```{r, warning=FALSE}
+
+df$TS_2_38_3_1_1.c <- TS_2_38_3_1_1.limits
+df$TS_2_38_3_2_1.c <- TS_2_38_3_2_1.limits
+df$TS_2_38_3_3_1.c <- TS_2_38_3_3_1.limits
+df$TS_2_38_3_4_1.c <- TS_2_38_3_4_1.limits
+df$TS_2_38_3_5_1.c <- TS_2_38_3_5_1.limits
+df$TS_2_38_3_6_1.c <- TS_2_38_3_6_1.limits
+df$TS_2_38_3_7_1.c <- TS_2_38_3_7_1.limits
+df$TS_2_38_3_8_1.c <- TS_2_38_3_8_1.limits
+df$TS_2_38_3_9_1.c <- TS_2_38_3_9_1.limits
+df$TS_2_38_3_10_1.c <- TS_2_38_3_10_1.limits
+df$TS_2_38_3_11_1.c <- TS_2_38_3_11_1.limits
+df$TS_2_38_3_12_1.c <- TS_2_38_3_12_1.limits
 
 ```
 
