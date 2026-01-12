@@ -924,6 +924,6 @@ This gets written into data folder to match with previous cleaned files' locatio
 Upload this file to the buckets!!!
 ```{r, warning=FALSE}
 
-write.csv(x = df,file = './data/cleaned/Churchill_Met_Flux_Clean_Ameriflux_2025.csv',row.names = F,quote = F)
+write.csv(x = df,file = './data/cleaned/Churchill_Met_Flux_Clean_Ameriflux_2022_2025.csv',row.names = F,quote = F)
 ```
 

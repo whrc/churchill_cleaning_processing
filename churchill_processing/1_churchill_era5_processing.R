@@ -39,8 +39,8 @@ era$rh = 100*(exp((17.625*era$dew)/(243.04+era$dew))/exp((17.625*era$airt)/(243.
 era$ws = sqrt(era$v^2 + era$u^2)
 
 #create a date data frame with every half hour in the timeframe of interest
-date = seq(from = as.POSIXct('2022-07-01 00:00',tz='CST'),
-           to = as.POSIXct('2025-12-01 00:00',tz='CST'),
+date = seq(from = as.POSIXct('2022-08-01 00:00',tz='CST'),
+           to = as.POSIXct('2026-01-01 00:00',tz='CST'),
            by = 60*30)
 datedf = as.data.frame(date)
 
