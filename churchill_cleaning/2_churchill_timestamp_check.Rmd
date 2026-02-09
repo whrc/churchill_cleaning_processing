@@ -110,7 +110,7 @@ m <- as.numeric(format(seq(from = mindate,
                           by = 60*30),'%M'))
 H <- h+ifelse(m == 30,0.5,0)
 
-rpot <- potential.radiation(doy = JD,hour = H,latDeg = 59,longDeg = -94,timezone = -6,useSolartime = F)*1.1
+rpot <- potential.radiation(doy = JD,hour = H,latDeg = 59,longDeg = -94,timezone = -6,useSolartime = T)*1.1
 
 
 rpot <- as.data.frame(cbind(TIMESTAMP, rpot))
@@ -251,12 +251,6 @@ view_all_generated_plots_rad <- function(pattern = "^rad_plot_") {
 
 
 view_all_generated_plots_rad()
-
-
-
-
-
-
 ```
 
 
@@ -269,7 +263,7 @@ One to one plot for initial check
 
 ggplot(data = df)+
   geom_point(aes(x = TA_2_1_1_1_1, y = sonic_temperature-273.15, color = TIMESTAMP))+
-  geom_abline(yint = 0, slope = 1, color = "red")+
+  geom_abline(yintercept = 0, slope = 1, color = "red")+
   scale_x_continuous(limits = c(-43, 35))+
   scale_y_continuous(limits = c(-43, 35))
 
@@ -377,8 +371,6 @@ view_all_generated_plots_temp <- function(pattern = "^temp_plot_") {
 
 
 view_all_generated_plots_temp()
-
-
 ```
 
 

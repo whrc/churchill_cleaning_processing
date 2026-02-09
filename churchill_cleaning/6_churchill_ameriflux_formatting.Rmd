@@ -1,12 +1,13 @@
 ---
-title: "Prep for Ameriflux - Churchill"
-author: "Kyle Arndt"
-date: "2024-02-15"
+title: "Ameriflux Formatting"
+author: "Dani Trangmoe"
+date: "`r Sys.Date()`"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+#knitr::opts_knit$set(root.dir = 'C:/Users/karndt.WHRC/Desktop/sites/churchill/ameriflux submission/') #use this to set your directory
 knitr::opts_knit$set(root.dir = 'C:/Users/dtrangmoe/Documents/GitHub/churchill_cleaning_processing/') #use this to set your directory
 ```
 
@@ -21,10 +22,13 @@ library(stringr)
 Sys.setenv(TZ = "UTC")
 ```
 
+
+Useful link for finding Ameriflux formatting conventions: https://ameriflux.lbl.gov/data/aboutdata/data-variables/
+
 Load Data
 ```{r}
 
-df = fread(input = "./outputs/gapfilling/cf3_gapfilled_clean_2022_2025.csv")
+df = fread(input = './data/cleaned/Churchill_Met_Flux_Clean_Ameriflux_2022_2025.csv')
 
 ```
 
@@ -63,24 +67,11 @@ CO2_MIXING_RATIO = df$co2_mixing_ratio
 CH4_MIXING_RATIO = ifelse(df$ch4_mixing_ratio<0,NA,df$ch4_mixing_ratio*1000) #convert from umol to nmol
 #H2O mole fraction and H2O mixing ratio are identical
 
-
-#standard deviation of co2 wet fraction. (Standard deviation is sqrt of the variance, need to)
-# CO2_SIGMA = sqrt(df$co2_var)
-# CH4_SIGMA = sqrt(df$ch4_var*1000)
-# H2O_SIGMA = sqrt(df$h2o_var)
-
 #Gas Fluxes ######################
 #CO2 flux is umol m-2 s-1
 FC   = df$co2_flux.c
-FC_F = ifelse(is.na(df$co2_flux.c),df$rfnee,df$co2_flux.c)
 FCH4 = df$ch4_flux.c*1000 #convert from umol m-2 s-1 to nmol m-2 s-1
-FCH4_F = ifelse(is.na(df$ch4_flux.c),df$rfch4,df$ch4_flux.c)*1000 #convert from umol m-2 s-1 to nmol m-2 s-1
 FH2O = ifelse(df$h2o_flux > 10, NA, df$h2o_flux) # removes a few crazy values
-
-GPP_F   = df$GPP_f
-GPP_DT  = df$GPP_DT
-RECO    = df$Reco
-RECO_DT = df$Reco_DT
 
 #energy fluxes ###########################
 G_1_1_1 = df$SHF_6_37_1_1_1.c
@@ -93,7 +84,7 @@ WTD_1_1_1 = df$WTD_10_42_1_1_1.c # water table depth in m
 TW        = df$TW_2_45_1_1_1 # Water temperature in deg C
 
 #meteorology and weather #################################
-TA      = df$TA_2_1_1_1_1    # Air T in Deg C
+TA      = df$TA_2_1_1_1_1.c    # Air T in Deg C
 SVP     = 610.7*10^((7.5*TA)/(237.3+TA)) #NOT INCLUDED IN FINAL
 PA      = df$PA_4_2_1_1_1.c    # air pressure in kPA
 RH      = df$RH_19_3_1_1_1.c   #RH in %
@@ -138,7 +129,7 @@ TS_3_8_1  = df$TS_2_38_3_8_1.c
 TS_3_9_1  = df$TS_2_38_3_9_1.c
 TS_3_10_1 = df$TS_2_38_3_10_1.c
 TS_3_11_1 = df$TS_2_38_3_11_1.c
-TS_3_12_1 = ifelse(df$TS_2_38_3_12_1.c < -3, NA, df$TS_2_38_3_12_1.c) # get rid of weird 2022 data
+TS_3_12_1 = df$TS_2_38_3_12_1.c
 
 TS_4_1_1  = df$TS_2_38_4_1_1.c
 TS_4_2_1  = df$TS_2_38_4_2_1.c
@@ -189,21 +180,9 @@ plot(CH4_MIXING_RATIO) #nmol
 ```
 
 ```{r}
-# plot(CO2_SIGMA)
-# plot(CH4_SIGMA) 
-# plot(H2O_SIGMA) 
-```
-
-```{r}
 plot(FC)
-# plot(FC_F)
 plot(FCH4)
-# plot(FCH4_F)
 plot(FH2O)
-# plot(GPP_F)
-# plot(GPP_DT)
-# plot(RECO)
-# plot(RECO_DT)
 ```
 
 ```{r}
@@ -296,143 +275,11 @@ plot(TAU_SSITC_TEST)
 ```
 
 
-
-############# Create Internal File #########################
-
-Variables to include in internal file: Uncleaned co2, ch4, LE, H, Tau, signal strength, DOY, hour, month, U, V, W, uncleaned biomet??, u flag, Footprint model (needs eddypro re-run before this fully works), random error (once calculated), add ERA5 original data variables
-
 ```{r}
-
-# Uncleaned fluxes
-FC_UC   = df$co2_flux
-FCH4_UC = df$ch4_flux*1000 #convert from umol m-2 s-1 to nmol m-2 s-1
-TAU_UC = df$Tau
-H_UC = df$H
-LE_UC = df$LE
-
-#Signal strength
-RSSI_77 = df$rssi_77_mean
-SIG_STRENGTH_72 = df$co2_signal_strength_7200_mean
-
-#DOY, hour, month
-DOY = df$DOY
-HOUR = df$hour
-MONTH = df$month
-
-#U Flag 
-U_FLAG = df$u_flag
-
-#Wind components - replace these with mean
-U = df$u_unrot
-V = df$v_unrot
-W = df$w_unrot
-
-#Footprint model
-X_OFFSET = df$x_offset
-X_PEAK = df$x_peak
-X_10 = df$`x_10%`
-X_30 = df$`x_30%`
-X_50 = df$`x_50%`
-X_70 = df$`x_70%`
-X_90 = df$`x_90%`
-
-#ERA5 Data
-DEW_ERA5 = df$dew
-ST1_ERA5 = df$st1
-ST2_ERA5 = df$st2
-LE_ERA5 = df$le
-PRES_ERA5 = df$pres
-H_ERA5 = df$h
-RAD_ERA5 = df$rad
-AIRT_ERA5 = df$airt
-PPT_ERA5 = df$ppt
-U_ERA5 = df$u
-V_ERA5 = df$v
-VWC1_ERA5 = df$vwc1
-VWC2_ERA5 = df$vwc2
-
-# Random error
-
-RAND_ERR_CO2_FLUX = df$rand_err_co2_flux
-RAND_ERR_CH4_FLUX = df$rand_err_ch4_flux
-RAND_ERR_H2O_FLUX = df$rand_err_h2o_flux
-RAND_ERR_TAU = df$rand_err_Tau
-RAND_ERR_LE = df$rand_err_LE
-RAND_ERR_H = df$rand_err_H
-
-```
-
-```{r}
-
-plot(FC_F)
-plot(FCH4_F)
-plot(GPP_F)
-plot(GPP_DT)
-plot(RECO)
-plot(RECO_DT)
-
-
-plot(FC_UC)
-plot(FCH4_UC)
-plot(H_UC)
-plot(LE_UC)
-plot(TAU_UC)
-
-plot(RSSI_77)
-plot(SIG_STRENGTH_72)
-
-plot(DOY)
-plot(HOUR)
-plot(MONTH)
-
-plot(U_FLAG)
-
-plot(U)
-plot(V)
-plot(W)
-
-#These will work after new eddypro runs
-plot(X_OFFSET)
-plot(X_PEAK)
-plot(X_10)
-plot(X_30)
-plot(X_50)
-plot(X_70)
-plot(X_90)
-
-
-
-plot(DEW_ERA5)
-plot(ST1_ERA5)
-plot(ST2_ERA5)
-plot(LE_ERA5)
-plot(PRES_ERA5)
-plot(H_ERA5)
-plot(RAD_ERA5)
-plot(AIRT_ERA5)
-plot(PPT_ERA5)
-plot(U_ERA5)
-plot(V_ERA5)
-plot(VWC1_ERA5)
-plot(VWC2_ERA5)
-
-plot(RAND_ERR_CO2_FLUX)
-plot(RAND_ERR_CH4_FLUX)
-plot(RAND_ERR_H2O_FLUX)
-plot(RAND_ERR_H)
-plot(RAND_ERR_LE)
-plot(RAND_ERR_TAU)
-
-```
-
-# Create internal dataframe
-```{r}
-INTERNAL = data.frame(TIMESTAMP_START,TIMESTAMP_END,
-  CO2,CH4,H2O
+CA_CF3 = data.frame(TIMESTAMP_START,TIMESTAMP_END
+,CO2,CH4,H2O
 ,CO2_MIXING_RATIO,CH4_MIXING_RATIO
-#,CO2_SIGMA,CH4_SIGMA ,H2O_SIGMA 
 ,FC,FCH4,FH2O
-,FC_F,FCH4_F,GPP_F,GPP_DT,RECO,RECO_DT
 ,G_1_1_1,G_2_1_1
 ,H
 ,LE
@@ -483,34 +330,21 @@ INTERNAL = data.frame(TIMESTAMP_START,TIMESTAMP_END,
 ,TS_4_11_1
 ,TS_4_12_1
 ,MO_LENGTH,ZL,TAU,U_SIGMA,V_SIGMA,W_SIGMA,USTAR,WD,WS,WS_MAX
-,FC_SSITC_TEST,FCH4_SSITC_TEST,H_SSITC_TEST,LE_SSITC_TEST,TAU_SSITC_TEST, # End of OG names
-
-FC_UC,FCH4_UC,TAU_UC,H_UC,LE_UC,
-RSSI_77,SIG_STRENGTH_72,
-DOY,HOUR,MONTH,
-U_FLAG,
-U,V,W,
-X_OFFSET,X_PEAK,X_10,X_30,X_50,X_70,X_90,
-DEW_ERA5,ST1_ERA5,ST2_ERA5,LE_ERA5,PRES_ERA5,H_ERA5,
-RAD_ERA5,AIRT_ERA5,PPT_ERA5,U_ERA5,V_ERA5,VWC1_ERA5,VWC2_ERA5,
-RAND_ERR_CO2_FLUX, RAND_ERR_CH4_FLUX, RAND_ERR_H2O_FLUX, RAND_ERR_TAU, RAND_ERR_LE, RAND_ERR_H
-
-
-)
+,FC_SSITC_TEST,FCH4_SSITC_TEST,H_SSITC_TEST,LE_SSITC_TEST,TAU_SSITC_TEST)
 ```
 
 
 Write off final csv with Ameriflux naming convention
 ```{r}
-siteID_i = "CA-CF3"
-resolution_i = 'HH'
-tsstart_i = INTERNAL$TIMESTAMP_START[1]
-tsend_i   = INTERNAL$TIMESTAMP_END[nrow(INTERNAL)]
+siteID = "CA-CF3"
+resolution = 'HH'
+tsstart = CA_CF3$TIMESTAMP_START[1]
+tsend   = CA_CF3$TIMESTAMP_END[nrow(CA_CF3)]
 
-filename_i = paste(siteID_i,resolution_i,'INTERNAL',tsstart_i,tsend_i,sep = '_')
-filename_i = paste("./internal/",filename_i,".csv",sep = "")
+filename = paste(siteID,resolution,tsstart,tsend,sep = '_')
+filename = paste("./ameriflux/",filename,".csv",sep = "")
 
-write.csv(x = INTERNAL,file = filename_i,row.names = F,na = "-9999")
+write.csv(x = CA_CF3,file = filename,row.names = F,na = "-9999")
 ```
 
 

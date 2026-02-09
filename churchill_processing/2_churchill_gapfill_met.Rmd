@@ -25,18 +25,13 @@ Sys.setenv(TZ = "UTC")
 Load Data
 These files are found on the buckets under /cleaned
 ```{r}
-# c22 = fread(input = "./data/cleaned/Churchill_Met_Flux_Clean_Ameriflux_2022.csv")
-# c23 = fread(input = "./data/cleaned/Churchill_Met_Flux_Clean_Ameriflux_2023.csv")
-# c24 = fread(input = "./data/cleaned/Churchill_Met_Flux_Clean_Ameriflux_2024.csv")
-c25 = fread(input = "./data/cleaned/Churchill_Met_Flux_Clean_Ameriflux_2025.csv")
-
-# df <- rbind(c22,c23,c24,c25,fill=T)
-df <- c25
+df = fread(input = "./data/cleaned/Churchill_Met_Flux_Clean_Ameriflux_2022_2025.csv")
 
 # create date, time, DOY in the correct  time zone
 df$DOY <- yday(df$TIMESTAMP)
 df$time <- format(df$TIMESTAMP, format = "%H:%M")
 
+# select time where data exists
 df <- subset(df,df$TIMESTAMP >= as.POSIXct(x = "2022-08-07 00:00"))
 ```
 
@@ -126,16 +121,13 @@ all = all[!duplicated(all$date),]
 
 We're now going to merge era5 data with site level data and create regression adjusted values for each variable
 
-#Rg
+##Rg
 ```{r}
 ggplot(data = all)+
   geom_point(aes(date,rad,col='ERA5'))+
   geom_point(aes(date,SWIN_6_10_1_1_1.c,col='Site'))
 
 #zoom in on a time period to make sure timestamps line up and solar noon makes sense
-#Problem days:
-#2025-03-03
-#2025-06-28 (known clock change in change log)
 
 ggplot(data = all)+
   geom_point(aes(date,rad,col='ERA5'))+
@@ -154,7 +146,7 @@ ggplot(data = all,aes(rad,SWIN_6_10_1_1_1.c))+theme_bw()+
   geom_abline(slope = 1,intercept = 0,col='red',lty=2)
 ```
 
-RH
+##RH
 ```{r}
 rh.mod = lm(formula = all$RH_19_3_1_1_1.c ~ all$rh)
 summary(rh.mod)
@@ -171,7 +163,7 @@ ggplot(data = all,aes(rh,RH_19_3_1_1_1.c))+
   geom_abline(slope = 1,intercept = 0,col='red',lty=2)
 ```
 
-#AirT
+##AirT
 ```{r}
 ggplot(data = all)+
   geom_point(aes(date,airt,col='ERA5'))+
@@ -188,7 +180,7 @@ ggplot(data = all,aes(airt,TA_2_1_1_1_1))+theme_bw()+
   geom_abline(slope = 1,intercept = 0,col='red',lty=2)
 ```
 
-#SoilT
+##SoilT
 ```{r}
 ggplot(data = all)+
   geom_point(aes(date,st1,col='ERA5.1'))+
@@ -204,11 +196,9 @@ ggplot(data = all)+
   geom_point(aes(date,st2,col='ERA5'))+
   geom_point(aes(date,TS_2_38_3_2_1.c,col='Site'))+
   geom_point(aes(date,tsoil.eramod,col='Lin. Reg.'))
-
-#why is linear regression less than both datasets here?
 ```
 
-#ws
+##ws
 ```{r}
 # ggplot(data = all)+
 #   geom_point(aes(date,ws,col='ERA5'))+
@@ -219,13 +209,13 @@ summary(ws.mod)
 
 all$ws.eramod = all$ws*ws.mod$coefficients[2] + ws.mod$coefficients[1]    
 
-# ggplot(data = all,aes(ws,WS_16_33_1_1_1))+theme_bw()+
-#   geom_point()+
-#   geom_smooth(method = 'lm')+
-#   geom_abline(slope = 1,intercept = 0,col='red',lty=2)
+ggplot(data = all,aes(ws,WS_16_33_1_1_1))+theme_bw()+
+  geom_point()+
+  geom_smooth(method = 'lm')+
+  geom_abline(slope = 1,intercept = 0,col='red',lty=2)
 ```
 
-LE
+##LE
 ```{r}
 ggplot(data = all)+
   geom_point(aes(date,le,col='ERA5'))+
@@ -242,7 +232,7 @@ ggplot(data = all,aes(le,LE.c))+theme_bw()+
   geom_abline(slope = 1,intercept = 0,col='red',lty=2)
 ```
 
-H
+##H
 ```{r}
 ggplot(data = all)+
   geom_point(aes(date,h,col='ERA5'))+
@@ -259,9 +249,9 @@ ggplot(data = all,aes(h,H.c))+theme_bw()+
   geom_abline(slope = 1,intercept = 0,col='red',lty=2)
 ```
 
-Pressure
+##Pressure
 ```{r}
-all$pres = all$pres/1000
+all$pres = all$pres/1000 # adjust units
 
 ggplot(data = all)+
   geom_point(aes(date,pres,col='ERA5'))+
@@ -278,7 +268,7 @@ ggplot(data = all,aes(pres,PA_4_2_1_1_1.c))+theme_bw()+
   geom_abline(slope = 1,intercept = 0,col='red',lty=2)
 ```
 
-#reduce down to churchill size and add to final data set
+reduce down to churchill size and add to final data set
 ```{r}
 eras = all[,c('date','rh.eramod','airt.eramod','ws.eramod','rad.eramod','tsoil.eramod','le.eramod','h.eramod','pres.eramod','dew','st1','st2','le','pres','h','rad','airt','ppt','u','v','vwc1','vwc2')]
 

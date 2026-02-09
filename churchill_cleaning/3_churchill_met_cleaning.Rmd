@@ -42,12 +42,10 @@ df <- fread('./outputs/cleaning/Churchill_met_flux_merged_aligned_2025.csv')
 
 ```
 
-Creates a variable to input a date range for the plots in the biomet section of
-cleaning code. Used to easily change date range for different data sets. 
-```{r, warning=FALSE}
-biomet_dates <- c('2025-08-01', '2026-01-01')
-```
+Plots every biomet variable, looks for issues and cleans when necessary
 
+Some variables add a ".c" at the end even if no cleaning is done because this
+makes it easier for future filed to merge with past files!
 
 # Air T 
 ```{r, warning=FALSE}
@@ -61,8 +59,6 @@ df$TA_2_1_1_1_1.c <- df$TA_2_1_1_1_1
 
 ```
 
-
-
 #Relative Humidity 
 
 ```{r,warning=FALSE}
@@ -70,7 +66,7 @@ ggplot(data = df)+
   geom_point(aes(TIMESTAMP,RH_19_3_1_1_1),col='black')+
   scale_y_continuous(#limits = c(20,100),
                      expression('Relative Humidity ('*percent*')'))+
-  scale_x_datetime(limits = as.POSIXct(biomet_dates))
+  scale_x_datetime(limits = as.POSIXct(c('2022-08-01', '2026-01-01')))
 
 ```
 
@@ -98,7 +94,7 @@ ggplot(data = df)+
   geom_point(aes(TIMESTAMP,PA_4_2_1_1_1),col='black')+
   scale_y_continuous(limits = c(0,120),
                      expression ('Barometric Pressure ('*kPa*')'))+
-  scale_x_datetime(limits = as.POSIXct(biomet_dates))
+  scale_x_datetime(limits = as.POSIXct(c('2022-08-01', '2026-01-01')))
 ```
 
 Unit adjustment and cleaning
@@ -122,7 +118,7 @@ ggplot(data = df)+
   geom_point(aes(TIMESTAMP,PA_4_2_1_1_1.limits),col='black')+
   scale_y_continuous(#limits = c(0,200),
                      expression ('Barometric Pressure ('*kPa*')'))+
-  scale_x_datetime(limits = as.POSIXct(biomet_dates))+
+  scale_x_datetime(limits = as.POSIXct(c('2022-08-01', '2026-01-01')))+
   scale_y_continuous(limits = c(90, 115))
 
 df$PA_4_2_1_1_1.c <- PA_4_2_1_1_1.limits
@@ -140,7 +136,7 @@ ggplot(data = df)+
   scale_y_continuous(limits = c(-80,190),
                      expression ('Soil Heat Flux ('*W/m^2*')'))+
   scale_color_manual(values = c('red','black'))+
-  scale_x_datetime(limits = as.POSIXct(biomet_dates))
+  scale_x_datetime(limits = as.POSIXct(c('2022-08-01', '2026-01-01')))
 
 df$SHF_6_37_1_1_1.c <- df$SHF_6_37_1_1_1
 df$SHF_6_37_2_1_1.c <- df$SHF_6_37_2_1_1
@@ -148,7 +144,7 @@ df$SHF_6_37_2_1_1.c <- df$SHF_6_37_2_1_1
 
 # Snow Depth 
 
-Turns snow-free data into NAs
+Turns snow-free season into NAs - dates picked manually
 ```{r, warning=FALSE}
 hist(df$SD_10_99_1_1_1,breaks=100)
 
@@ -188,7 +184,7 @@ ggplot(data = df)+
   geom_point(aes(TIMESTAMP,SD_10_99_1_1_1.limits),col='black')+
   scale_y_continuous(#limits = c(-.25,.75),
                      expression('Snow Depth ('*m*')'))+
-  scale_x_datetime(limits = as.POSIXct(biomet_dates))
+  scale_x_datetime(limits = as.POSIXct(c('2022-08-01', '2026-01-01')))
 
 ```
 
@@ -221,7 +217,7 @@ ggplot(df)+geom_hline(yintercept = 0)+
   geom_line(aes(TIMESTAMP,mad_filt,col='Filter'))+
   geom_line(aes(TIMESTAMP,roll.mad,col='MAD'))+
   scale_y_continuous(limits = c(-.1,.8))+
-  scale_x_datetime(limits = as.POSIXct(biomet_dates,format="%F"))+
+  scale_x_datetime(limits = as.POSIXct(c('2025-08-01', '2026-01-01'),format="%F"))+
   scale_color_manual(values=c('yellow','red','black'))
 
 ```
@@ -240,7 +236,7 @@ ggplot(df)+geom_hline(yintercept = 0)+
   geom_point(aes(TIMESTAMP,SD_10_99_1_1_1,col='Uncleaned'))+
   geom_point(aes(TIMESTAMP,SD_10_99_1_1_1.c,col='Cleaned'))+
   scale_y_continuous(limits = c(-0.75,1))+
-  scale_x_datetime(limits = as.POSIXct(biomet_dates,format="%F"))+
+  scale_x_datetime(limits = as.POSIXct(c('2025-08-01', '2026-01-01'),format="%F"))+
   scale_color_manual(values=c('black','red'))
 ```
 
@@ -275,7 +271,7 @@ summary(df$PPFD_7_21_1_1_1)
 
 ```{r, warning=FALSE}
 
-
+## Use this chunk to remove out liars if needed
 # hist(df$PPFD_7_21_1_1_1,breaks=100)
 # plot(df$TIMESTAMP,df$PPFD_7_21_1_1_1,ylim = c(0,1850));abline(h=1750, col= 'red');abline(h=0, col='red')
 # PPFD_7_21_1_1_1.limits = replace(df$PPFD_7_21_1_1_1, df$PPFD_7_21_1_1_1 < 0 | df$PPFD_7_21_1_1_1 > 1750,NA)
@@ -310,7 +306,7 @@ df$PPFDR_7_23_1_1_1.c <- PPFDR_7_23_1_1_1.limits
 ```{r, warning=FALSE}
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP, RN_6_5_1_1_1),col='black')+
-  scale_x_datetime(limits = as.POSIXct(biomet_dates))+
+  scale_x_datetime(limits = as.POSIXct(c('2022-08-01', '2026-01-01')))+
   scale_y_continuous(#limits = c(-125,850),
                      expression('Net Radiation ('*W/m^2*')'))
 
@@ -326,7 +322,7 @@ hist(RN_6_5_1_1_1.limits,breaks=100)
 plot(df$TIMESTAMP,RN_6_5_1_1_1.limits)
 
 
-df$RN_6_5_1_1_1.c <- df$RN_6_5_1_1_1
+df$RN_6_5_1_1_1.c <- RN_6_5_1_1_1.limits
 ```
 
 # Shortwave in 
@@ -334,7 +330,7 @@ df$RN_6_5_1_1_1.c <- df$RN_6_5_1_1_1
 ```{r, warning=FALSE}
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,SWIN_6_10_1_1_1))+
-  scale_x_datetime(limits = as.POSIXct(biomet_dates))+
+  scale_x_datetime(limits = as.POSIXct(c('2022-08-01', '2026-01-01')))+
   scale_y_continuous(#limits = c(-10,1000),
                      expression('Shortwave In ('*W/m^2*')'))
 
@@ -359,7 +355,7 @@ df$SWIN_6_10_1_1_1.c <- SWIN_6_10_1_1_1.limits
 ```{r, warning=FALSE}
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,SWOUT_6_11_1_1_1))+
-  scale_x_datetime(limits = as.POSIXct(biomet_dates))+
+  scale_x_datetime(limits = as.POSIXct(c('2022-08-01', '2026-01-01')))+
   scale_y_continuous(limits = c(-10,750),
                      expression('Shortwave Out ('*W/m^2*')'))
 
@@ -367,8 +363,9 @@ ggplot(data = df)+
 summary(df$SWOUT_6_11_1_1_1)
 ```
 
-```{r, warning=FALSE}
 
+```{r, warning=FALSE}
+# Get rid of negatives
 SWOUT_6_11_1_1_1.limits <- df$SWOUT_6_11_1_1_1
 
 SWOUT_6_11_1_1_1.limits[df$SWOUT_6_11_1_1_1 < 0] <- 0
@@ -385,7 +382,7 @@ ggplot(data = df)+
   geom_point(aes(TIMESTAMP,albedo))+
   scale_y_continuous(limits = c(-0.2,5),
                      expression('Albedo'))+
-  scale_x_datetime(limits = as.POSIXct(biomet_dates))
+  scale_x_datetime(limits = as.POSIXct(c('2022-08-01', '2026-01-01')))
 
 albedo.limits = replace(albedo, albedo < .05 | albedo > 1,NA)
 
@@ -393,7 +390,7 @@ ggplot(data = df)+
   geom_point(aes(TIMESTAMP,albedo.limits))+
   scale_y_continuous(limits = c(-.2,1.2),
                      expression('Albedo'))+
-  scale_x_datetime(limits = as.POSIXct(biomet_dates))
+  scale_x_datetime(limits = as.POSIXct(c('2022-08-01', '2026-01-01')))
 
 
 ```
@@ -423,7 +420,7 @@ ggplot(df)+geom_hline(yintercept = 0)+
   geom_line(aes(TIMESTAMP,mad_filt,col='Filter'))+
   geom_line(aes(TIMESTAMP,roll.mad,col='MAD'))+
   scale_y_continuous(limits = c(0,1))+
-  scale_x_datetime(limits = as.POSIXct(biomet_dates,format="%F"))+
+  scale_x_datetime(limits = as.POSIXct(c('2025-08-01', '2026-01-01'),format="%F"))+
   scale_color_manual(values=c('black','yellow','red'))
 ```
 
@@ -453,17 +450,19 @@ ggplot(df)+geom_hline(yintercept = 0)+
 
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,LWIN_6_14_1_1_1))+
-  scale_x_datetime(limits = as.POSIXct(biomet_dates))+
+  scale_x_datetime(limits = as.POSIXct(c('2022-08-01', '2026-01-01')))+
   scale_y_continuous(#limits = c(50,750),
                      expression('Longwave In ('*W/m^2*')'))+
-  scale_x_datetime(limits = as.POSIXct(biomet_dates))
+  scale_x_datetime(limits = as.POSIXct(c('2022-08-01', '2026-01-01')))
+
+
+hist(df$LWIN_6_14_1_1_1,breaks=100)
 
 ```
 
 ```{r, warning=FALSE}
 
-hist(df$LWIN_6_14_1_1_1,breaks=100)
-
+#Get rid of weird 2022 chunk
 LWIN_6_14_1_1_1.limits = replace(df$LWIN_6_14_1_1_1, df$LWIN_6_14_1_1_1 > 500,NA)
 
 df$LWIN_6_14_1_1_1.c = LWIN_6_14_1_1_1.limits
@@ -480,12 +479,13 @@ ggplot(data = df)+
   geom_point(aes(TIMESTAMP,LWOUT_6_15_1_1_1))+
   scale_y_continuous(#limits = c(150,750),
                      expression('Longwave Out ('*W/m^2*')'))+
-  scale_x_datetime(limits = as.POSIXct(biomet_dates))
+  scale_x_datetime(limits = as.POSIXct(c('2022-08-01', '2026-01-01')))
+
+hist(df$LWOUT_6_15_1_1_1,breaks=100)
+
 ```
 
 ```{r, warning=FALSE}
-
-hist(df$LWOUT_6_15_1_1_1,breaks=100)
 
 LWOUT_6_15_1_1_1.limits = replace(df$LWOUT_6_15_1_1_1, df$LWOUT_6_15_1_1_1 > 550,NA)
 
@@ -502,9 +502,9 @@ ggplot(data = df)+
   geom_point(aes(TIMESTAMP,TW_2_45_1_1_1))+
   scale_y_continuous(#limits = c(150,750),
                      expression('Water Temp (Celcius)'))+
-  scale_x_datetime(limits = as.POSIXct(c("2025-09-01","2025-11-30")))+
+  scale_x_datetime(limits = as.POSIXct(c("2025-05-01","2025-11-30")))+
   geom_vline(aes(xintercept = as.POSIXct('2025-05-25')))+
-  geom_vline(aes(xintercept = as.POSIXct('2025-11-05'))) #for cutting freezing water table depth data
+  geom_vline(aes(xintercept = as.POSIXct('2025-11-05'))) #ref. for cutting freezing water table depth data
 
 ```
 
@@ -515,7 +515,7 @@ ggplot(data = df)+
   geom_point(aes(TIMESTAMP,WTD_10_42_1_1_1))+
   scale_y_continuous(#limits = c(150,750),
                      expression('Water Table Depth (m)'))+
-  scale_x_datetime(limits = as.POSIXct(c(biomet_dates)))+
+  scale_x_datetime(limits = as.POSIXct(c(c('2025-06-01', '2026-01-01'))))+
   geom_vline(aes(xintercept = as.POSIXct('2025-05-25')))+
   geom_vline(aes(xintercept = as.POSIXct('2025-11-05')))  #for cutting freezing water table depth data
 
@@ -526,7 +526,7 @@ ggplot(data = df)+
   geom_point(aes(TIMESTAMP,WTD_10_42_1_1_1.c))+
   scale_y_continuous(#limits = c(150,750),
                      expression('Water Table Depth (m)'))+
-  scale_x_datetime(limits = as.POSIXct(c(biomet_dates)))
+  scale_x_datetime(limits = as.POSIXct(c(c('2022-08-01', '2026-01-01'))))
 
 
 ```
@@ -535,7 +535,7 @@ ggplot(data = df)+
 
 # Soil Temps
 
-##CS655 Temps
+## CS655 Temps
 ```{r}
 
 ggplot(data = df)+ theme_bw()+
@@ -580,7 +580,7 @@ ggplot(data = df)+ theme_bw()+
   geom_line(aes(TIMESTAMP,TS_2_38_4_10_1,color='80 cm'))+
   geom_line(aes(TIMESTAMP,TS_2_38_4_11_1,color='90 cm'))+
   geom_line(aes(TIMESTAMP,TS_2_38_4_12_1,color='1 m'))+
-  scale_x_datetime(limits = as.POSIXct(biomet_dates))
+  scale_x_datetime(limits = as.POSIXct(c('2022-08-01', '2026-01-01')))
 ```
   
 
@@ -600,7 +600,7 @@ ggplot(data = df)+ theme_bw()+
   geom_line(aes(TIMESTAMP,TS_2_38_3_10_1,color='80 cm'))+
   geom_line(aes(TIMESTAMP,TS_2_38_3_11_1,color='90 cm'))+
   geom_line(aes(TIMESTAMP,TS_2_38_3_12_1,color='1 m'))+
-  scale_x_datetime(limits = as.POSIXct(biomet_dates))
+  scale_x_datetime(limits = as.POSIXct(c('2022-08-01', '2026-01-01')))
 ```
 
 Bulk temp cleaning
@@ -638,7 +638,7 @@ for (v in ts_vars) {
 
 ```
 
-Random problematic chunks
+Random 2022 problematic chunks
 ```{r}
 
 #3_1_1

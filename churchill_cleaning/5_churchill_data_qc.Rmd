@@ -1,5 +1,5 @@
 ---
-title: "Data Quality Check"
+title: "Churchill Data Quality Check"
 author: "Dani Trangmoe"
 date: "`r Sys.Date()`"
 output: html_document
@@ -11,7 +11,7 @@ knitr::opts_knit$set(root.dir = 'C:/Users/dtrangmoe/Documents/github/churchill_c
 ```
 
 
-This file generates plots for the monthly data check meetings
+This file generates plots for the monthly data check meetings - doesn't do any data cleaning or processing! 
 
 
 ```{r, include=FALSE}
@@ -38,7 +38,7 @@ Sys.setenv(TZ = "UTC")
 
 ```{r, include = FALSE}
 
-df <- fread('./data/cleaned/Churchill_Met_Flux_Clean_Ameriflux_2025.csv')
+df <- fread('./data/cleaned/Churchill_Met_Flux_Clean_Ameriflux_2022_2025.csv')
 
 # create a dataframe with only the time period of interest
 df_month <- subset(df, month(df$TIMESTAMP) == 12 & year(df$TIMESTAMP) == 2025)
@@ -79,7 +79,7 @@ nee_plot_ytd = ggplot(data = df)+geom_hline(yintercept = 0)+
   geom_point(aes(TIMESTAMP,co2_flux,color = co2_flux.flag))+
   geom_point(aes(TIMESTAMP,co2_flux.c),col='black')+
   scale_y_continuous(limits=c(-12,8))+
-  scale_x_datetime(limits = as.POSIXct(c("2025-01-01", "2025-11-30")))+
+  scale_x_datetime(limits = as.POSIXct(c("2025-01-01", "2025-12-31")))+
   labs(
     x = NULL,
     y = expression(paste( ~CO[2], ~"Flux (umol m",""^"-2","s",""^"-1",")"))
@@ -101,13 +101,12 @@ Flag = 0, 1, 2 : EddyPro Quality Flag; Flag = 3 : Absolute Limits Filter; Flag =
 nee_plot_month = ggplot(data = df)+geom_hline(yintercept = 0)+
   geom_point(aes(TIMESTAMP,co2_flux,color = co2_flux.flag))+
   geom_point(aes(TIMESTAMP,co2_flux.c),col='black')+
-  scale_y_continuous(limits=c(-12,8))+
+  scale_y_continuous(limits = c(-1.5, 1.5))+
     labs(
     x = NULL,
     y = expression(paste( ~CO[2], ~"Flux (umol m",""^"-2","s",""^"-1",")"))
   ) +
   scale_x_datetime(limits = as.POSIXct(c("2025-12-01", "2025-12-31")))+
-  scale_y_continuous(limits = c(-1.5, 1.5))+
 scale_color_manual(values = color_map, name = "QC CO2 Flux")
 nee_plot_month
 
@@ -139,7 +138,7 @@ plot_week <- function(start, end) {
     geom_point(aes(TIMESTAMP, co2_flux, color = co2_flux.flag)) +
     geom_point(aes(TIMESTAMP, co2_flux.c), color = "black") +
     scale_x_datetime(limits = c(start, end), date_breaks = "1 day", date_labels = "%b %d") +
-    scale_y_continuous(limits = c(-2.5, 2.5)) +
+    scale_y_continuous(limits = c(-0.5, 1)) +
     scale_color_manual(values = color_map, name = "QC CO2 Flux") +
     labs(
       x = NULL,
@@ -194,7 +193,7 @@ ch4_plot_year = ggplot(data = df)+geom_hline(yintercept = 0)+
     x = NULL,
     y = expression(paste( ~CH[4], ~"Flux (umol m",""^"-2","s",""^"-1",")"))
   ) +
-  scale_x_datetime(limits = as.POSIXct(c("2025-01-01", "2025-11-30")))+
+  scale_x_datetime(limits = as.POSIXct(c("2025-01-01", "2025-12-31")))+
 scale_color_manual(values = color_map, name = "QC CH4 Flux")
 ch4_plot_year
 
@@ -218,7 +217,7 @@ ch4_plot_month = ggplot(data = df)+geom_hline(yintercept = 0)+
     x = NULL,
     y = expression(paste( ~CH[4], ~"Flux (umol m",""^"-2","s",""^"-1",")"))
   ) +
-  scale_x_datetime(limits = as.POSIXct(c("2025-10-01", "2025-11-30")))+
+  scale_x_datetime(limits = as.POSIXct(c("2025-12-01", "2025-12-31")))+
 scale_color_manual(values = color_map, name = "QC CH4 Flux")
 ch4_plot_month
 
@@ -250,7 +249,7 @@ plot_week <- function(start, end) {
     geom_point(aes(TIMESTAMP, ch4_flux, color = ch4_flux.flag)) +
     geom_point(aes(TIMESTAMP, ch4_flux.c), color = "black") +
     scale_x_datetime(limits = c(start, end), date_breaks = "1 day", date_labels = "%b %d") +
-    scale_y_continuous(limits = c(-0.1, 0.2)) +
+    scale_y_continuous(limits = c(-0.05, 0.07)) +
     scale_color_manual(values = color_map, name = "QC CH4 Flux") +
     labs(
       x = NULL,
