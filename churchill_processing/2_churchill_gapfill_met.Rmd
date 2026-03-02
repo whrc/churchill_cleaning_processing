@@ -275,7 +275,7 @@ eras = all[,c('date','rh.eramod','airt.eramod','ws.eramod','rad.eramod','tsoil.e
 df = df[!duplicated(df$date),]
 df = merge(df,eras,by = 'date',all = T)
 
-write.csv(x = df,file = './outputs/gapfilling/churchill_2022_2025_era.csv',row.names = F,quote = F)
+#write.csv(x = df,file = './outputs/gapfilling/churchill_2022_2025_era.csv',row.names = F,quote = F)
 
 #calculate VPD from air t and RH
 svp = 610.7*10^((7.5*all$airt)/(237.3+all$airt))
@@ -292,7 +292,7 @@ airt = ggplot(data = all,aes(airt,TA_2_1_1_1_1))+theme_bw()+
   geom_abline(slope = 1,intercept = 0,col='red',lty=2)+
   scale_y_continuous(expression('Site Air T. ('*degree*C*")"))+
   scale_x_continuous(expression('ERA5 Air T. ('*degree*C*")"))+
-  theme(text = element_text(size = 6))
+  theme(text = element_text(size = 10))
 
 #RH
 rh = ggplot(data = all,aes(rh,RH_19_3_1_1_1.c))+theme_bw()+
@@ -301,7 +301,7 @@ rh = ggplot(data = all,aes(rh,RH_19_3_1_1_1.c))+theme_bw()+
   geom_abline(slope = 1,intercept = 0,col='red',lty=2)+
   scale_y_continuous(expression('Site RH (%)'))+
   scale_x_continuous(expression('ERA5 RH (%)'))+
-  theme(text = element_text(size = 6))
+  theme(text = element_text(size = 10))
 
 #wind speed
 ws = ggplot(data = all,aes(ws,WS_16_33_1_1_1))+theme_bw()+
@@ -310,7 +310,7 @@ ws = ggplot(data = all,aes(ws,WS_16_33_1_1_1))+theme_bw()+
   geom_abline(slope = 1,intercept = 0,col='red',lty=2)+
   scale_y_continuous(expression('Site Wind Speed ('*m~s^-1*")"))+
   scale_x_continuous(expression('ERA5 Wind Speed ('*m~s^-1*")"))+
-  theme(text = element_text(size = 6))
+  theme(text = element_text(size = 10))
 
 #'rad.eramod'
 rad = ggplot(data = all,aes(rad,SWIN_6_10_1_1_1.c))+theme_bw()+
@@ -319,7 +319,7 @@ rad = ggplot(data = all,aes(rad,SWIN_6_10_1_1_1.c))+theme_bw()+
   geom_abline(slope = 1,intercept = 0,col='red',lty=2)+
   scale_y_continuous(expression('Site Incident Radiation ('*W~m^-2*")"))+
   scale_x_continuous(expression('ERA5 Incident Radiation ('*W~m^-2*")"))+
-  theme(text = element_text(size = 6))
+  theme(text = element_text(size = 10))
 
 #'tsoil.eramod',
 tsoil = ggplot(data = all,aes(st2,TS_2_38_3_2_1.c))+theme_bw()+
@@ -328,7 +328,7 @@ tsoil = ggplot(data = all,aes(st2,TS_2_38_3_2_1.c))+theme_bw()+
   geom_abline(slope = 1,intercept = 0,col='red',lty=2)+
   scale_y_continuous(expression('Site Soil T. ('*degree*C*")"))+
   scale_x_continuous(expression('ERA5 Soil T. ('*degree*C*")"))+
-  theme(text = element_text(size = 6))
+  theme(text = element_text(size = 10))
 
 #'le.eramod',
 le = ggplot(data = all,aes(le,LE.c))+theme_bw()+
@@ -337,7 +337,7 @@ le = ggplot(data = all,aes(le,LE.c))+theme_bw()+
   geom_abline(slope = 1,intercept = 0,col='red',lty=2)+
   scale_y_continuous(expression('Site LE ('*W~m^-2*")"))+
   scale_x_continuous(expression('ERA5 LE ('*W~m^-2*")"))+
-  theme(text = element_text(size = 6))
+  theme(text = element_text(size = 10))
 
 #'h.eramod'
 h = ggplot(data = all,aes(h,H.c))+theme_bw()+
@@ -346,7 +346,7 @@ h = ggplot(data = all,aes(h,H.c))+theme_bw()+
   geom_abline(slope = 1,intercept = 0,col='red',lty=2)+
   scale_y_continuous(expression('Site H ('*W~m^-2*")"))+
   scale_x_continuous(expression('ERA5 H ('*W~m^-2*")"))+
-  theme(text = element_text(size = 6))
+  theme(text = element_text(size = 10))
 
 
 #VPD
@@ -356,21 +356,29 @@ vpd = ggplot(data = all,aes(vpd,VPD))+theme_bw()+
   geom_abline(slope = 1,intercept = 0,col='red',lty=2)+
   scale_y_continuous(expression('Site VPD ('*W~m^-2*")"))+
   scale_x_continuous(expression('ERA5 VPD ('*W~m^-2*")"))+
-  theme(text = element_text(size = 6))
+  theme(text = element_text(size = 10))
 
-#swc
+#swc - bad! gapfilled using RF
 swc = ggplot(data = all,aes(vwc1*100,SWC_12_36_2_1_1))+theme_bw()+
   geom_hline(yintercept = 0)+geom_vline(xintercept = 0)+
   geom_point(alpha=0.5)+
   geom_abline(slope = 1,intercept = 0,col='red',lty=2)+
   scale_y_continuous(expression('Site VWC (%)'))+
   scale_x_continuous(expression('ERA5 VWC (%)'))+
-  theme(text = element_text(size = 6))
+  theme(text = element_text(size = 10))
+
+#pres
+pres = ggplot(data = all,aes(pres,PA_4_2_1_1_1.c))+theme_bw()+
+  geom_point(alpha=0.5)+
+  geom_abline(slope = 1,intercept = 0,col='red',lty=2)+
+  scale_y_continuous(expression('Site Pressure (kPa)'))+
+  scale_x_continuous(expression('ERA5 Pressure (kPa)'))+
+  theme(text = element_text(size = 10))
 ```
 
 ```{r}
-png(filename = './png/era5_churchill_comparisons.png',width = 6,height = 4,units = 'in',res = 1500)
-plot_grid(airt,rh,ws,rad,tsoil,le,h,vpd,swc)
+png(filename = './png/era5_churchill_comparisons_sz10.png',width = 10,height = 8,units = 'in',res = 1500)
+plot_grid(airt,rh,ws,rad,tsoil,le,h,vpd,pres)
 dev.off()
 ```
 
