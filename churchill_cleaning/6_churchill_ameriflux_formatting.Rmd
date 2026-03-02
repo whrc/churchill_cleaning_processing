@@ -30,6 +30,10 @@ Load Data
 
 df = fread(input = './data/cleaned/Churchill_Met_Flux_Clean_Ameriflux_2022_2025.csv')
 
+## Select only up to 2026
+
+df <- df[df$TIMESTAMP <= as.POSIXct("2026-01-01 0000", tz = "UTC"), ]
+
 ```
 
 Format the time stamps at start and end
@@ -109,9 +113,9 @@ PPFD_OUT = df$PPFDR_7_23_1_1_1.c # par out umol m-2 s-1
 
 #Soil factors ###################################
 #all swc in %
-SWC_1_1_1 = df$SWC_12_36_1_1_1
-SWC_2_1_1 = df$SWC_12_36_2_1_1
-SWC_2_2_1 = df$SWC_12_36_2_2_1
+SWC_1_1_1 = df$SWC_12_36_1_1_1*100
+SWC_2_1_1 = df$SWC_12_36_2_1_1*100
+SWC_2_2_1 = df$SWC_12_36_2_2_1*100
 
 #all soil temps deg C
 TS_1_1_1 = df$TS_2_38_1_1_1.c
