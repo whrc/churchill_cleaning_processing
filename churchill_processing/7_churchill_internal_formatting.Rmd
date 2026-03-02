@@ -400,8 +400,6 @@ plot(X_50)
 plot(X_70)
 plot(X_90)
 
-
-
 plot(DEW_ERA5)
 plot(ST1_ERA5)
 plot(ST2_ERA5)
