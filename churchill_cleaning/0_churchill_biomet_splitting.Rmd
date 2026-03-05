@@ -1,0 +1,281 @@
+---
+title: "Churchill Biomet Splitting"
+author: "Dani Trangmoe"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+This file uses the AllBiomet and AllLogger files to create neat, monthly biomet files
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+rm(list = ls())
+
+library(data.table)
+library(dplyr)
+library(lubridate)
+
+```
+
+   
+   
+## All Biomet
+
+```{r}
+# Define file names
+file_names = list(
+  main_file = "Churchill_AllBiomet.dat"
+  #file1 = "Churchill_AllBiomet_until20250110.dat"  # For using more than one file
+)
+
+# # Define NA strings
+# na_strings <- as.numeric(c("-9999", "NA", "NaN", "NAN", "-7999"))
+
+
+base_path = "C:/Users/dtrangmoe/Documents/scripts/biomet_monthly_splitting_files/churchill"  # Update this as needed
+
+
+
+load_data <- function(file_name, exclude_cols = NULL, skip = 4) {
+  header <- fread(file.path(base_path, file_name), skip = 1, nrows = 0)
+  data <- fread(file.path(base_path, file_name), skip = skip, header = FALSE)
+  
+  setnames(data, names(header))
+  return(data)
+}
+
+
+
+dataframes <- list(
+  df_main <- load_data(file_names$main_file)
+  # dat2 <- load_data(file_names$file2, exclude_cols = exclude_cols)  # For using more than one file
+)
+
+### Adjust column names for continuity across all dataframes
+
+#removes unnecessary column from main dataframe 
+
+df_main <- df_main[,-"Scancount"]
+# dat2 <- dat2[,-"Scancount"]  # For using more than one file
+
+# 
+# unique_cols <- setdiff(union(names(dat2), names(df_main)), 
+#                        intersect(names(dat2), names(df_main)))
+# print(unique_cols)  # For using more than one file
+
+
+```
+
+
+Join
+```{r}
+
+df <- df_main
+
+# #merge all dataframes into master dataframe
+# df <- full_join(df_main, dat2, by = NULL) %>%
+#   full_join(dat3, by = NULL)   # For using more than one file
+
+
+df <- df[!duplicated(df$TIMESTAMP)] #remove any duplicates
+
+plot(df$TIMESTAMP)
+
+df <- df[df$TIMESTAMP > as.POSIXct("2020-01-01"), ] # Remove weird -99999 timestamp NAs
+
+plot(df$TIMESTAMP)
+
+# Ensure continuous timestamp, fill out months
+# Some timestamps are missing in late summer 2024
+
+#take the min and max date
+mindate = floor_date(min(df$TIMESTAMP))
+maxdate = ceiling_date(max(df$TIMESTAMP))
+
+#create a timestamp variable every half hour to the full months
+TIMESTAMP = seq(from = mindate,to = maxdate,by = 60*30) 
+TIMESTAMP = as.data.frame(TIMESTAMP)
+
+#merge with the full data frame to create NAs where data is missing
+df = merge(TIMESTAMP,df,by = 'TIMESTAMP',all.x = T)
+
+plot(df$TIMESTAMP)
+
+summary(df)
+
+plot(df$TIMESTAMP, df$TA_2_1_1_1_1)
+
+```
+
+
+```{r}
+
+library(plyr)
+library(dplyr)
+library(purrr)
+library(tidyr)
+
+#NEST AND SPLIT THE DATA BY MONTH AND SAVE IN DESIRED DIRECTORY
+
+
+base_path = "C:/Users/dtrangmoe/Documents/scripts/biomet_monthly_splitting_files/churchill/raw_monthly/biomet/"
+
+# Nest the data and prepare for saving
+data_nested = df %>%
+  mutate(TIMESTAMP = as.POSIXct(TIMESTAMP, format = "%Y-%m-%d %H:%M:%S")) %>%
+  mutate(year_month = format(TIMESTAMP, "%Y%m")) %>%
+  group_by(year_month) %>%
+  nest() %>%
+  ungroup() %>%  # Important to prevent errors with grouped data
+  mutate(file_path = paste0(base_path, "churchill_biomet_",year_month, ".csv"))
+
+# Write each nested data frame to the specified file path
+walk2(
+  .x = data_nested$data, 
+  .y = data_nested$file_path, 
+  ~ {
+    # Ensure the nested data frame has columns as character if needed
+    .x[] <- lapply(.x, as.character)  # Convert all columns to character, if needed
+    
+    # Write to CSV without adding the units row
+    write.csv(.x, .y, row.names = FALSE)
+  }
+)
+
+
+```
+
+
+
+## All Logger
+
+
+```{r}
+
+rm(list = ls())
+
+
+# Define file names
+file_names = list(
+  main_file = "Churchill_AllLogger.dat"
+  #file1 = "xxxx" #if you need to load more than one file, this is where it goes
+)
+
+ # Define NA strings
+na_strings <- as.numeric(c("-9999", "NA", "NaN", "NAN", "-7999"))
+
+
+base_path = "C:/Users/dtrangmoe/Documents/scripts/biomet_monthly_splitting_files/churchill"  # Update this as needed
+
+
+
+load_data <- function(file_name, exclude_cols = NULL, skip = 4) {
+  header <- fread(file.path(base_path, file_name), skip = 1, nrows = 0)
+  data <- fread(file.path(base_path, file_name), skip = skip, header = FALSE)
+  
+  setnames(data, names(header))
+  return(data)
+}
+
+
+
+dataframes <- list(
+  df_main <- load_data(file_names$main_file)
+  #dat1 <- load_data(file_names$file1, exclude_cols = exclude_cols) # For using more than one file
+)
+
+### Adjust column names for continuity across all dataframes
+
+#removes unnecessary column from main dataframe 
+
+df_main <- df_main[,-"Scancount"]
+# dat1 <- dat1[,-"Scancount"] # For using more than one file
+
+# unique_cols <- setdiff(union(names(dat2), names(df_main)), 
+#                        intersect(names(dat2), names(df_main))) 
+# print(unique_cols)  # For using more than one file
+
+
+```
+
+
+Join
+```{r}
+
+#merge all dataframes into master dataframe
+df <- df_main
+# df <- full_join(df_main, dat1, by = NULL)  # For using more than one file
+
+
+df <- df[!duplicated(df$TIMESTAMP)] #remove any duplicates
+
+df <- df[df$TIMESTAMP > as.POSIXct("2020-01-01"), ] # Remove weird -99999 timestamp NAs
+
+plot(df$TIMESTAMP)
+
+
+# Ensure continuous timestamp, fill out months
+# Some timestamps are missing in late summer 2024
+
+#take the min and max date
+mindate = floor_date(min(df$TIMESTAMP))
+maxdate = ceiling_date(max(df$TIMESTAMP))
+
+#create a timestamp variable every half hour to the full months
+TIMESTAMP = seq(from = mindate,to = maxdate,by = 60*30) 
+TIMESTAMP = as.data.frame(TIMESTAMP)
+
+#merge with the full data frame to create NAs where data is missing
+df = merge(TIMESTAMP,df,by = 'TIMESTAMP',all.x = T)
+
+plot(df$TIMESTAMP)
+
+summary(df)
+
+plot(df$TIMESTAMP, df$AirT_Avg)
+
+```
+
+
+```{r}
+
+library(plyr)
+library(dplyr)
+library(purrr)
+library(tidyr)
+
+#NEST AND SPLIT THE DATA BY MONTH AND SAVE IN DESIRED DIRECTORY
+
+
+base_path = "C:/Users/dtrangmoe/Documents/scripts/biomet_monthly_splitting_files/churchill/raw_monthly/logger/"
+
+# Nest the data and prepare for saving
+data_nested = df %>%
+  mutate(TIMESTAMP = as.POSIXct(TIMESTAMP, format = "%Y-%m-%d %H:%M:%S")) %>%
+  mutate(year_month = format(TIMESTAMP, "%Y%m")) %>%
+  group_by(year_month) %>%
+  nest() %>%
+  ungroup() %>%  # Important to prevent errors with grouped data
+  mutate(file_path = paste0(base_path, "churchill_logger_",year_month, ".csv"))
+
+# Write each nested data frame to the specified file path
+walk2(
+  .x = data_nested$data, 
+  .y = data_nested$file_path, 
+  ~ {
+    # Ensure the nested data frame has columns as character if needed
+    .x[] <- lapply(.x, as.character)  # Convert all columns to character, if needed
+    
+    # Write to CSV without adding the units row
+    write.csv(.x, .y, row.names = FALSE)
+  }
+)
+
+
+```
+
+
