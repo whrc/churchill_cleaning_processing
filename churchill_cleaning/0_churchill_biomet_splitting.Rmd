@@ -7,9 +7,12 @@ output: html_document
 
 This file uses the AllBiomet and AllLogger files to create neat, monthly biomet files
 
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = 'C:/Users/dtrangmoe/Documents/github/churchill_cleaning_processing') #use this to set your directory
 ```
+
 
 ```{r}
 
@@ -36,7 +39,7 @@ file_names = list(
 # na_strings <- as.numeric(c("-9999", "NA", "NaN", "NAN", "-7999"))
 
 
-base_path = "C:/Users/dtrangmoe/Documents/scripts/biomet_monthly_splitting_files/churchill"  # Update this as needed
+base_path = './data/raw_biomet/'
 
 
 
@@ -122,7 +125,7 @@ library(tidyr)
 #NEST AND SPLIT THE DATA BY MONTH AND SAVE IN DESIRED DIRECTORY
 
 
-base_path = "C:/Users/dtrangmoe/Documents/scripts/biomet_monthly_splitting_files/churchill/raw_monthly/biomet/"
+base_path = './data/biomet/'
 
 # Nest the data and prepare for saving
 data_nested = df %>%
@@ -169,7 +172,7 @@ file_names = list(
 na_strings <- as.numeric(c("-9999", "NA", "NaN", "NAN", "-7999"))
 
 
-base_path = "C:/Users/dtrangmoe/Documents/scripts/biomet_monthly_splitting_files/churchill"  # Update this as needed
+base_path = './data/raw_biomet/'
 
 
 
@@ -251,7 +254,7 @@ library(tidyr)
 #NEST AND SPLIT THE DATA BY MONTH AND SAVE IN DESIRED DIRECTORY
 
 
-base_path = "C:/Users/dtrangmoe/Documents/scripts/biomet_monthly_splitting_files/churchill/raw_monthly/logger/"
+base_path = "./data/logger/"
 
 # Nest the data and prepare for saving
 data_nested = df %>%
@@ -277,5 +280,4 @@ walk2(
 
 
 ```
-
 
