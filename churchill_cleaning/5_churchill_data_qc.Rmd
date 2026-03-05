@@ -42,12 +42,17 @@ library(openair)
 
 ```
 
+<!---
+# Load data
+This chunk loads data, selects correct time period, and does some reformatting for plotting
+-->
 
 ```{r, echo = FALSE}
 
 df <- fread('./data/cleaned/Churchill_Met_Flux_Clean_Ameriflux_2022_2025.csv')
 
-#Make a larger file only one year of data
+########### Choose Time Period #############################
+#This is where you select what data you want to look at!
 df <- df[df$TIMESTAMP > as.POSIXct("2025-01-01"), ]
 
 df$TIMESTAMP <- as.POSIXct( paste(df$TIMESTAMP, "00:00"), format = "%Y-%m-%d %H:%M", tz = "UTC")
@@ -73,6 +78,10 @@ df$LE.flag <- factor(df$LE.flag, levels = c("0","1","2","3","4","5"))
 color_map = c("0" = "yellow3", "1" = "darkblue" , "2" =  "red4", "3" = "orange", "4" = "green4", "5" = "purple")
 
 ```
+
+<!---
+This chunk makes some unit adjustments and does some simple calculations - try to keep all edits here so the plots run smoothly
+-->
 
 ```{r, warning=FALSE, echo = FALSE}
 
@@ -209,6 +218,8 @@ Flag = 5 : Diagnostic filter
 
 ## CO2
 
+<!-- Change these values if you adjust cleaning limits! -->
+
 CO2 is cleaned with absolute limits of 8 & -15, and a limit of 3 MADs away from the mean over a 7 day window in the summer and 7 MADs away from the mean in the winter
 
 #### Year-to-Date CO2 - wide range plot
@@ -280,6 +291,8 @@ for (w in sort(unique(df_month$week_in_month))) {
 ```
 
 ## Methane
+
+<!-- Change these values if you adjust cleaning limits! -->
 
 Methane is cleaned with absolute limits of -0.15 & 0.28, and a limit of 8 MADs away from the mean over a 7 day window
 
