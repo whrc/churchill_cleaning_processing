@@ -450,7 +450,8 @@ df$year = as.numeric(format(df$TIMESTAMP, "%Y"))
 
 diel = df %>%
   group_by(year,month,hour) %>%
-  select(co2_flux.c,ch4_flux.c,LE.c,H.c,RN_6_5_1_1_1.c,`u*`,TKE,year,month,hour) %>%
+  select(co2_flux.c,ch4_flux.c,LE.c,H.c,RN_6_5_1_1_1.c,rpot,sonic_temperature,
+         `u*`,TKE,year,month,hour) %>%
   summarise_all(.funs = c(median,sd),na.rm=T)
 
 diel = subset(diel,!is.na(diel$month))
@@ -537,6 +538,23 @@ diurnal_u. <- ggplot(data = diel)+geom_hline(yintercept = 0)+
  facet_wrap(year~month)
 diurnal_u.
 
+```
+
+### Potential Radiation Checks
+
+
+#### RPOT vs NETRAD
+
+```{r, warning=FALSE, echo=FALSE, echo = FALSE}
+diurnal_rpot1 <- ggplot(data = diel)+geom_hline(yintercept = 0)+
+  geom_line(aes(hour,rpot_fn1),lty=1, color = "blue")+
+  geom_line(aes(hour,RN_6_5_1_1_1.c_fn1),lty=2)+
+  geom_ribbon(aes(x = hour,y = RN_6_5_1_1_1.c_fn1,
+                  ymax = RN_6_5_1_1_1.c_fn1 + RN_6_5_1_1_1.c_fn2,
+                  ymin = RN_6_5_1_1_1.c_fn1 - RN_6_5_1_1_1.c_fn2),
+              alpha= 0.5)+
+  facet_wrap(year~month)
+diurnal_rpot1
 ```
 
 # Energy Balance Plots
@@ -1591,9 +1609,4 @@ generate_rad_plots(df,
                    month_start = "2025-11-01")
 
 ```
-
-
-
-
-
 
