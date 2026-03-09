@@ -545,7 +545,7 @@ diurnal_u.
 
 ```
 
-### Potential Radiation Checks
+# Diurnal Timestamp Alignment Check
 
 
 #### Calculated Potential Radiation vs Measured Radiation
@@ -1358,7 +1358,10 @@ windRose(df_wind_openair,
 
 ```
 
-# Sonic Temp and Air Temp Comparison
+
+# Timestamp Alignment Checks
+
+## Sonic Temp and Air Temp Comparison
 
 <!-- #### T air vs T sonic - full -->
 
@@ -1380,7 +1383,7 @@ windRose(df_wind_openair,
 # full_temp_plot 
 ```
 
-#### T air vs T sonic - month
+#### T air vs T sonic - Full Month
 
 ```{r, warning=FALSE, echo=FALSE, echo = FALSE}
 
@@ -1399,7 +1402,7 @@ month_temp_plot <- plot_flux_long(
 month_temp_plot
 ```
 
-#### T air vs T sonic - weeks
+#### T air vs T sonic - Each Week
 
 ```{r, warning=FALSE, echo=FALSE, echo = FALSE}
 
@@ -1425,7 +1428,7 @@ week_temp_plots
 
 ```
 
-# Potential Radiation vs. Incoming Shortwave - radiation check
+## Potential Radiation vs. Incoming Shortwave - radiation check
 
 ```{r, warning=FALSE, echo = FALSE}
 
@@ -1603,8 +1606,7 @@ generate_rad_plots <- function(df,
 
 ```
 
-
-#### Previous Month, Radiation Plots
+#### Calculated vs. Measured Radiation - Full Month
 
 ```{r, warning=FALSE, echo=FALSE, echo = FALSE}
 
