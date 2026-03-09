@@ -57,6 +57,9 @@ df <- df[(df$TIMESTAMP > as.POSIXct("2025-03-01") & df$TIMESTAMP < as.POSIXct("2
 
 df$TIMESTAMP <- as.POSIXct( paste(df$TIMESTAMP, "00:00"), format = "%Y-%m-%d %H:%M", tz = "UTC")
 
+#This is where you define the beginning of the previous month of data
+month_start <- "2026-02-01"
+
 # data formatting for flag plots
 # Ensure flags are character first
 df$co2_flux.flag <- as.character(df$co2_flux.flag)
@@ -112,6 +115,8 @@ df$shf_avg = rowMeans(
 df <- df %>%
   mutate(across(c(SWC_12_36_1_1_1, SWC_12_36_2_1_1, SWC_12_36_2_2_1), ~ .x * 100))
 
+
+
 ```
 
 
@@ -135,7 +140,7 @@ make_week_index <- function(df, time_col = "TIMESTAMP") {
 }
 
 df_month <- subset(df,
-  df$TIMESTAMP >= as.POSIXct("2026-01-01 00:00", tz = "UTC")
+  df$TIMESTAMP >= as.POSIXct(month_start, tz = "UTC")
 )
 
 df_month <- make_week_index(df_month)
@@ -545,7 +550,7 @@ diurnal_u.
 
 #### Calculated Potential Radiation vs Measured Radiation
 Blue line = calculated potential radiation
-```{r, warning=FALSE, echo=FALSE, echo = FALSE}
+```{r, warning=FALSE, echo=FALSE}
 diurnal_rpot1 <- ggplot(data = diel)+geom_hline(yintercept = 0)+
   geom_line(aes(hour,rpot_fn1),lty=1, color = "blue")+
   geom_line(aes(hour,RN_6_5_1_1_1.c_fn1),lty=2)+
@@ -1355,24 +1360,24 @@ windRose(df_wind_openair,
 
 # Sonic Temp and Air Temp Comparison
 
-#### T air vs T sonic - full
+<!-- #### T air vs T sonic - full -->
 
 ```{r, warning=FALSE, echo=FALSE, echo = FALSE}
 
-full_temp_plot <- plot_flux_long(
-  df,
-  cols   = c("TA_2_1_1_1_1.c", "sonic_c"),
-  labels = c("Air Temp", "Sonic Temp"),
-  colors = c("red", "blue"),
-  y_label = "Temperature (°C)",
-  title   = "Air vs Sonic Temperature — Full Timeseries",
-  smooth  = FALSE,           # only once!
-  date_breaks = "1 month",
-  date_labels = "%b"
-)
-
-
-full_temp_plot 
+# full_temp_plot <- plot_flux_long(
+#   df,
+#   cols   = c("TA_2_1_1_1_1.c", "sonic_c"),
+#   labels = c("Air Temp", "Sonic Temp"),
+#   colors = c("red", "blue"),
+#   y_label = "Temperature (°C)",
+#   title   = "Air vs Sonic Temperature — Full Timeseries",
+#   smooth  = FALSE,           # only once!
+#   date_breaks = "1 month",
+#   date_labels = "%b"
+# )
+# 
+# 
+# full_temp_plot 
 ```
 
 #### T air vs T sonic - month
@@ -1587,14 +1592,14 @@ generate_rad_plots <- function(df,
 
 ```
 
-#### Year to Date, Bi - Weekly Radiation plots
+<!-- #### Year to Date, Bi - Weekly Radiation plots -->
 
 ```{r, warning=FALSE, echo=FALSE, echo = FALSE}
-generate_rad_plots(df,
-                   "TIMESTAMP",
-                   "SWIN_6_10_1_1_1",
-                   mode = "biweekly")
-
+# generate_rad_plots(df,
+#                    "TIMESTAMP",
+#                    "SWIN_6_10_1_1_1",
+#                    mode = "biweekly")
+# 
 
 ```
 
@@ -1602,11 +1607,14 @@ generate_rad_plots(df,
 #### Previous Month, Radiation Plots
 
 ```{r, warning=FALSE, echo=FALSE, echo = FALSE}
+
+##################### Need to edit date here to select the correct month!! #############################
 generate_rad_plots(df,
                    "TIMESTAMP",
                    "SWIN_6_10_1_1_1",
                    mode = "weekly_month",
-                   month_start = "2025-11-01")
+                   month_start = month_start)
+
 
 ```
 
