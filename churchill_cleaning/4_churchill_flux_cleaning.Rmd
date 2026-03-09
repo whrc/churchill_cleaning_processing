@@ -250,7 +250,7 @@ LE.limits =replace(LE.limits, df$LE < -50 | df$LE > 450,NA)
 
 
 # Make .flag = 3 everywhere where cleaning is done via absolute limits
-df$LE.flag <- ifelse(is.na(LE.limits) & !is.na(df$LE) & df$LE.flag != 2 & df$LE.flag != 5, df$LE.flag != 5, 3, df$LE.flag)
+df$LE.flag <- ifelse(is.na(LE.limits) & !is.na(df$LE) & df$LE.flag != 2 & df$LE.flag != 5, 3, df$LE.flag)
 
 ```
 
@@ -613,7 +613,7 @@ ggplot(data = df)+
 Add flag data
 ```{r}
 
-df$H.flag <- ifelse(is.na(df$H.c) & !is.na(co2fluxclean) & df$H.flag != 2 & df$H.flag != 5 & df$H.flag != 3, 4, df$H.flag)
+df$H.flag <- ifelse(is.na(df$H.c) & !is.na(Hclean) & df$H.flag != 2 & df$H.flag != 5 & df$H.flag != 3, 4, df$H.flag)
 
 df$H.flag <- as.factor(df$H.flag)
 summary(df$H.flag)
@@ -700,7 +700,7 @@ ggplot(data = df)+
 Add flag data
 ```{r}
 
-df$LE.flag <- ifelse(is.na(df$LE.c) & !is.na(co2fluxclean) & df$LE.flag != 2  & df$LE.flag != 5 & df$LE.flag != 3, 4, df$LE.flag)
+df$LE.flag <- ifelse(is.na(df$LE.c) & !is.na(LEclean) & df$LE.flag != 2  & df$LE.flag != 5 & df$LE.flag != 3, 4, df$LE.flag)
 
 df$LE.flag <- as.factor(df$LE.flag)
 summary(df$LE.flag)
