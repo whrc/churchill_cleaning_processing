@@ -251,7 +251,7 @@ view_all_generated_plots_rad <- function(pattern = "^rad_plot_") {
 }
 
 
-#view_all_generated_plots_rad()
+view_all_generated_plots_rad()
 ```
 
 
@@ -371,7 +371,7 @@ view_all_generated_plots_temp <- function(pattern = "^temp_plot_") {
 }
 
 
-view_all_generated_plots_temp()
+# view_all_generated_plots_temp()
 ```
 
 

@@ -53,7 +53,7 @@ df <- fread('./data/cleaned/Churchill_Met_Flux_Clean_Ameriflux_2022_2025.csv')
 
 ########### Choose Time Period #############################
 #This is where you select what data you want to look at!
-df <- df[df$TIMESTAMP > as.POSIXct("2025-01-01"), ]
+df <- df[(df$TIMESTAMP > as.POSIXct("2025-03-01") & df$TIMESTAMP < as.POSIXct("2026-03-01") ), ]
 
 df$TIMESTAMP <- as.POSIXct( paste(df$TIMESTAMP, "00:00"), format = "%Y-%m-%d %H:%M", tz = "UTC")
 
@@ -543,8 +543,8 @@ diurnal_u.
 ### Potential Radiation Checks
 
 
-#### RPOT vs NETRAD
-
+#### Calculated Potential Radiation vs Measured Radiation
+Blue line = calculated potential radiation
 ```{r, warning=FALSE, echo=FALSE, echo = FALSE}
 diurnal_rpot1 <- ggplot(data = diel)+geom_hline(yintercept = 0)+
   geom_line(aes(hour,rpot_fn1),lty=1, color = "blue")+

@@ -53,7 +53,7 @@ ggplot(data = df)+
   geom_point(aes(TIMESTAMP,TA_2_1_1_1_1),col='black')+
   scale_y_continuous(#limits = c(-40,40),
                      expression('Air Temperature ('*Celsius*')'))+
-  scale_x_datetime(limits = as.POSIXct(c('2025-03-01', '2025-07-01')))
+  scale_x_datetime(limits = as.POSIXct(c('2026-01-01', '2026-03-01')))
 
 df$TA_2_1_1_1_1.c <- df$TA_2_1_1_1_1
 
@@ -66,7 +66,7 @@ ggplot(data = df)+
   geom_point(aes(TIMESTAMP,RH_19_3_1_1_1),col='black')+
   scale_y_continuous(#limits = c(20,100),
                      expression('Relative Humidity ('*percent*')'))+
-  scale_x_datetime(limits = as.POSIXct(c('2022-08-01', '2026-01-01')))
+  scale_x_datetime(limits = as.POSIXct(c('2026-01-01', '2026-03-01')))
 
 ```
 
@@ -94,7 +94,7 @@ ggplot(data = df)+
   geom_point(aes(TIMESTAMP,PA_4_2_1_1_1),col='black')+
   scale_y_continuous(limits = c(0,120),
                      expression ('Barometric Pressure ('*kPa*')'))+
-  scale_x_datetime(limits = as.POSIXct(c('2022-08-01', '2026-01-01')))
+  scale_x_datetime(limits = as.POSIXct(c('2026-01-01', '2026-03-01')))
 ```
 
 Unit adjustment and cleaning
@@ -136,7 +136,7 @@ ggplot(data = df)+
   scale_y_continuous(limits = c(-80,190),
                      expression ('Soil Heat Flux ('*W/m^2*')'))+
   scale_color_manual(values = c('red','black'))+
-  scale_x_datetime(limits = as.POSIXct(c('2022-08-01', '2026-01-01')))
+  scale_x_datetime(limits = as.POSIXct(c('2026-01-01', '2026-03-01')))
 
 df$SHF_6_37_1_1_1.c <- df$SHF_6_37_1_1_1
 df$SHF_6_37_2_1_1.c <- df$SHF_6_37_2_1_1
@@ -217,7 +217,7 @@ ggplot(df)+geom_hline(yintercept = 0)+
   geom_line(aes(TIMESTAMP,mad_filt,col='Filter'))+
   geom_line(aes(TIMESTAMP,roll.mad,col='MAD'))+
   scale_y_continuous(limits = c(-.1,.8))+
-  scale_x_datetime(limits = as.POSIXct(c('2025-11-01', '2026-01-01'),format="%F"))+
+  scale_x_datetime(limits = as.POSIXct(c('2026-01-01', '2026-03-01'),format="%F"))+
   scale_color_manual(values=c('yellow','red','black'))
 
 ```
@@ -236,7 +236,7 @@ ggplot(df)+geom_hline(yintercept = 0)+
   geom_point(aes(TIMESTAMP,SD_10_99_1_1_1,col='Uncleaned'))+
   geom_point(aes(TIMESTAMP,SD_10_99_1_1_1.c,col='Cleaned'))+
   scale_y_continuous(limits = c(-0.75,1))+
-  scale_x_datetime(limits = as.POSIXct(c('2025-08-01', '2026-01-01'),format="%F"))+
+  scale_x_datetime(limits = as.POSIXct(c('2026-01-01', '2026-03-01'),format="%F"))+
   scale_color_manual(values=c('black','red'))
 ```
 
@@ -251,7 +251,7 @@ ggplot(data = df)+
   geom_point(aes(TIMESTAMP,SD_10_99_1_1_1.c),col='black')+
   geom_line(aes(TIMESTAMP,WS_16_33_1_1_1/10),col='black')+
   #scale_y_continuous(limits = c(-.25,.5))+
-  scale_x_datetime(limits = as.POSIXct(c('2025-11-06','2025-12-06'),format="%F"))
+  scale_x_datetime(limits = as.POSIXct(c('2026-01-01', '2026-03-01'),format="%F"))
 
 ```
 
@@ -260,7 +260,7 @@ ggplot(data = df)+
 ```{r, warning=FALSE}
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,PPFD_7_21_1_1_1),col='black')+
-  scale_x_datetime(limits = as.POSIXct(c("2022-07-01","2026-01-01")))+
+  scale_x_datetime(limits = as.POSIXct(c('2026-01-01', '2026-03-01')))+
   scale_y_continuous(#limits = c(-25,2000),
                      expression('PAR ('*mu*mol/m^2/s*')'))
 
@@ -287,7 +287,7 @@ There are some off points here but I tried a rolling filter with no luck - could
 ```{r, warning=FALSE}
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,PPFDR_7_23_1_1_1),col='black')+
-  scale_x_datetime(limits = as.POSIXct(c("2022-07-01","2026-01-01")))+
+  scale_x_datetime(limits = as.POSIXct(c('2026-01-01', '2026-03-01')))+
   scale_y_continuous(#limits = c(-25,1600),
                      expression('PAR Reflected ('*mu*mol/m^2/s*')'))+
   geom_hline(yintercept = 800)
@@ -306,7 +306,7 @@ df$PPFDR_7_23_1_1_1.c <- PPFDR_7_23_1_1_1.limits
 ```{r, warning=FALSE}
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP, RN_6_5_1_1_1),col='black')+
-  scale_x_datetime(limits = as.POSIXct(c('2022-08-01', '2026-01-01')))+
+  scale_x_datetime(limits = as.POSIXct(c('2026-01-01', '2026-03-01')))+
   scale_y_continuous(#limits = c(-125,850),
                      expression('Net Radiation ('*W/m^2*')'))
 
@@ -330,7 +330,7 @@ df$RN_6_5_1_1_1.c <- RN_6_5_1_1_1.limits
 ```{r, warning=FALSE}
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,SWIN_6_10_1_1_1))+
-  scale_x_datetime(limits = as.POSIXct(c('2022-08-01', '2026-01-01')))+
+  scale_x_datetime(limits = as.POSIXct(c('2026-01-01', '2026-03-01')))+
   scale_y_continuous(#limits = c(-10,1000),
                      expression('Shortwave In ('*W/m^2*')'))
 
@@ -355,7 +355,7 @@ df$SWIN_6_10_1_1_1.c <- SWIN_6_10_1_1_1.limits
 ```{r, warning=FALSE}
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,SWOUT_6_11_1_1_1))+
-  scale_x_datetime(limits = as.POSIXct(c('2022-08-01', '2026-01-01')))+
+  scale_x_datetime(limits = as.POSIXct(c('2026-01-01', '2026-03-01')))+
   scale_y_continuous(limits = c(-10,750),
                      expression('Shortwave Out ('*W/m^2*')'))
 
@@ -382,7 +382,7 @@ ggplot(data = df)+
   geom_point(aes(TIMESTAMP,albedo))+
   scale_y_continuous(limits = c(-0.2,5),
                      expression('Albedo'))+
-  scale_x_datetime(limits = as.POSIXct(c('2022-08-01', '2026-01-01')))
+  scale_x_datetime(limits = as.POSIXct(c('2026-01-01', '2026-03-01')))
 
 albedo.limits = replace(albedo, albedo < .05 | albedo > 1,NA)
 
@@ -390,7 +390,7 @@ ggplot(data = df)+
   geom_point(aes(TIMESTAMP,albedo.limits))+
   scale_y_continuous(limits = c(-.2,1.2),
                      expression('Albedo'))+
-  scale_x_datetime(limits = as.POSIXct(c('2022-08-01', '2026-01-01')))
+  scale_x_datetime(limits = as.POSIXct(c('2026-01-01', '2026-03-01')))
 
 
 ```
@@ -420,7 +420,7 @@ ggplot(df)+geom_hline(yintercept = 0)+
   geom_line(aes(TIMESTAMP,mad_filt,col='Filter'))+
   geom_line(aes(TIMESTAMP,roll.mad,col='MAD'))+
   scale_y_continuous(limits = c(0,1))+
-  scale_x_datetime(limits = as.POSIXct(c('2025-08-01', '2026-01-01'),format="%F"))+
+  scale_x_datetime(limits = as.POSIXct(c('2026-01-01', '2026-03-01'),format="%F"))+
   scale_color_manual(values=c('black','yellow','red'))
 ```
 
@@ -450,10 +450,9 @@ ggplot(df)+geom_hline(yintercept = 0)+
 
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,LWIN_6_14_1_1_1))+
-  scale_x_datetime(limits = as.POSIXct(c('2022-08-01', '2026-01-01')))+
+  scale_x_datetime(limits = as.POSIXct(c('2026-01-01', '2026-03-01')))+
   scale_y_continuous(#limits = c(50,750),
-                     expression('Longwave In ('*W/m^2*')'))+
-  scale_x_datetime(limits = as.POSIXct(c('2022-08-01', '2026-01-01')))
+                     expression('Longwave In ('*W/m^2*')'))
 
 
 hist(df$LWIN_6_14_1_1_1,breaks=100)
@@ -479,7 +478,7 @@ ggplot(data = df)+
   geom_point(aes(TIMESTAMP,LWOUT_6_15_1_1_1))+
   scale_y_continuous(#limits = c(150,750),
                      expression('Longwave Out ('*W/m^2*')'))+
-  scale_x_datetime(limits = as.POSIXct(c('2022-08-01', '2026-01-01')))
+  scale_x_datetime(limits = as.POSIXct(c('2026-01-01', '2026-03-01')))
 
 hist(df$LWOUT_6_15_1_1_1,breaks=100)
 
@@ -502,7 +501,7 @@ ggplot(data = df)+
   geom_point(aes(TIMESTAMP,TW_2_45_1_1_1))+
   scale_y_continuous(#limits = c(150,750),
                      expression('Water Temp (Celcius)'))+
-  scale_x_datetime(limits = as.POSIXct(c("2025-05-01","2025-11-30")))+
+  scale_x_datetime(limits = as.POSIXct(c('2026-01-01', '2026-03-01')))+
   geom_vline(aes(xintercept = as.POSIXct('2025-05-25')))+
   geom_vline(aes(xintercept = as.POSIXct('2025-11-05'))) #ref. for cutting freezing water table depth data
 
@@ -510,6 +509,7 @@ ggplot(data = df)+
 
 # Water Table Depth
 
+When soil thaws and freezes you will need to edit this chunk to keep/remove data! Only keep water table depth (WTD_10_42_1_1_1) when the measured water temp is above 0
 ```{r}
 ggplot(data = df)+
   geom_point(aes(TIMESTAMP,WTD_10_42_1_1_1))+
@@ -542,7 +542,8 @@ ggplot(data = df)+ theme_bw()+
   geom_hline(yintercept = 0)+
   geom_line(aes(TIMESTAMP,TS_2_38_1_1_1,color='1_1'))+
   geom_line(aes(TIMESTAMP,TS_2_38_2_1_1,color='2_1'))+
-  geom_line(aes(TIMESTAMP,TS_2_38_2_2_1,color='2_2'))
+  geom_line(aes(TIMESTAMP,TS_2_38_2_2_1,color='2_2'))+
+  scale_x_datetime(limits = as.POSIXct(c('2026-01-01', '2026-03-01')))
 
 
 ## Convert these to kelvin separately
@@ -559,7 +560,8 @@ ggplot(data = df)+ theme_bw()+
   geom_hline(yintercept = 0)+
   geom_line(aes(TIMESTAMP,TS_2_38_1_1_1.c,color='1_1'))+
   geom_line(aes(TIMESTAMP,TS_2_38_2_1_1.c,color='2_1'))+
-  geom_line(aes(TIMESTAMP,TS_2_38_2_2_1.c,color='2_2'))
+  geom_line(aes(TIMESTAMP,TS_2_38_2_2_1.c,color='2_2'))+
+  scale_x_datetime(limits = as.POSIXct(c('2026-01-01', '2026-03-01')))
 
 
 ```
@@ -580,7 +582,7 @@ ggplot(data = df)+ theme_bw()+
   geom_line(aes(TIMESTAMP,TS_2_38_4_10_1,color='80 cm'))+
   geom_line(aes(TIMESTAMP,TS_2_38_4_11_1,color='90 cm'))+
   geom_line(aes(TIMESTAMP,TS_2_38_4_12_1,color='1 m'))+
-  scale_x_datetime(limits = as.POSIXct(c('2022-08-01', '2026-01-01')))
+  scale_x_datetime(limits = as.POSIXct(c('2026-01-01', '2026-03-01')))
 ```
   
 
@@ -600,7 +602,7 @@ ggplot(data = df)+ theme_bw()+
   geom_line(aes(TIMESTAMP,TS_2_38_3_10_1,color='80 cm'))+
   geom_line(aes(TIMESTAMP,TS_2_38_3_11_1,color='90 cm'))+
   geom_line(aes(TIMESTAMP,TS_2_38_3_12_1,color='1 m'))+
-  scale_x_datetime(limits = as.POSIXct(c('2022-08-01', '2026-01-01')))
+  scale_x_datetime(limits = as.POSIXct(c('2026-01-01', '2026-03-01')))
 ```
 
 Bulk temp cleaning
@@ -638,7 +640,7 @@ for (v in ts_vars) {
 
 ```
 
-Random 2022 problematic chunks
+Random 2022 problematic chunks - water in datalogger box :(
 ```{r}
 
 #3_1_1
@@ -681,7 +683,7 @@ ggplot(data = df)+ theme_bw()+
   geom_line(aes(TIMESTAMP,TS_2_38_4_10_1.limits,color='80 cm'))+
   geom_line(aes(TIMESTAMP,TS_2_38_4_11_1.limits,color='90 cm'))+
   geom_line(aes(TIMESTAMP,TS_2_38_4_12_1.limits,color='1 m'))+
-  scale_x_datetime(limits = as.POSIXct(c("2022-07-01","2026-01-01")))
+  scale_x_datetime(limits = as.POSIXct(c('2026-01-01', '2026-03-01')))
 ```
   
 
@@ -700,7 +702,7 @@ ggplot(data = df)+ theme_bw()+
   geom_line(aes(TIMESTAMP,TS_2_38_3_10_1.limits,color='80 cm'))+
   geom_line(aes(TIMESTAMP,TS_2_38_3_11_1.limits,color='90 cm'))+
   geom_line(aes(TIMESTAMP,TS_2_38_3_12_1.limits,color='1 m'))+
-  scale_x_datetime(limits = as.POSIXct(c("2022-07-01","2026-01-01")))
+  scale_x_datetime(limits = as.POSIXct(c('2026-01-01', '2026-03-01')))
 ```
 
 ## Hummocks clean
