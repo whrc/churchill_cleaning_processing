@@ -57,17 +57,6 @@ df = df[!duplicated(df$ts),]
 
 plot(df$ts,df$co2_flux,ylim = c(-10,10))
 
-## Replace Nov/Dec data with merged ch4/co2 files (if applicable)
-## These files are saved on the buckets for download if needed
-# df_nov=fread('C:/Users/dtrangmoe/Documents/Churchill/ChurchillFlux_Nov23_CO2_CH4_merged.csv')
-# df_dec=fread('C:/Users/dtrangmoe/Documents/Churchill/ChurchillFlux_Dec23_CO2_CH4_merged.csv')
-#
-# #Used to add in merged files 
-# df_subset <- subset(df, df$ts > as.POSIXct('2024-03-01 0000'))
-# 
-# # Combine df_subset and monthly data (set up for 2024)
-# df <- bind_rows(df_jan, df_feb, df_subset)
-
 
 #take the min and max date rounding to the nearest full month
 mindate = floor_date(min(df$ts),unit = 'month')

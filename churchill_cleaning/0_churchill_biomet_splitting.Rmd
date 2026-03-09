@@ -123,6 +123,7 @@ library(purrr)
 library(tidyr)
 
 #NEST AND SPLIT THE DATA BY MONTH AND SAVE IN DESIRED DIRECTORY
+# Do not overwrite old files here!! Partial new files will overwrite older, complete files at the beginning of the dataset. Save these in a separate directory, and then transfer them to wherever the updated files are manually (or program something better here!)
 
 
 base_path = './data/biomet/'
