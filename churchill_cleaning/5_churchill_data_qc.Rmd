@@ -1324,7 +1324,7 @@ p_rh
 ```{r,warning=FALSE, echo = FALSE}  
 
 df_wind_openair <- df %>%
-  filter(!is.na(wind_dir) & !is.na(WS_16_33_1_1_1)) %>%
+  filter_at(vars(wind_dir,WS_16_33_1_1_1), all_vars(!is.na(.))) %>%
   rename(
     wd = wind_dir,
     ws = WS_16_33_1_1_1
@@ -1343,7 +1343,7 @@ windRose(df_wind_openair,
 ```{r, warning=FALSE, echo = FALSE} 
 
 df_wind_openair <- df_month %>%
-  filter(!is.na(wind_dir) & !is.na(WS_16_33_1_1_1)) %>%
+  filter_at(vars(wind_dir, WS_16_33_1_1_1), all_vars(!is.na(.))) %>%
   rename(
     wd = wind_dir,
     ws = WS_16_33_1_1_1
